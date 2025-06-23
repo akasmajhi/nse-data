@@ -5,7 +5,7 @@ from datetime import datetime
 
 from loguru import logger
 
-from constants import SUPPORTED_FILE_TYPES  
+from src.constants import SUPPORTED_FILE_TYPES  
 
 # for key in MONTH_NAMES:
 #     print(f"Month Name: [{key}] Month Value: [{MONTH_NAMES[key]}]")
@@ -43,14 +43,31 @@ def isDateValid(i_date: str):
         boolean
     True if the date is valid.
     """
-    logger.debug(f"Input date is: {i_date}")
+    logger.debug(f"Input date is: [{i_date}]")
     if len(i_date.split('-')) == 3:
         try:
             datetime.strptime(i_date, '%d-%b-%Y')
         except ValueError:
-            logger.error(f"Invalid date {i_date} passed")
+            logger.error(f"Invalid date [{i_date}] passed. Reqd. format is DD-Mon-YYYY")
             return False
         return True
 
+def isDateInFuture(i_date: str):
+    logger.debug(f"Input date is: {i_date}")
+    pass
+def validateTradingDate(i_date: str):
+    """
+        Check if the trading date is valid.
+    Parameters
+    ----------
+        i_date: str
+    Input date in the format of DD-Mon-YYYY. e.g., 14-Jun-2025
 
+    Returns
+    -------
+        boolean
+    True if the trading date is valid.
+    """
+
+    return False
 
