@@ -13,3 +13,5 @@ MONTH_NAMES = {
   "DEC":"Dec",
 }
 SUPPORTED_FILE_TYPES = ('BHAVCOPY', 'PE')
+DATE_FMT='%d-%b-%Y'
+FILES_BASE_DIR='data_files/'

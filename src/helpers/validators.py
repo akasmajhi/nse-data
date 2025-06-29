@@ -52,9 +52,11 @@ def isDateValid(i_date: str):
             return False
         return True
 
+#TODO
 def isDateInFuture(i_date: str):
     logger.debug(f"Input date is: {i_date}")
     pass
+#TODO
 def validateTradingDate(i_date: str):
     """
         Check if the trading date is valid.
@@ -68,6 +70,6 @@ def validateTradingDate(i_date: str):
         boolean
     True if the trading date is valid.
     """
-
+    logger.debug(f"Input date is: {i_date}")
     return False
 

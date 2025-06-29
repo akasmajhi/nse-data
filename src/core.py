@@ -4,8 +4,8 @@
 
 from loguru import logger
 
-import src.helpers.validators as validators
-import src.helpers.file_readers as file_readers
+from src.helpers.validators import isDateValid, isFileTypeValid
+from src.helpers import file_readers
 from src.constants import SUPPORTED_FILE_TYPES
 
 import pandas as pd 
@@ -31,21 +31,20 @@ def get_data(file_type: str, start_date: str, end_date: str):
     """
     logger.info(f"file_type: {file_type}, start_date: {start_date}, end_date: {end_date}")
     data = pd.DataFrame()
-    if validators.isFileTypeValid(file_type) :
+    if isFileTypeValid(file_type) :
         logger.debug(f"File type {file_type} is valid")        
-        if validators.isDateValid(start_date) and validators.isDateValid(end_date):
+        if isDateValid(start_date) and isDateValid(end_date):
             logger.debug(f"Dates: {start_date} and {end_date} are valid")
             # param validatins okay. Read the files now.
-            file_readers.get_local_data(file_type, start_date, end_date)
+            data = file_readers.get_local_data(file_type, start_date, end_date)
+            logger.info(f"Got data: {data}")
         else:
-            logger.debug(f"start_date: {start_date} is invalid")
+            logger.debug(f"start_date: [{start_date}] or end_date: [{end_date}]is invalid")
     else:
         logger.debug(f"File type {file_type} is Invalid")
         return False
 
     return data
-
-#TODO: create a method for get_supported_file_types
 
 def get_supported_file_types():
     """ Returns the file types supported.
