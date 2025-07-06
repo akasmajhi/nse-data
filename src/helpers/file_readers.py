@@ -42,18 +42,18 @@ def get_local_data(file_type: str, start_date: str, end_date:str):
         try:
             trd_dt_data = pd.read_csv(os.path.join(FILES_BASE_DIR,file_type.upper(),\
                                                    f'{file_type.lower()}_{trading_date}.csv'))
+            #TODO Need to handle empty file case.
             if trd_dt_data.size == 0:
-                #TODO Need to handle empty file case.
-                logger.info(f"Data not found in local for [{trading_date}]")
+                logger.error(f"Data not found in local for [{trading_date}]")
+            # Data found in local; Append data to DF 
             else:
-                # Append data to DF 
                 logger.debug(f"[{file_type}] Data found locally for [{trading_date}]")
                 df = pd.concat([df,trd_dt_data], ignore_index=True)
+        #TODO Should be similar to the first case
         except pd.errors.EmptyDataError:
-            #TODO 
             logger.error(f"WTF: No data for [{trading_date}]")
+        # If data not found locally, issue remote fetch
         except FileNotFoundError:
-            # If data not found locally, issue remote fetch
             logger.info(f"No file for [{trading_date}]. Calling Fetcher")
             trd_dt_data = fetch_data(file_type, trading_date)
             df = pd.concat([df, trd_dt_data], ignore_index=True) 

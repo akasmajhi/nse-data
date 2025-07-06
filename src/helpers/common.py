@@ -2,7 +2,7 @@ from loguru import logger
 
 from datetime import datetime, timedelta
 
-from src.helpers.validators import isDateValid
+from src.helpers.validators import isDateValid, isNSEHoliday
 from src.constants import DATE_FMT
 
 def composeDatesFromRange(s_date: str, e_date:str):
@@ -41,13 +41,16 @@ Compose a list of trading dates from the supplied range.
     
     s_dt = datetime.strptime(s_date, DATE_FMT).date()
     e_dt = datetime.strptime(e_date, DATE_FMT).date()
-    logger.debug(f"Total days: [{(e_dt - s_dt).days}]")
+    # Validations - 3: Add only weekdays and non-NSE-Holidays
     for cnt in range((e_dt - s_dt).days + 1):
-        #Don't add weekends
-        logger.debug(f"ddddddddddddddddddddd{(s_dt + timedelta(days=cnt)).weekday}")
-        if (s_dt + timedelta(days=cnt)).weekday():
+        #Don't add weekends. Add only weekdays!
+        # logger.debug(f"The week of day is: [{(s_dt + timedelta(days=cnt)).weekday()}]")
+        trading_dt = s_dt + timedelta(days=cnt)
+        #Add check for NSE Holidays
+        if ( ((trading_dt.weekday()) <= 4) and 
+                (not isNSEHoliday(trading_dt.strftime(DATE_FMT)))):
             d_range.append((s_dt + timedelta(days=cnt)).strftime('%d-%b-%Y'))
-    logger.info(f"Date Range lis****t: [{d_range}]")
+    logger.info(f"Date Range list: [{d_range}]")
     return d_range
 
 def composeFileNameFromDate(trading_date: str):

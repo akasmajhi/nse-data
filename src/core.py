@@ -37,7 +37,7 @@ def get_data(file_type: str, start_date: str, end_date: str):
             logger.debug(f"Dates: {start_date} and {end_date} are valid")
             # param validatins okay. Read the files now.
             data = file_readers.get_local_data(file_type, start_date, end_date)
-            logger.info(f"Got data: {data}")
+            # logger.info(f"Got data: {data}")
         else:
             logger.debug(f"start_date: [{start_date}] or end_date: [{end_date}]is invalid")
     else:

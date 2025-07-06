@@ -1,5 +1,7 @@
-from src import core
+from datetime import datetime
 
+from src import core
+from src.constants import DATE_FMT
 def test_get_data():
     # assert core.get_data("PE", '12-12-2025', '') is False
-    pass
+    assert core.get_data('PE', '01-Jun-2024', datetime.today().strftime(DATE_FMT)) is not None
