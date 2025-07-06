@@ -1,13 +1,19 @@
 from src.helpers.validators import isDateValid, isNSEHoliday
 
 def test_isDateValid():
+    # Valid Date
     assert isDateValid('21-JUN-2025') is True
+    # Invalid Date
     assert isDateValid('00-00-00') is False
+    # Invalid Date - Wrong Format
     assert isDateValid('-Jun-2025') is False
+    # Invalid Date - Wrong Format
+    assert isDateValid('Jun-21-2025') is False
+    # Invalid Date - Wrong Format
+    assert isDateValid('2025-Jun-21') is False
+    # Invalid Date - Future Date
+    assert isDateValid('21-Jun-2050') is False
 
-
-def test_isDateInFuture():
-    pass
 
 def test_isNSEHoliday():
     # Valid trading date; Expect a False

@@ -26,12 +26,13 @@ def isFileTypeValid(file_type: str):
         boolean : True/False
     """
     logger.debug(f"file type is: {file_type.upper()}")
-    logger.debug(f"Supported File Types: {SUPPORTED_FILE_TYPES}")
+    # logger.debug(f"Supported File Types: {SUPPORTED_FILE_TYPES}")
     return True if file_type.upper() in SUPPORTED_FILE_TYPES else False 
 
 def isDateValid(i_date: str):
     """ 
-        The string i_date ('DD-Mon-YYYY') is checked for validity.
+        The string i_date ('DD-Mon-YYYY') is checked for validity of format and 
+        prevents future dates.
 
     Parameters
     ----------
@@ -44,34 +45,18 @@ def isDateValid(i_date: str):
     True if the date is valid.
     """
     logger.debug(f"Input date is: [{i_date}]")
+    trading_dt = ""
     if len(i_date.split('-')) == 3:
         try:
-            datetime.strptime(i_date, '%d-%b-%Y')
+            trading_dt = datetime.strptime(i_date, '%d-%b-%Y')
+            if (datetime.today() > trading_dt):
+                return True
+            else:
+                logger.error(f"Future date [{i_date}] Not Allowed!")
+                return False
         except ValueError:
             logger.error(f"Invalid date [{i_date}] passed. Reqd. format is DD-Mon-YYYY")
             return False
-        return True
-
-#TODO
-def isDateInFuture(i_date: str):
-    logger.debug(f"Input date is: {i_date}")
-    pass
-#TODO
-def validateTradingDate(i_date: str):
-    """
-        Check if the trading date is valid.
-    Parameters
-    ----------
-        i_date: str
-    Input date in the format of DD-Mon-YYYY. e.g., 14-Jun-2025
-
-    Returns
-    -------
-        boolean
-    True if the trading date is valid.
-    """
-    logger.debug(f"Input date is: {i_date}")
-    return False
 
 def isNSEHoliday(trading_dt: str):
     # Check if it is a valida date
@@ -80,9 +65,13 @@ def isNSEHoliday(trading_dt: str):
     if(isDateValid(trading_dt)):
         # Get the year from the trading date
         yyyy = trading_dt[-4:]
-        logger.debug(f"Getting holday list for {yyyy}")
+        # logger.debug(f"Getting holday list for {yyyy}")
         try:
             NSE_HOLIDAY_LIST = NSE_HOLIDAYS[yyyy]
+            # If no holiday list then DONOT proceed
+            if len(NSE_HOLIDAYS) == 0:
+                logger.error(f"No NSE holiday calendar found for [{yyyy}]")
+                return True
             logger.debug(f"Holiday list: [{NSE_HOLIDAY_LIST}]")
             # check if trading date is in the holiday list
             if (trading_dt.upper() in NSE_HOLIDAY_LIST):
