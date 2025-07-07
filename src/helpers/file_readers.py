@@ -38,7 +38,7 @@ def get_local_data(file_type: str, start_date: str, end_date:str):
     d_range = composeDatesFromRange(start_date, end_date)
     # Look for data
     for trading_date in d_range:
-        logger.debug(f"Getting data for [{trading_date}]")
+        # logger.debug(f"Getting data for [{trading_date}]")
         try:
             trd_dt_data = pd.read_csv(os.path.join(FILES_BASE_DIR,file_type.upper(),\
                                                    f'{file_type.lower()}_{trading_date}.csv'))
@@ -54,7 +54,7 @@ def get_local_data(file_type: str, start_date: str, end_date:str):
             logger.error(f"WTF: No data for [{trading_date}]")
         # If data not found locally, issue remote fetch
         except FileNotFoundError:
-            logger.info(f"No file for [{trading_date}]. Calling Fetcher")
+            logger.info(f"No file for [{trading_date}], file_type: {file_type}. Calling Fetcher")
             trd_dt_data = fetch_data(file_type, trading_date)
             df = pd.concat([df, trd_dt_data], ignore_index=True) 
     return df

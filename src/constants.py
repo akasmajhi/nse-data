@@ -29,4 +29,16 @@ NSE_HOLIDAYS={
              "04-Nov-2021", "05-Nov-2021", "19-Nov-2021"],
     "2020": [], 
 }
+REQ_HEADER = {
+    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+    "authority":"www.nseindia.com",
+    "method":"GET",
+    "scheme":"https",
+    "accept":"*/*",
+    "referer":"https://www.nseindia.com/",
+    "sec-fetch-site":"same-origin",
+    "sec-fetch-mode":"cors",
+    "sec-fetch-dest":"empty",
+}
+NSE_REPORTS_URL = 'https://www.nseindia.com/api/reports'
 
