@@ -17,7 +17,10 @@ def test_get_data():
 
     # TESTS for BHAVCOPY data fetch 
 
-    assert core.get_data(file_type='BHAVCOPY', start_date='04-Jul-2025', end_date='07-Jul-2025') is not None
+    assert core.get_data(file_type='BHAVCOPY', 
+                         start_date='04-Jul-2025', 
+                         end_date='07-Jul-2025') is not None
+
     assert core.get_data(file_type='BHAVCOPY', 
                          start_date='07-Jul-2024', 
                          end_date=datetime.today().strftime(DATE_FMT)) is not None
