@@ -41,7 +41,7 @@ def get_data(file_type: str, start_date: str, end_date: str):
         else:
             logger.debug(f"start_date: [{start_date}] or end_date: [{end_date}]is invalid")
     else:
-        logger.debug(f"File type {file_type} is Invalid")
+        logger.error(f"File type {file_type} is Invalid")
         return False
 
     return data
