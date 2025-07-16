@@ -1,12 +1,13 @@
 """
     Entry method for the callers to request data from the service.
 """
+from datetime import datetime
 
 from loguru import logger
 
 from src.helpers.validators import isDateValid, isFileTypeValid
 from src.helpers import file_readers
-from src.constants import SUPPORTED_FILE_TYPES
+from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
 
 import pandas as pd 
 
@@ -60,5 +61,10 @@ def get_supported_file_types():
     return SUPPORTED_FILE_TYPES
 
 if __name__ == '__main__':
-    get_data('bhavcopy', '41-Jun-2025', '18-Jun-2025')
-    # print (",".join(get_supported_file_types()))
+    get_data(file_type='BHAVCOPY', start_date='07-Jul-2024', 
+             end_date=datetime.today().strftime(DATE_FMT))
+
+    get_data(file_type='PE', start_date='07-Jul-2024', 
+             end_date=datetime.today().strftime(DATE_FMT))
+
+

@@ -1,6 +1,7 @@
 from loguru import logger
 
 from datetime import datetime, timedelta
+import  time
 
 from src.helpers.validators import isDateValid, isNSEHoliday
 from src.constants import DATE_FMT
@@ -25,6 +26,7 @@ Compose a list of trading dates from the supplied range.
     -----------
     Both dates are validated against valid trading dates and holidays along with sanity. 
     """
+    start_time = time.perf_counter()
     logger.debug(f"start_date: [{s_date}], end_date: [{e_date}]")
     d_range = list()
     # Validations - 1: Ensure both trading dates are valid
@@ -50,7 +52,10 @@ Compose a list of trading dates from the supplied range.
         if ( ((trading_dt.weekday()) <= 4) and 
                 (not isNSEHoliday(trading_dt.strftime(DATE_FMT)))):
             d_range.append((s_dt + timedelta(days=cnt)).strftime('%d-%b-%Y'))
-    logger.info(f"Date Range list: [{d_range}]")
+    logger.debug(f"Date Range list: [{d_range}]")
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    logger.info(f"Total time taken: [{elapsed_time:.4f}] seconds")
     return d_range
 
 def composeFileNameFromDate(trading_date: str):
