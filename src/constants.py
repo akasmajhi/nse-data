@@ -12,7 +12,7 @@ MONTH_NAMES = {
   "NOV":"Nov",
   "DEC":"Dec",
 }
-SUPPORTED_FILE_TYPES = ('BHAVCOPY', 'PE')
+SUPPORTED_FILE_TYPES = ("BHAVCOPY", "PE", "PREOPEN")
 DATE_FMT="%d-%b-%Y"
 FILES_BASE_DIR='data_files/'
 NSE_HOLIDAYS={
@@ -44,4 +44,28 @@ REQ_HEADER = {
     "sec-fetch-dest":"empty",
 }
 NSE_REPORTS_URL = "https://www.nseindia.com/api/reports"
+NSE_PREOPEN_URL = "https://www.nseindia.com/api/market-data-pre-open"
+PREOPEN_SKIPROWS = 12
 
+PAYLOAD_NIFTY = {
+    "key": "NIFTY",
+    "csv": "true",
+    "selectValFormat": "crores",
+}
+PAYLOAD_NIFTYBANK = {
+    "key": "BANKNIFTY",
+    "csv": "true",
+    "selectValFormat": "crores",
+}
+PAYLOAD_SME = {
+    "key": "SME",
+    "csv": "true",
+    "selectValFormat": "crores",
+}
+PAYLOAD_FO = {
+    "key": "FO",
+    "csv": "true",
+    "selectValFormat": "crores",
+}
+PAYLOADS = {"nifty": PAYLOAD_NIFTY, "niftybank": PAYLOAD_NIFTYBANK,
+            "sme": PAYLOAD_SME, "fo": PAYLOAD_FO}

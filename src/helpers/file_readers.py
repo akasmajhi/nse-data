@@ -4,7 +4,7 @@ import pandas as pd
 from loguru import logger
 
 from src.helpers.common import composeDatesFromRange
-from src.constants import FILES_BASE_DIR
+from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PAYLOADS
 from src.fetchers.historical_data import fetch_data
 
 def get_local_data(file_type: str, start_date: str, end_date:str):
@@ -40,6 +40,13 @@ def get_local_data(file_type: str, start_date: str, end_date:str):
     for trading_date in d_range:
         # logger.debug(f"Getting data for [{trading_date}]")
         try:
+            if(file_type.upper() == "PREOPEN"):
+                #TODO PREOPEN is valid only for the current day
+                for payload in PAYLOADS:
+                    data = pd.read_csv(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), encoding="utf-8", skiprows=PREOPEN_SKIPROWS)
+                    df = pd.concat([df, data ])
+                return df
+
             trd_dt_data = pd.read_csv(os.path.join(FILES_BASE_DIR,file_type.upper(),\
                                                    f'{file_type.lower()}_{trading_date}.csv'))
             #TODO Need to handle empty file case.

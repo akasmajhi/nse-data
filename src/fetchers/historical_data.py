@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 from http import HTTPStatus
 import os
@@ -7,7 +8,7 @@ import zipfile
 import pandas as pd
 from loguru import logger
 
-from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL
+from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PAYLOADS
 
 def dummy_request():
     tmp_url = 'https://www.nseindia.com/all-reports'
@@ -93,6 +94,27 @@ def fetch_data(file_type: str, trading_date: str):
             # logger.info(f"Data Size is: [{df.size}]")
             return df 
 
+    if (file_type.lower() == "preopen"):
+        # Currently, we can fetch preopen for the current day
+        trading_date = datetime.strftime(datetime.today(), DATE_FMT)
+        logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        dummy_res = dummy_request()
+
+        for payload in PAYLOADS:
+            preopen_res = requests.get(
+                url=NSE_PREOPEN_URL,
+                headers=REQ_HEADER,
+                params=PAYLOADS[payload], 
+                cookies=dummy_res.cookies,
+                timeout=8)
+            if(preopen_res.status_code == HTTPStatus.OK):
+                # Write the data to the file
+                with open(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), "w", encoding="utf-8") as file:
+                    file.write(preopen_res.text)
+                # Read the same CSV and return as pandas dataframe
+                data = pd.read_csv(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), encoding="utf-8", skiprows=PREOPEN_SKIPROWS)
+                df = pd.concat([df, data])
+        return df 
     return df
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ def test_month_names():
     assert valid_mon_values == list(MONTH_NAMES.values())
 
 def test_supported_file_types():
-    valid_file_types = ('BHAVCOPY', 'PE')
+    valid_file_types = ("BHAVCOPY", "PE", "PREOPEN")
     assert valid_file_types == SUPPORTED_FILE_TYPES
 
 def test_date_fmt():
