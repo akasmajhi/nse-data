@@ -13,7 +13,7 @@ MONTH_NAMES = {
   "DEC":"Dec",
 }
 SUPPORTED_FILE_TYPES = ('BHAVCOPY', 'PE')
-DATE_FMT='%d-%b-%Y'
+DATE_FMT="%d-%b-%Y"
 FILES_BASE_DIR='data_files/'
 NSE_HOLIDAYS={
     "2025": [ "26-FEB-2025", "14-MAR-2025", "31-MAR-2025", "10-APR-2025", "14-APR-2025", "18-APR-2025", 
@@ -43,5 +43,5 @@ REQ_HEADER = {
     "sec-fetch-mode":"cors",
     "sec-fetch-dest":"empty",
 }
-NSE_REPORTS_URL = 'https://www.nseindia.com/api/reports'
+NSE_REPORTS_URL = "https://www.nseindia.com/api/reports"
 

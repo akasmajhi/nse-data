@@ -32,7 +32,7 @@ def get_data(file_type: str, start_date: str, end_date: str):
     """
     logger.info(f"file_type: {file_type}, start_date: {start_date}, end_date: {end_date}")
     data = pd.DataFrame()
-    if isFileTypeValid(file_type) :
+    if isFileTypeValid(file_type):
         # logger.debug(f"File type {file_type} is valid")        
         if isDateValid(start_date) and isDateValid(end_date):
             logger.debug(f"Dates: {start_date} and {end_date} are valid")
