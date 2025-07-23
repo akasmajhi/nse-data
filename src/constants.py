@@ -69,3 +69,6 @@ PAYLOAD_FO = {
 }
 PAYLOADS = {"nifty": PAYLOAD_NIFTY, "niftybank": PAYLOAD_NIFTYBANK,
             "sme": PAYLOAD_SME, "fo": PAYLOAD_FO}
+PREOPEN_HEADER = {0: "SYMBOL", 1: "PREV_CLOSE", 2: "IEP", 4: "PCT_CHANGE", 
+                  5: "FINAL_PRICE", 6: "FINAL_QTY", 7: "VALUE_CR", 8: "FFM_CAP_CR", 
+                  9: "52_WEEK_HIGH", 10: "52_WEEK_LOW"}
