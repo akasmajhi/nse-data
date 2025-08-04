@@ -61,10 +61,10 @@ def get_supported_file_types():
     return SUPPORTED_FILE_TYPES
 
 if __name__ == '__main__':
-    get_data(file_type='BHAVCOPY', start_date='01-Jul-2025', 
+    get_data(file_type='BHAVCOPY', start_date='01-Aug-2025', 
              end_date=datetime.today().strftime(DATE_FMT))
 
-    get_data(file_type='PE', start_date='01-Jul-2025', 
+    get_data(file_type='PE', start_date='01-Aug-2025', 
              end_date=datetime.today().strftime(DATE_FMT))
 
     get_data(file_type='PREOPEN', 
