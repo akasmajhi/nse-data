@@ -67,6 +67,7 @@ if __name__ == '__main__':
     get_data(file_type='PE', start_date='01-Aug-2025', 
              end_date=datetime.today().strftime(DATE_FMT))
 
+    #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))

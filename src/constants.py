@@ -67,8 +67,13 @@ PAYLOAD_FO = {
     "csv": "true",
     "selectValFormat": "crores",
 }
+PAYLOAD_ALL = {
+    "key": "ALL",
+    "csv": "true",
+    "selectValFormat": "crores",
+}
 PAYLOADS = {"nifty": PAYLOAD_NIFTY, "niftybank": PAYLOAD_NIFTYBANK,
-            "sme": PAYLOAD_SME, "fo": PAYLOAD_FO}
+            "sme": PAYLOAD_SME, "fo": PAYLOAD_FO, "all": PAYLOAD_ALL}
 PREOPEN_HEADER = {0: "SYMBOL", 1: "PREV_CLOSE", 2: "IEP", 4: "PCT_CHANGE", 
                   5: "FINAL_PRICE", 6: "FINAL_QTY", 7: "VALUE_CR", 8: "FFM_CAP_CR", 
                   9: "52_WEEK_HIGH", 10: "52_WEEK_LOW"}
