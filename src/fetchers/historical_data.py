@@ -8,13 +8,16 @@ import zipfile
 import pandas as pd
 from loguru import logger
 
-from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PAYLOADS
+from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PAYLOADS, NSE_DUMMY_REQ_URL
 
-def dummy_request():
-    tmp_url = 'https://www.nseindia.com/all-reports'
-    session = requests.Session()
-    r = session.get(url=tmp_url, headers=REQ_HEADER)
-    return r
+from src.fetchers.common import dummy_request
+from src.fetchers import idx_fetchers
+
+# def dummy_request():
+#     tmp_url = 'https://www.nseindia.com/all-reports'
+#     session = requests.Session()
+#     r = session.get(url=tmp_url, headers=REQ_HEADER)
+#     return r
 
 def fetch_data(file_type: str, trading_date: str):
     """
@@ -36,10 +39,11 @@ def fetch_data(file_type: str, trading_date: str):
     df = pd.DataFrame()
 
     # Block for fetching PE files
+    # Processing for NOTE: PE
     if (file_type.lower() == 'pe'):
         logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
 
-        dummy_res = dummy_request()
+        dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
         payload = {
             'archives':'[{"name":"PE Ratio","type":"daily-reports","category":"capital-market","section":"equities"}]',
@@ -62,9 +66,10 @@ def fetch_data(file_type: str, trading_date: str):
             return df 
 
     # For bhavcopy specific fetch
+    # Processing for NOTE: BHAVCOPY
     if (file_type.lower() == 'bhavcopy'):
-        logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
-        dummy_res = dummy_request()
+        logger.info(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
         payload = {
             'archives':'[{"name":"CM-UDiFF Common Bhavcopy Final (zip)","type":"daily-reports","category":"capital-market","section":"equities"}]',
@@ -94,11 +99,12 @@ def fetch_data(file_type: str, trading_date: str):
             # logger.info(f"Data Size is: [{df.size}]")
             return df 
 
+    # Processing for NOTE: PREOPEN
     if (file_type.lower() == "preopen"):
         # Currently, we can fetch preopen for the current day
         trading_date = datetime.strftime(datetime.today(), DATE_FMT)
         logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
-        dummy_res = dummy_request()
+        dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
         for payload in PAYLOADS:
             preopen_res = requests.get(
@@ -115,6 +121,10 @@ def fetch_data(file_type: str, trading_date: str):
                 data = pd.read_csv(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), encoding="utf-8", skiprows=PREOPEN_SKIPROWS)
                 df = pd.concat([df, data])
         return df 
+    # Processing for NOTE: INDEX
+    if (file_type.lower() == "index"):
+        # Currently, we can fetch preopen for the current day
+        return idx_fetchers.fetch_idx_names(file_type)
     return df
 
 if __name__ == "__main__":

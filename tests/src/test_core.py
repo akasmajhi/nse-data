@@ -19,7 +19,7 @@ def test_get_data():
 
     assert core.get_data(file_type='BHAVCOPY', 
                          start_date='04-Jul-2025', 
-                         end_date='04-Jul-2024') is not None
+                         end_date='04-Jul-2025') is not None
 
     # assert core.get_data(file_type='BHAVCOPY', 
     #                      start_date='07-Jul-2024', 

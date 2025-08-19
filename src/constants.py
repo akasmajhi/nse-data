@@ -12,7 +12,8 @@ MONTH_NAMES = {
   "NOV":"Nov",
   "DEC":"Dec",
 }
-SUPPORTED_FILE_TYPES = ("BHAVCOPY", "PE", "PREOPEN")
+SUPPORTED_FILE_TYPES = ("BHAVCOPY", "PE", "PREOPEN", "INDEX")
+SUPPORTED_INSTR_TYPES = ("STK", "IDX", "OPT")
 DATE_FMT="%d-%b-%Y"
 FILES_BASE_DIR='data_files/'
 NSE_HOLIDAYS={
@@ -43,6 +44,7 @@ REQ_HEADER = {
     "sec-fetch-mode":"cors",
     "sec-fetch-dest":"empty",
 }
+NSE_DUMMY_REQ_URL="https://www.nseindia.com/all-reports"
 NSE_REPORTS_URL = "https://www.nseindia.com/api/reports"
 NSE_PREOPEN_URL = "https://www.nseindia.com/api/market-data-pre-open"
 PREOPEN_SKIPROWS = 12
@@ -77,3 +79,12 @@ PAYLOADS = {"nifty": PAYLOAD_NIFTY, "niftybank": PAYLOAD_NIFTYBANK,
 PREOPEN_HEADER = {0: "SYMBOL", 1: "PREV_CLOSE", 2: "IEP", 4: "PCT_CHANGE", 
                   5: "FINAL_PRICE", 6: "FINAL_QTY", 7: "VALUE_CR", 8: "FFM_CAP_CR", 
                   9: "52_WEEK_HIGH", 10: "52_WEEK_LOW"}
+# Index Related. NOTE: 
+IDX_NAMES ={
+        "NIFTY50": "NIFTY50", "NIFTYBANK": "NIFTYBANK",
+        "FO": "FO", "SME": "SME", "ALL": "ALL"
+}
+IDX_LIST_URL="https://www.nseindia.com/api/allIndices"
+IDX_LIST_COLUMNS = ["IDX_NAME", "CURRENT", "PCT_CHANGE", "OPEN", "HIGH", "LOW", "INDICATIVE_CLOSE", 
+                    "PREV_CLOSE", "PREV_DAY", "1_WEEK_AGO", "1_MONTH_AGO", "1_YEAR_AGO", "52_WK_HIGH", "52_WK_LOW", 
+                    "365_D_CHANGE", "30_DAY_CHANGE"]

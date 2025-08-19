@@ -1,4 +1,4 @@
-from src.constants import SUPPORTED_FILE_TYPES, MONTH_NAMES, DATE_FMT, NSE_HOLIDAYS, REQ_HEADER, NSE_REPORTS_URL, FILES_BASE_DIR
+from src.constants import SUPPORTED_FILE_TYPES, SUPPORTED_INSTR_TYPES, MONTH_NAMES, DATE_FMT, NSE_HOLIDAYS, REQ_HEADER, NSE_REPORTS_URL, FILES_BASE_DIR
 
 def test_month_names():
     valid_mon_keys = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -10,9 +10,12 @@ def test_month_names():
     assert valid_mon_values == list(MONTH_NAMES.values())
 
 def test_supported_file_types():
-    valid_file_types = ("BHAVCOPY", "PE", "PREOPEN")
+    valid_file_types = ("BHAVCOPY", "PE", "PREOPEN", "INDEX")
     assert valid_file_types == SUPPORTED_FILE_TYPES
 
+def test_supported_instr_types():
+    valid_instr_types = ("STK", "IDX", "OPT")
+    assert valid_instr_types == SUPPORTED_INSTR_TYPES
 def test_date_fmt():
     valid_date_fmt = "%d-%b-%Y"
     assert valid_date_fmt == DATE_FMT

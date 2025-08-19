@@ -36,6 +36,10 @@ def get_local_data(file_type: str, start_date: str, end_date:str):
     # Extract date ranges (Validations provided by the called method
     # Following call gets the DD-MMM-YYYY ranges as list
     d_range = composeDatesFromRange(start_date, end_date)
+    if not d_range:
+        logger.info(f"No dates to process for file_type: [{file_type}], start_date: [{start_date}] \
+            end_date: [{end_date}]")
+        return None
     # Look for data
     for trading_date in d_range:
         # logger.debug(f"Getting data for [{trading_date}]")
@@ -58,7 +62,7 @@ def get_local_data(file_type: str, start_date: str, end_date:str):
                 df = pd.concat([df,trd_dt_data], ignore_index=True)
         #TODO Should be similar to the first case
         except pd.errors.EmptyDataError:
-            logger.error(f"WTF: No data for [{trading_date}]")
+            logger.error(f"WTF: No data for [{trading_date}], for file_type: [{file_type}]")
         # If data not found locally, issue remote fetch
         except FileNotFoundError:
             logger.info(f"No file for [{trading_date}], file_type: {file_type}. Calling Fetcher")

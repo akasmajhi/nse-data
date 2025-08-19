@@ -71,4 +71,8 @@ if __name__ == '__main__':
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
+    #TODO: Needs a design change revisit at a later time!
+    get_data(file_type='INDEX', 
+             start_date=datetime.today().strftime(DATE_FMT), 
+             end_date=datetime.today().strftime(DATE_FMT))
 
