@@ -13,7 +13,7 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +1 src/core.py
+badd +102 src/core.py
 badd +93 analytics/core.py
 argglobal
 %argdel
@@ -34,10 +34,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 117 + 118) / 236)
-exe 'vert 2resize ' . ((&columns * 118 + 118) / 236)
+exe 'vert 1resize ' . ((&columns * 133 + 134) / 269)
+exe 'vert 2resize ' . ((&columns * 135 + 134) / 269)
 argglobal
-balt src/core.py
 setlocal foldmethod=manual
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
@@ -48,11 +47,11 @@ setlocal foldnestmax=20
 setlocal foldenable
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 31) / 63)
+let s:l = 102 - ((71 * winheight(0) + 36) / 73)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 102
 normal! 0
 wincmd w
 argglobal
@@ -71,16 +70,15 @@ setlocal foldnestmax=20
 setlocal foldenable
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 93 - ((59 * winheight(0) + 31) / 63)
+let s:l = 93 - ((68 * winheight(0) + 36) / 73)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 93
 normal! 0
 wincmd w
-2wincmd w
-exe 'vert 1resize ' . ((&columns * 117 + 118) / 236)
-exe 'vert 2resize ' . ((&columns * 118 + 118) / 236)
+exe 'vert 1resize ' . ((&columns * 133 + 134) / 269)
+exe 'vert 2resize ' . ((&columns * 135 + 134) / 269)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
