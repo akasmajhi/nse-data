@@ -1,10 +1,11 @@
 from loguru import logger
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import  time
+import os
 
 from src.helpers.validators import isDateValid, isNSEHoliday
-from src.constants import DATE_FMT
+from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR
 
 def composeDatesFromRange(s_date: str, e_date:str):
     """
@@ -95,6 +96,28 @@ def compose_local_filename(file_type: str, trading_date: str):
         return f"pe_{trading_date}"
     return "" # Return nil for unknown file_type
 
+def get_last_monday():
+    """
+        Gets the immediate last Monday in DD-MMM-YYYY format. Useful for analytics.
+    """
+    today = date.today()
+    return (today - timedelta(days=(today.weekday()))).strftime(DATE_FMT)
 
+def compose_local_index_file_name(trading_date: str = datetime.today().strftime(DATE_FMT)):
+    """Compose a local index file name, with full path, based on supplied trading date.
 
+    Parameters
+    ----------
+        trading_date: str
+    The trading date or defaulted to today's date
+    Returns
+    -------
+        str
+    The local index file name.
+    """
+    IDX_FOLDER = SUPPORTED_FILE_TYPES["INDEX"]
+    IDX_FILE_PREPEND = SUPPORTED_FILE_TYPES["INDEX"].lower()
+    IDX_FILE_NAME = f"{IDX_FILE_PREPEND}_{trading_date}.csv"
+    index_file = os.path.join(FILES_BASE_DIR, IDX_FOLDER, IDX_FILE_NAME)
+    return index_file
 

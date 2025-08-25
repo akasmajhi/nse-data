@@ -12,7 +12,20 @@ MONTH_NAMES = {
   "NOV":"Nov",
   "DEC":"Dec",
 }
-SUPPORTED_FILE_TYPES = ("BHAVCOPY", "PE", "PREOPEN", "INDEX")
+SUPPORTED_FILE_TYPES = {
+    "STOCK": "STOCK",
+    "BHAVCOPY": "BHAVCOPY",
+    "PE": "PE",
+    "PREOPEN": "PREOPEN",
+    "INDEX": "INDEX",
+    "OPT": "OPT",
+}
+SUPPORTED_TIME_DURATIONS = {
+    "MIN":" MIN",
+    "HOUR": "HOUR",
+    "DAY": "DAY",
+    "WEEK": "WEEK",
+}
 SUPPORTED_INSTR_TYPES = ("STK", "IDX", "OPT")
 DATE_FMT="%d-%b-%Y"
 FILES_BASE_DIR='data_files/'

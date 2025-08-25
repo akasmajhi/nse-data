@@ -1,3 +1,4 @@
+#TODO: Make this program a cmdline-param based!
 """
     Entry method for the callers to request data from the service.
 """
@@ -47,6 +48,28 @@ def get_data(file_type: str, start_date: str, end_date: str):
 
     return data
 
+def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
+    """Gets the market cap of an index, if file_type=="INDEX", or gets the market cap of a stock specified by the second parameter.
+    
+    Parameters
+    ----------
+
+    file_type : str
+        As enumerated by src/constants/SUPPORTED_FILE_TYPES 
+    stock_name : str
+        Name of the stock if file_type=STOCK
+
+    Returns
+    -------
+    pd.array
+        Dictionary with key as attribute and pd.DataFrame as value
+    """
+    logger.info(f"file_type: {file_type}, stock_name: {stock_name}")
+    if file_type and isFileTypeValid(file_type):
+        return {}
+    return {}
+
+
 def get_supported_file_types():
     """ Returns the file types supported.
 
@@ -67,11 +90,12 @@ if __name__ == '__main__':
     get_data(file_type='PE', start_date='01-Aug-2025', 
              end_date=datetime.today().strftime(DATE_FMT))
 
-    #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
-    get_data(file_type='PREOPEN', 
-             start_date=datetime.today().strftime(DATE_FMT), 
-             end_date=datetime.today().strftime(DATE_FMT))
-    #TODO: Needs a design change revisit at a later time!
+    # #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
+    # get_data(file_type='PREOPEN', 
+    #          start_date=datetime.today().strftime(DATE_FMT), 
+    #          end_date=datetime.today().strftime(DATE_FMT))
+    # TODO: Needs a design change revisit at a later time!
+    # Do not run it before 7 PM
     get_data(file_type='INDEX', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))

@@ -10,7 +10,14 @@ def test_month_names():
     assert valid_mon_values == list(MONTH_NAMES.values())
 
 def test_supported_file_types():
-    valid_file_types = ("BHAVCOPY", "PE", "PREOPEN", "INDEX")
+    valid_file_types = {
+    "STOCK": "STOCK",
+    "BHAVCOPY": "BHAVCOPY",
+    "PE": "PE",
+    "PREOPEN": "PREOPEN",
+    "INDEX": "INDEX",
+    "OPT": "OPT",
+}
     assert valid_file_types == SUPPORTED_FILE_TYPES
 
 def test_supported_instr_types():

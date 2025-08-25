@@ -7,9 +7,6 @@ from loguru import logger
 
 from src.constants import SUPPORTED_FILE_TYPES, NSE_HOLIDAYS
 
-# for key in MONTH_NAMES:
-#     print(f"Month Name: [{key}] Month Value: [{MONTH_NAMES[key]}]")
-
 def isFileTypeValid(file_type: str):
     """
         Checks to see if the file type is valid.

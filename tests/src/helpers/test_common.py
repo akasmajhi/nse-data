@@ -1,4 +1,4 @@
-from src.helpers.common import composeDatesFromRange
+from src.helpers.common import composeDatesFromRange, get_last_monday
 
 def test_composeDatesFromRange():
     # scenario where date range is valid but data only for working week
@@ -22,3 +22,6 @@ def test_composeDatesFromRange():
     e_date_valid_trading = '16-Jun-2025'
     result = composeDatesFromRange(s_date_valid_trading, e_date_valid_trading)
     assert len(result) >= 0
+
+def test_get_last_monday():
+    assert get_last_monday() is not None
