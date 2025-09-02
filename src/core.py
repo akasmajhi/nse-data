@@ -12,7 +12,7 @@ from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
 
 import pandas as pd 
 
-def get_data(file_type: str, start_date: str, end_date: str):
+def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
     """ Gets the data for the 'file_type' supplied.
 
     Parameters
@@ -44,8 +44,6 @@ def get_data(file_type: str, start_date: str, end_date: str):
             logger.debug(f"start_date: [{start_date}] or end_date: [{end_date}]is invalid")
     else:
         logger.error(f"File type {file_type} is Invalid")
-        return False
-
     return data
 
 def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
@@ -83,20 +81,34 @@ def get_supported_file_types():
     """
     return SUPPORTED_FILE_TYPES
 
+def get_index_names() -> pd.DataFrame:
+    """ Returns names of all the indices.
+    Parameters
+    ----------
+        None
+    Returns
+    -------
+        pd.DataFrame
+    DataFrame contains a row for each index.
+    """
+    return file_readers.get_local_index_names()
+
 if __name__ == '__main__':
-    get_data(file_type='BHAVCOPY', start_date='01-Aug-2025', 
-             end_date=datetime.today().strftime(DATE_FMT))
-
-    get_data(file_type='PE', start_date='01-Aug-2025', 
-             end_date=datetime.today().strftime(DATE_FMT))
-
     #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
-    # TODO: Needs a design change revisit at a later time!
-    # Do not run it before 7 PM
+
+    get_data(file_type='BHAVCOPY', start_date='01-Sep-2025', 
+             end_date=datetime.today().strftime(DATE_FMT))
+
+    get_data(file_type='PE', start_date='01-Sep-2025', 
+             end_date=datetime.today().strftime(DATE_FMT))
+
+    # # TODO: Needs a design change revisit at a later time!
+    # # Do not run it before 7 PM
     get_data(file_type='INDEX', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
-
+    #
+    # get_index_names()

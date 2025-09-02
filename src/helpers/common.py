@@ -103,6 +103,51 @@ def get_last_monday():
     today = date.today()
     return (today - timedelta(days=(today.weekday()))).strftime(DATE_FMT)
 
+def is_start_date_Monday(i_date) -> bool :
+    """
+        Checks to see if the date provided is a Monday or not.
+    Parameters
+    ----------
+       i_date: str
+    The incoming date in 'DD-Mon-YYYY' format type of file (PE, BHAVCOPY, etc.)
+    Returns
+    -------
+        Bool
+    True if the incoming date is a Monday. False otherwise (even in error conditions)
+
+    """
+    logger.debug(f"Incoming date is: [{i_date}]")
+    try:
+        i_dt = datetime.strptime(i_date, DATE_FMT)
+        if i_dt.weekday() == 0: # For Monday == 0
+            return True
+    except ValueError:
+        logger.error(f"Invalid date [{i_date}] or fomrat provided!")
+    return False
+
+def get_week_ending_date(start_date: str) -> str :
+    """
+        Gets the week ending date (=current date + 4 days)
+    Parameters
+    ----------
+       start_date: str
+    The incoming date in 'DD-Mon-YYYY' 
+    Returns
+    -------
+        str | Bool
+    False if there is any problem with the date otherwise weend ending date ('DD-Mon-YYYY')
+
+    """
+    logger.debug(f"Incoming date is: [{start_date}]")
+    try:
+        start_dt = datetime.strptime(start_date, DATE_FMT)
+        #TODO: Check if you need to add 4 days or 5
+        end_dt = start_dt + timedelta(days=4)
+        return end_dt.strftime(DATE_FMT)
+    except ValueError:
+        logger.error(f"Invalid date [{start_date}] or fomrat provided!")
+        return ""
+
 def compose_local_index_file_name(trading_date: str = datetime.today().strftime(DATE_FMT)):
     """Compose a local index file name, with full path, based on supplied trading date.
 
@@ -121,3 +166,28 @@ def compose_local_index_file_name(trading_date: str = datetime.today().strftime(
     index_file = os.path.join(FILES_BASE_DIR, IDX_FOLDER, IDX_FILE_NAME)
     return index_file
 
+def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> str:
+    """Returns the immediate last trading trade or today, if it is a trading date.
+
+    Parameters
+    ----------
+        i_date: str
+    The input date in DD-Mon-YYYY format
+    Returns
+    -------
+        str
+    The last trading date
+    """
+    #TODO: 
+    # Is the date in future
+    # If i_date is weekend then calculate the immediate last weekday
+    # If the last weekday was a exchange holiday then try previous day
+    logger.debug(f"Incoming date is: [{i_date}]")
+    return ""
+
+def is_date_in_future(i_date: str) -> bool:
+    logger.info(f"Incoming Date is: [{i_date}]")
+    if datetime.strptime(i_date, DATE_FMT) > datetime.today():
+        logger.error(f"Incoming date is: [{i_date}] is in future!")
+        return True
+    return False

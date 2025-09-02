@@ -1,4 +1,6 @@
-from src.helpers.common import composeDatesFromRange, get_last_monday
+from src.constants import DATE_FMT
+from src.helpers.common import composeDatesFromRange, get_last_monday, is_date_in_future
+from datetime import datetime, timedelta
 
 def test_composeDatesFromRange():
     # scenario where date range is valid but data only for working week
@@ -25,3 +27,8 @@ def test_composeDatesFromRange():
 
 def test_get_last_monday():
     assert get_last_monday() is not None
+
+def test_is_date_in_future():
+    today = datetime.today()
+    tomorrow = today + timedelta(days=1)
+    assert is_date_in_future(tomorrow.strftime(DATE_FMT)) is True

@@ -20,7 +20,11 @@ def test_top_gainers():
                        duration=SUPPORTED_TIME_DURATIONS["WEEK"],
                        start_date=future_date) is None
     #NOTE: Should all params be fine, you should get "not None" return
+    assert top_gainers(file_type="PE",
+                       duration="WEEK",
+                       start_date=today.strftime(DATE_FMT)) is None
     assert top_gainers(file_type=SUPPORTED_FILE_TYPES["INDEX"], 
                        duration=SUPPORTED_TIME_DURATIONS["WEEK"],
+                       # start_date="25-Aug-2025") is not None
                        start_date=today.strftime(DATE_FMT)) is not None
 

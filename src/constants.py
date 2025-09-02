@@ -87,7 +87,7 @@ PAYLOAD_ALL = {
     "csv": "true",
     "selectValFormat": "crores",
 }
-PAYLOADS = {"nifty": PAYLOAD_NIFTY, "niftybank": PAYLOAD_NIFTYBANK,
+PREOPEN_PAYLOADS = {"nifty": PAYLOAD_NIFTY, "niftybank": PAYLOAD_NIFTYBANK,
             "sme": PAYLOAD_SME, "fo": PAYLOAD_FO, "all": PAYLOAD_ALL}
 PREOPEN_HEADER = {0: "SYMBOL", 1: "PREV_CLOSE", 2: "IEP", 4: "PCT_CHANGE", 
                   5: "FINAL_PRICE", 6: "FINAL_QTY", 7: "VALUE_CR", 8: "FFM_CAP_CR", 
@@ -97,7 +97,7 @@ IDX_NAMES ={
         "NIFTY50": "NIFTY50", "NIFTYBANK": "NIFTYBANK",
         "FO": "FO", "SME": "SME", "ALL": "ALL"
 }
-IDX_LIST_URL="https://www.nseindia.com/api/allIndices"
-IDX_LIST_COLUMNS = ["IDX_NAME", "CURRENT", "PCT_CHANGE", "OPEN", "HIGH", "LOW", "INDICATIVE_CLOSE", 
-                    "PREV_CLOSE", "PREV_DAY", "1_WEEK_AGO", "1_MONTH_AGO", "1_YEAR_AGO", "52_WK_HIGH", "52_WK_LOW", 
-                    "365_D_CHANGE", "30_DAY_CHANGE"]
+INDEX_LIST_URL="https://www.nseindia.com/api/allIndices"
+INDEX_LIST_COLUMNS = ["INDEX", "CURRENT", "PCT_CHANGE", "OPEN", "HIGH", "LOW", "INDICATIVE_CLOSE", 
+                    "PREV_CLOSE", "PREV_DAY", "1_WEEK_AGO", "1_MONTH_AGO", "1_YEAR_AGO", "52_WK_HIGH", "52_WK_LOW", "365_D_PCT_CHANGE", "30_DAY_PCT_CHANGE"]
+INDEX_LIST_SKIPROWS=1

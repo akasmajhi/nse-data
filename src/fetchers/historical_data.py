@@ -8,7 +8,7 @@ import zipfile
 import pandas as pd
 from loguru import logger
 
-from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PAYLOADS, NSE_DUMMY_REQ_URL
+from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, NSE_DUMMY_REQ_URL
 
 from src.fetchers.common import dummy_request
 from src.fetchers import idx_fetchers
@@ -99,18 +99,19 @@ def fetch_data(file_type: str, trading_date: str):
             # logger.info(f"Data Size is: [{df.size}]")
             return df 
 
-    # Processing for NOTE: PREOPEN
     if (file_type.lower() == "preopen"):
         # Currently, we can fetch preopen for the current day
+        #NOTE: PREOPEN is valid only for the current day. 
+        # Exchanges do not have mechanism for historical dates being processed for PREOPEN
         trading_date = datetime.strftime(datetime.today(), DATE_FMT)
         logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
-        for payload in PAYLOADS:
+        for payload in PREOPEN_PAYLOADS:
             preopen_res = requests.get(
                 url=NSE_PREOPEN_URL,
                 headers=REQ_HEADER,
-                params=PAYLOADS[payload], 
+                params=PREOPEN_PAYLOADS[payload], 
                 cookies=dummy_res.cookies,
                 timeout=8)
             if(preopen_res.status_code == HTTPStatus.OK):
@@ -121,14 +122,13 @@ def fetch_data(file_type: str, trading_date: str):
                 data = pd.read_csv(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), encoding="utf-8", skiprows=PREOPEN_SKIPROWS)
                 df = pd.concat([df, data])
         return df 
-    # Processing for NOTE: INDEX
     if (file_type.lower() == "index"):
-        # Currently, we can fetch preopen for the current day
-        return idx_fetchers.fetch_idx_names(file_type)
+        return idx_fetchers.fetch_idx_list(file_type)
     return df
 
 if __name__ == "__main__":
     logger.debug(f"Main Invoked")
+    # fetch_data('PREOPEN', '22-Jan-2025')
     fetch_data('PE', '22-Jun-2025')
 
 

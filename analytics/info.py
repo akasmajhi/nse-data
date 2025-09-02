@@ -10,12 +10,8 @@ def get_idx_market_cap(idx: str):
     ----------
 
     idx : str
-        The name of the index as enumerated in src/constants.IDX_NAMES
-        Invoke core.supported_file_types for all the supported file types.
-    start_date : str
-        Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
-    end_date : str
-        Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
+        The name of the index as presented in the index listing page.
+        https://www.nseindia.com/market-data/live-market-indices
 
     Returns
     -------
