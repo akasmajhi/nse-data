@@ -98,7 +98,7 @@ if __name__ == '__main__':
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
-
+    #
     get_data(file_type='BHAVCOPY', start_date='01-Sep-2025', 
              end_date=datetime.today().strftime(DATE_FMT))
 
@@ -110,5 +110,6 @@ if __name__ == '__main__':
     get_data(file_type='INDEX', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
-    #
-    # get_index_names()
+    get_data(file_type='FNOBHAVCOPY', 
+             start_date="01-Sep-2025", 
+             end_date=datetime.today().strftime(DATE_FMT))

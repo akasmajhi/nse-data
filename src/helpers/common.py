@@ -7,7 +7,7 @@ import os
 from src.helpers.validators import isDateValid, isNSEHoliday
 from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR
 
-def composeDatesFromRange(s_date: str, e_date:str):
+def compose_dates_from_range(s_date: str, e_date:str):
     """
 Compose a list of trading dates from the supplied range.
 

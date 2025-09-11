@@ -5,7 +5,7 @@ import pandas as pd
 from loguru import logger
 from pandas.errors import EmptyDataError
 
-from src.helpers.common import composeDatesFromRange
+from src.helpers.common import compose_dates_from_range
 from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT
 from src.fetchers.historical_data import fetch_data
 
@@ -37,7 +37,7 @@ def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFram
 
     # Extract date ranges (Validations provided by the called method
     # Following call gets the DD-MMM-YYYY ranges as list
-    d_range = composeDatesFromRange(start_date, end_date)
+    d_range = compose_dates_from_range(start_date, end_date)
     if not d_range:
         logger.info(f"No dates to process for file_type: [{file_type}], start_date: [{start_date}] end_date: [{end_date}]")
         return df

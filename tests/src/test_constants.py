@@ -17,6 +17,7 @@ def test_supported_file_types():
     "PREOPEN": "PREOPEN",
     "INDEX": "INDEX",
     "OPT": "OPT",
+    "FNOBHAVCOPY": "FNOBHAVCOPY",
 }
     assert valid_file_types == SUPPORTED_FILE_TYPES
 

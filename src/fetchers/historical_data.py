@@ -8,7 +8,7 @@ import zipfile
 import pandas as pd
 from loguru import logger
 
-from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, NSE_DUMMY_REQ_URL
+from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, NSE_DUMMY_REQ_URL, SUPPORTED_FILE_TYPES
 
 from src.fetchers.common import dummy_request
 from src.fetchers import idx_fetchers
@@ -122,6 +122,42 @@ def fetch_data(file_type: str, trading_date: str):
                 data = pd.read_csv(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), encoding="utf-8", skiprows=PREOPEN_SKIPROWS)
                 df = pd.concat([df, data])
         return df 
+    if (file_type.lower() == SUPPORTED_FILE_TYPES["FNOBHAVCOPY"].lower()):
+        FNOBHAVCOPY = SUPPORTED_FILE_TYPES["FNOBHAVCOPY"]
+        logger.info(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
+
+        payload = {
+            'archives':'[{"name":"F&O - UDiFF Common Bhavcopy Final (zip)","type":"archives","category":"derivatives","section":"equity"}]',
+            'date':trading_date,
+            'type':'equity',
+            'mode':'single',
+        }
+        fno_bhavcopy_res = requests.get(
+            url=NSE_REPORTS_URL,
+            headers=REQ_HEADER,
+            params=payload, 
+            cookies=dummy_res.cookies,
+            timeout=8)
+        # logger.info(f"BHAVCOPY Response code: [{bhavcopy_res.status_code}]")
+        if(fno_bhavcopy_res.status_code == HTTPStatus.OK):
+            zip_in_mem = BytesIO(fno_bhavcopy_res.content)
+            with zipfile.ZipFile(zip_in_mem, 'r') as zf:
+                # List contents/file names
+                for name in zf.namelist():
+                    with zf.open(name) as fno_bhavcopy:
+                        fno_bhavcopy_content = fno_bhavcopy.read().decode('utf-8')
+                        # Write the data to the file
+                        with open(os.path.join(FILES_BASE_DIR, 
+                                               FNOBHAVCOPY, 
+                                               f"{FNOBHAVCOPY.lower()}_{trading_date}.csv"), 
+                                  "w") as file:
+                            file.write(fno_bhavcopy_content)
+            # Read the same CSV and return as pandas dataframe
+            df = pd.read_csv(os.path.join(FILES_BASE_DIR, 
+                                          FNOBHAVCOPY, 
+                                          f"{FNOBHAVCOPY.lower()}_{trading_date}.csv"))
+            return df 
     if (file_type.lower() == "index"):
         return idx_fetchers.fetch_idx_list(file_type)
     return df

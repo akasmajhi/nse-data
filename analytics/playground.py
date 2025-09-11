@@ -3,8 +3,6 @@ from pandas import DataFrame
 
 import os
 
-from pandas.core.arrays import period
-from pandas.core.frame import IgnoreRaise
 
 #%% Constants
 PE_DATA_DIR='/home/akasmajhi/source/nse-data/data_files/PE/'
@@ -58,7 +56,7 @@ from pandas import DataFrame
 import sys 
 sys.path.append("/home/akasmajhi/anaconda3/envs/nse-data/lib/python3.11/site-packages")
 from analytics.core import top_gainers
-from src.constants import SUPPORTED_FILE_TYPES, SUPPORTED_TIME_DURATIONS
+from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, SUPPORTED_TIME_DURATIONS
 
 data: pd.DataFrame = top_gainers(file_type=SUPPORTED_FILE_TYPES["INDEX"], 
                                  duration=SUPPORTED_TIME_DURATIONS["WEEK"], 
@@ -123,16 +121,49 @@ week_data_df# pyright: ignore[reportUnusedExpression]
 week_data_df.index
 week_data_df.columns
 
-week_data_df[week_data_df["TRADING_DATE"] == "02-Sep-2025"].sort_values(
-    by="30_DAY_PCT_CHANGE", 
-    ascending=False)
+# week_data_df[week_data_df["TRADING_DATE"] == "02-Sep-2025"].sort_values(
+#     by="30_DAY_PCT_CHANGE", 
+#     ascending=False)
 # daily_index_data.index
 # daily_index_data.columns
 
+#%% NOTE: Using shift method calculate the daily % change for "NIFTY 50" Index
+#TODO: Get the daily index (NIFTY 50) data for a year
+def daily_change():
+    import pandas as pd
+    import sys 
+    sys.path.append("/home/akasmajhi/anaconda3/envs/nse-data/lib/python3.11/site-packages")
+
+    from datetime import datetime, timedelta
+    from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES
+    from src.core import get_data
+
+    # NOTE: Compose dates
+    # end_date = datetime.today().strftime(DATE_FMT)
+    # start_date = (datetime.today() - timedelta(days=365)).strftime(DATE_FMT)
+    # print(f"start_date: [{start_date}], end_date: [{end_date}]")
+    ##NOTE: Fetch/Read the read
+    # data = get_data("FNOBHAVCOPY",start_date, end_date )
+    data = pd.read_csv("/home/akasmajhi/source/nse-data/data_files/NIFTY_50.csv")
+    print(data)
+    data.columns
+    data.index
+    data.set_index(data["Date"])
+    tmp = data["Close"]
+    type(tmp.loc[0])
+    # data["day_change"] = tmp/tmp.shift(1) - 1
+    # data[(data["TradDt"] == "2025-09-02") & (data["TckrSymb"] == "NIFTY") ]["UndrlygPric"].iloc[0]
+    # data[data["TckrSymb"] == "NIFTY"]
+    # ["TckrSymb"]
+    # data[data["TradDt"] == "2024-09-03"]
+    #     # Read the file first
+    #     pass
+    #TODO: Put the data in a series
+    #TODO: Calculate the % change on day-to-day basis
 
 
-
-
+if __name__ == "__main__":
+    daily_change()
 
 
 

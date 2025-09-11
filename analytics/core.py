@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 
 from loguru import logger
-from src.helpers.common import get_last_monday, composeDatesFromRange, compose_local_index_file_name
+from src.helpers.common import get_last_monday, compose_dates_from_range, compose_local_index_file_name
 from src.constants import SUPPORTED_FILE_TYPES, SUPPORTED_TIME_DURATIONS, \
     DATE_FMT 
 from src.helpers.validators import isDateValid
@@ -63,7 +63,7 @@ def get_index_gainers(
     #NOTE: For weekly index data processing
     if duration == SUPPORTED_TIME_DURATIONS.get("WEEK"):
         end_date = datetime.strptime(start_date, DATE_FMT) + timedelta(days=5)
-        date_range = composeDatesFromRange(start_date, end_date.strftime(DATE_FMT))
+        date_range = compose_dates_from_range(start_date, end_date.strftime(DATE_FMT))
         #NOTE: You should not get an empty date range
         if not date_range:
             logger.error(f"Invalid start date: {start_date}. Please provide correct start date for the week!")
