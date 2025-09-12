@@ -81,19 +81,40 @@ def get_supported_file_types():
     """
     return SUPPORTED_FILE_TYPES
 
-def get_index_names() -> pd.DataFrame:
+def get_index_names() -> list:
     """ Returns names of all the indices.
     Parameters
     ----------
         None
     Returns
     -------
-        pd.DataFrame
-    DataFrame contains a row for each index.
+        list
+    list containing all index names
     """
     return file_readers.get_local_index_names()
 
-if __name__ == '__main__':
+def get_all_index_constituents():
+    logger.debug(f"Getting constituents for all indices")
+    for index_name in get_index_names():
+        if "/" in index_name:
+            index_name = index_name.replace("/", "By")
+        get_index_constituents(index_name)
+
+def get_index_constituents(index_name: str) -> list:
+    logger.debug(f"Getting constituents for index: [{index_name}]")
+    constituents = list()
+    #NOTE: Index name should be non-null
+    if not index_name:
+        logger.error(f"Index name [{index_name}] cannot be null or blank")
+        return constituents
+    #NOTE: Index name should be valid
+    if index_name not in get_index_names():
+        logger.error(f"Invalid Index Name: [{index_name}]")
+        return constituents
+    logger.debug(f"Index Name: [{index_name}] is valid")
+    return file_readers.get_local_index_constituents(index_name)
+
+def daily_fetchers():
     #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
@@ -113,3 +134,9 @@ if __name__ == '__main__':
     get_data(file_type='FNOBHAVCOPY', 
              start_date="01-Sep-2025", 
              end_date=datetime.today().strftime(DATE_FMT))
+
+if __name__ == "__main__":
+    print(f"Start Debugging")
+    # get_index_constituents("NIFTY NEXT 50")
+    # get_all_index_constituents()
+    daily_fetchers()

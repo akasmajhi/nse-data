@@ -24,3 +24,11 @@ def test_get_data():
     # assert core.get_data(file_type='BHAVCOPY', 
     #                      start_date='07-Jul-2024', 
     #                      end_date=datetime.today().strftime(DATE_FMT)) is not None
+
+
+def test_get_index_constituents():
+    assert len(core.get_index_constituents("")) is 0
+    assert len(core.get_index_constituents(None)) is 0 #pyright: ignore[reportArgumentType]
+    assert len(core.get_index_constituents("Some Random Index")) is 0 
+    assert len(core.get_index_constituents("NIFTY 50")) > 0
+

@@ -18,6 +18,7 @@ def test_supported_file_types():
     "INDEX": "INDEX",
     "OPT": "OPT",
     "FNOBHAVCOPY": "FNOBHAVCOPY",
+    "IDX_CONSTITUENTS": "IDX_CONSTITUENTS",
 }
     assert valid_file_types == SUPPORTED_FILE_TYPES
 

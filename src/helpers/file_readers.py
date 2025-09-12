@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 import os
 import pandas as pd
 
@@ -7,7 +8,7 @@ from pandas.errors import EmptyDataError
 
 from src.helpers.common import compose_dates_from_range
 from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT
-from src.fetchers.historical_data import fetch_data
+from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
 
 def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFrame:
     """
@@ -91,26 +92,68 @@ def isFileExisting(file_type: str, trading_date: str):
     """
     logger.debug(f"Checking for [{file_type}] for trading date [{trading_date}]")
 
-def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)):
+def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> list:
     """
-        Retunr the data for all index names for given date. For weekends, date is defaulted to the latest Friady.
+        Retunr the list containing all index names for given date. 
+        For weekends, date is defaulted to the latest Friady.
     Parameters
     ----------
        i_date: str
     Trading date for which the data is sought!
     Returns
     -------
-        pd.DataFrame
-    DataFrame containing all the index names and other params.
+        list
+    list containing all the index names
     """
+    index_names = list()
     i_weekday = datetime.strptime(i_date, DATE_FMT).weekday()
     if i_weekday > 4:
         days_to_go_back = (i_weekday + 3) % 7
         i_date = (datetime.strptime(i_date, DATE_FMT) - timedelta(days=days_to_go_back)).strftime(DATE_FMT)
     #TODO: What if the last Friday was a exchange holiday?
-    return get_local_data(file_type=SUPPORTED_FILE_TYPES["INDEX"],
+    try:
+        data = get_local_data(file_type=SUPPORTED_FILE_TYPES["INDEX"],
                           start_date=i_date,
                           end_date=i_date)
+        index_names = list(data["INDEX"].unique())
+        logger.info(f"Index Names are: [{index_names}]")
+        return index_names
+    except:
+        logger.error(f"Error Occured fetching data")
+        return index_names # Reurn Blank Index names
 
+def get_local_index_constituents(index_name: str) -> list:
+    """
+        Get's the index constituents for the passed index name. It is assumed that 
+        the index_name passed is valid.
+    
+    Parameters
+    ----------
+        index_name: str
+    The name of the valid index
+    Returns
+    -------
+        list
+    List containing the names of stocks in the index
+    """
+    logger.debug(f"Index name is [{index_name}]")
+    constituents = list()
+    #NOTE: Check if there is a file already present with index names
+    file_type:str = SUPPORTED_FILE_TYPES["IDX_CONSTITUENTS"]
+    try:
+        file_name = os.path.join(FILES_BASE_DIR,
+                                        file_type.upper(),
+                                        f'{file_type.lower()}_{index_name}.json')
+        data = json.load(open(file_name))
+        df = pd.DataFrame(data["data"])
+        constituents = list(df["symbol"][1:])
+        logger.info(f"The index [{index_name}] constituents are [{constituents}]")
+        # logger.info(df)
+    except pd.errors.EmptyDataError:
+        logger.error(f"WTF: File Present but No data for [{index_name}]")
+    #TODO: If such file is not present then fetch and store in the file
+    except FileNotFoundError:
+        return fetch_index_constituents_data(index_name)
+    return constituents
 if __name__ == "__main__":
     get_local_index_names("30-AUG-2025")

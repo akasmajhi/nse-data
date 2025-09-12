@@ -4,11 +4,12 @@ from http import HTTPStatus
 import os
 from io import BytesIO
 import zipfile
+import json
 
 import pandas as pd
 from loguru import logger
 
-from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, NSE_DUMMY_REQ_URL, SUPPORTED_FILE_TYPES
+from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT, NSE_PREOPEN_URL, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, NSE_DUMMY_REQ_URL, SUPPORTED_FILE_TYPES, NSE_STOCK_INDICES
 
 from src.fetchers.common import dummy_request
 from src.fetchers import idx_fetchers
@@ -161,6 +162,34 @@ def fetch_data(file_type: str, trading_date: str):
     if (file_type.lower() == "index"):
         return idx_fetchers.fetch_idx_list(file_type)
     return df
+
+def fetch_index_constituents_data(index_name: str) -> list:
+    logger.debug(f"Fetching the constituents for index: [{index_name}]")
+    dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
+    payload = {
+        'index':index_name,
+    }
+    res = requests.get(
+        url=NSE_STOCK_INDICES,
+        headers=REQ_HEADER,
+        params=payload, 
+        cookies=dummy_res.cookies,
+        timeout=8)
+    logger.info(f"The URL formed isL [{res.url}]")
+    if(res.status_code == HTTPStatus.OK):
+        # Write the data to the file
+        file_type:str = SUPPORTED_FILE_TYPES["IDX_CONSTITUENTS"]
+        file_name = os.path.join(FILES_BASE_DIR,
+                                        file_type.upper(),
+                                        f'{file_type.lower()}_{index_name}.json')
+        with open(file_name, "w") as file:
+            file.write(res.text)
+        data = json.load(open(file_name))
+        df = pd.DataFrame(data["data"])
+        return list(df["symbol"][1:])
+    logger.error(f"Seems like url fetch error for index [{index_name}]")
+    return list() # Blank list returned in case of fetch error
+
 
 if __name__ == "__main__":
     logger.debug(f"Main Invoked")

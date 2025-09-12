@@ -2,3 +2,9 @@ import src.helpers.file_readers as file_readers
 
 def test_get_local_data():
     assert file_readers.get_local_data("PE", "11-Jun-2025", "14-Jun-2025").size > 0  
+
+def test_get_local_index_names():
+    assert file_readers.get_local_index_names() is not None
+
+def test_get_local_index_constituents():
+    assert len(file_readers.get_local_index_constituents("NIFTY 50")) > 0

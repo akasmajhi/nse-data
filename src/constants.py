@@ -20,6 +20,7 @@ SUPPORTED_FILE_TYPES = {
     "INDEX": "INDEX",
     "OPT": "OPT",
     "FNOBHAVCOPY": "FNOBHAVCOPY",
+    "IDX_CONSTITUENTS": "IDX_CONSTITUENTS",
 }
 SUPPORTED_TIME_DURATIONS = {
     "MIN":" MIN",
@@ -61,6 +62,8 @@ REQ_HEADER = {
 NSE_DUMMY_REQ_URL="https://www.nseindia.com/all-reports"
 NSE_REPORTS_URL = "https://www.nseindia.com/api/reports"
 NSE_PREOPEN_URL = "https://www.nseindia.com/api/market-data-pre-open"
+NSE_LIVE_EQUITY_MARKET= "https://www.nseindia.com/market-data/live-equity-market"
+NSE_STOCK_INDICES="https://www.nseindia.com/api/equity-stockIndices"
 PREOPEN_SKIPROWS = 12
 
 PAYLOAD_NIFTY = {
