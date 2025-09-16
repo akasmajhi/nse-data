@@ -159,6 +159,9 @@ def fetch_data(file_type: str, trading_date: str):
                                           FNOBHAVCOPY, 
                                           f"{FNOBHAVCOPY.lower()}_{trading_date}.csv"))
             return df 
+        else:
+            logger.error(f"Error getting response for trading date: [{trading_date}], file_type: [{file_type}]")
+            logger.error(f"The error URL is: [{fno_bhavcopy_res.url}]")
     if (file_type.lower() == "index"):
         return idx_fetchers.fetch_idx_list(file_type)
     return df

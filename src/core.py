@@ -135,8 +135,10 @@ def daily_fetchers():
              start_date="01-Sep-2025", 
              end_date=datetime.today().strftime(DATE_FMT))
 
+    get_all_index_constituents()
 if __name__ == "__main__":
-    print(f"Start Debugging")
-    # get_index_constituents("NIFTY NEXT 50")
-    # get_all_index_constituents()
-    daily_fetchers()
+    # daily_fetchers()
+    get_data(file_type='FNOBHAVCOPY', 
+             start_date="01-Sep-2025", 
+             end_date=datetime.today().strftime(DATE_FMT))
+

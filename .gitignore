@@ -174,3 +174,4 @@ cython_debug/
 .pypirc
 data_files/*
 All_data.csv
+data_files.zip
