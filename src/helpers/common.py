@@ -191,3 +191,16 @@ def is_date_in_future(i_date: str) -> bool:
         logger.error(f"Incoming date is: [{i_date}] is in future!")
         return True
     return False
+def get_first_day_of_month() -> str:
+    """Returns the first day of the month in the form od DD-MMM-YYYY
+
+    Parameters
+    ----------
+    Returns
+    -------
+        str
+    First calendar day of the current month. For example, 01-Sep-2025
+    """
+    #TODO: 
+    return datetime.now().replace(day=1).strftime(DATE_FMT)
+

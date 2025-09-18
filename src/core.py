@@ -8,6 +8,7 @@ from loguru import logger
 
 from src.helpers.validators import isDateValid, isFileTypeValid
 from src.helpers import file_readers
+from src.helpers.common import get_first_day_of_month
 from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
 
 import pandas as pd 
@@ -120,10 +121,10 @@ def daily_fetchers():
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
     #
-    get_data(file_type='BHAVCOPY', start_date='01-Sep-2025', 
+    get_data(file_type='BHAVCOPY', start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
 
-    get_data(file_type='PE', start_date='01-Sep-2025', 
+    get_data(file_type='PE', start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
 
     # # TODO: Needs a design change revisit at a later time!
@@ -132,13 +133,10 @@ def daily_fetchers():
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
     get_data(file_type='FNOBHAVCOPY', 
-             start_date="01-Sep-2025", 
+             start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
 
     get_all_index_constituents()
 if __name__ == "__main__":
-    # daily_fetchers()
-    get_data(file_type='FNOBHAVCOPY', 
-             start_date="01-Sep-2025", 
-             end_date=datetime.today().strftime(DATE_FMT))
+    daily_fetchers()
 
