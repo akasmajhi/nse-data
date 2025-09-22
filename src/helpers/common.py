@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, date
 import  time
 import os
 
-from src.helpers.validators import isDateValid, isNSEHoliday
+from src.helpers.validators import isDateValid, isNSEHoliday, get_latest_file
 from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR
 
 def compose_dates_from_range(s_date: str, e_date:str):
@@ -178,12 +178,23 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
         str
     The last trading date
     """
-    #TODO: 
-    # Is the date in future
-    # If i_date is weekend then calculate the immediate last weekday
-    # If the last weekday was a exchange holiday then try previous day
     logger.debug(f"Incoming date is: [{i_date}]")
-    return ""
+    #NOTE: Is the date in future?
+    trading_date = ""
+    if is_date_in_future(i_date):
+        trading_date = datetime.today().strftime(DATE_FMT)
+    else:
+        trading_date = i_date
+    # If i_date is weekend then calculate the immediate last weekday
+    if datetime.strptime(trading_date, DATE_FMT).weekday() > 4:
+        excess_days = (datetime.strptime(trading_date, DATE_FMT).weekday()+1)%5
+        prev_week_day = (datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)).strftime(DATE_FMT)
+        trading_date = prev_week_day
+    # If the last weekday was a exchange holiday then try previous day
+    if isNSEHoliday(trading_date):
+        prev_working_day = (datetime.strptime(trading_date, DATE_FMT) - timedelta(days=1)).strftime(DATE_FMT)
+        trading_date = prev_working_day
+    return trading_date
 
 def is_date_in_future(i_date: str) -> bool:
     logger.info(f"Incoming Date is: [{i_date}]")
@@ -204,3 +215,17 @@ def get_first_day_of_month() -> str:
     #TODO: 
     return datetime.now().replace(day=1).strftime(DATE_FMT)
 
+def get_all_stock_names() -> list:
+    """Gets all the stock name from the latest bhavcopy.
+    Parameter
+    ---------
+        None
+    Returns
+    -------
+        list
+    Containing all the stock names
+    """
+    latest_bhavcopy = get_latest_file(file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    symbol_col_name = "TckrSymb"
+    logger.info(list(latest_bhavcopy[symbol_col_name].unique()))
+    return list(latest_bhavcopy[symbol_col_name].unique())

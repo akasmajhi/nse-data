@@ -4,11 +4,11 @@ import os
 import pandas as pd
 
 from loguru import logger
-from pandas.errors import EmptyDataError
 
-from src.helpers.common import compose_dates_from_range
+from src.helpers.common import compose_dates_from_range, get_last_trading_date
 from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT
 from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
+from src.fetchers.stock_fetchers import fetch_stock_data
 
 def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFrame:
     """
@@ -116,7 +116,7 @@ def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
                           start_date=i_date,
                           end_date=i_date)
         index_names = list(data["INDEX"].unique())
-        logger.info(f"Index Names are: [{index_names}]")
+        # logger.info(f"Index Names are: [{index_names}]")
         return index_names
     except:
         logger.error(f"Error Occured fetching data")
@@ -147,7 +147,7 @@ def get_local_index_constituents(index_name: str) -> list:
         data = json.load(open(file_name))
         df = pd.DataFrame(data["data"])
         constituents = list(df["symbol"][1:])
-        logger.info(f"The index [{index_name}] constituents are [{constituents}]")
+        # logger.info(f"The index [{index_name}] constituents are [{constituents}]")
         # logger.info(df)
     except pd.errors.EmptyDataError:
         logger.error(f"WTF: File Present but No data for [{index_name}]")
@@ -155,5 +155,24 @@ def get_local_index_constituents(index_name: str) -> list:
     except FileNotFoundError:
         return fetch_index_constituents_data(index_name)
     return constituents
+
+def get_local_stock_data(stock_name: str) -> pd.DataFrame:
+    logger.debug(f"Stock Name : [{stock_name}]")
+    #NOTE: Read the local file, if it exists
+    file_type:str = SUPPORTED_FILE_TYPES["STOCK"]
+    trading_date: str= get_last_trading_date(datetime.today().strftime(DATE_FMT))
+    logger.info(f"Getting data for stock: [{stock_name}], for date: [{trading_date}]")
+    try:
+        file_name = os.path.join(FILES_BASE_DIR,
+                                        file_type.upper(),
+                                        f'{file_type.lower()}_{stock_name}.json')
+        data = json.load(open(file_name))
+        df = pd.DataFrame(data["data"])
+    except FileNotFoundError:
+        logger.error(f"File not found for [{stock_name}], for date [{trading_date}]")
+        #NOTE: If the local file does not exist then issue a fetch
+        return fetch_stock_data(stock_name, trading_date)
+    return pd.DataFrame()
+
 if __name__ == "__main__":
     get_local_index_names("30-AUG-2025")

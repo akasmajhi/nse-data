@@ -8,3 +8,4 @@ def test_get_local_index_names():
 
 def test_get_local_index_constituents():
     assert len(file_readers.get_local_index_constituents("NIFTY 50")) > 0
+

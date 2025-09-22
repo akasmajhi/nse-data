@@ -30,6 +30,7 @@ SUPPORTED_TIME_DURATIONS = {
 }
 SUPPORTED_INSTR_TYPES = ("STK", "IDX", "OPT")
 DATE_FMT="%d-%b-%Y"
+DATE_FMT_1="%d-%m-%Y"
 FILES_BASE_DIR='data_files/'
 NSE_HOLIDAYS={
     "2025": [ "26-FEB-2025", "14-MAR-2025", "31-MAR-2025", "10-APR-2025", "14-APR-2025", "18-APR-2025", 
@@ -64,6 +65,9 @@ NSE_REPORTS_URL = "https://www.nseindia.com/api/reports"
 NSE_PREOPEN_URL = "https://www.nseindia.com/api/market-data-pre-open"
 NSE_LIVE_EQUITY_MARKET= "https://www.nseindia.com/market-data/live-equity-market"
 NSE_STOCK_INDICES="https://www.nseindia.com/api/equity-stockIndices"
+NSE_STOCK_HISTORY_URL = "https://www.nseindia.com/api/historicalOR/cm/equity"
+NSE_STOCK_QUOTE_URL = "https://www.nseindia.com/api/quote-equity"
+
 PREOPEN_SKIPROWS = 12
 
 PAYLOAD_NIFTY = {

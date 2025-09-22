@@ -8,7 +8,7 @@ from loguru import logger
 
 from src.helpers.validators import isDateValid, isFileTypeValid
 from src.helpers import file_readers
-from src.helpers.common import get_first_day_of_month
+from src.helpers.common import get_all_stock_names, get_first_day_of_month
 from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
 
 import pandas as pd 
@@ -47,6 +47,11 @@ def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
         logger.error(f"File type {file_type} is Invalid")
     return data
 
+def get_entire_market_cap() -> pd.DataFrame:
+    """For every stock in the BHAVCOPY fetch the market caps and combine
+    """
+    return pd.DataFrame()
+
 def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
     """Gets the market cap of an index, if file_type=="INDEX", or gets the market cap of a stock specified by the second parameter.
     
@@ -64,8 +69,13 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
         Dictionary with key as attribute and pd.DataFrame as value
     """
     logger.info(f"file_type: {file_type}, stock_name: {stock_name}")
+    if file_type is None and stock_name is None:
+        # Get the combined market cap of all the stocks
+        return get_entire_market_cap().to_dict()
     if file_type and isFileTypeValid(file_type):
         return {}
+    if ((file_type is None) and stock_name):
+        file_readers.get_local_stock_data(stock_name)
     return {}
 
 
@@ -100,6 +110,26 @@ def get_all_index_constituents():
         if "/" in index_name:
             index_name = index_name.replace("/", "By")
         get_index_constituents(index_name)
+
+
+def get_data_since_listing(stock_name: str = "") -> pd.DataFrame:
+    """Gets the price information for a given stock since listing
+    Parameters
+    ----------
+        stock_name: str
+    The name of the stock.
+    Returns
+    -------
+        pandas.DataFrame
+    DataFrame containing Price information about the stock
+    """
+    logger.info(f"Getting data since listing for stock [{stock_name}]")
+    if not stock_name: #NOTE: Get the since listing data for all the stocks <<One Time>>
+        # NOTE: For all stocks
+        for stock in get_all_stock_names():
+            pass
+        return pd.DataFrame()
+    return pd.DataFrame()
 
 def get_index_constituents(index_name: str) -> list:
     logger.debug(f"Getting constituents for index: [{index_name}]")

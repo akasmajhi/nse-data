@@ -1,7 +1,7 @@
 import requests
-from src.constants import REQ_HEADER
+from src.constants import REQ_HEADER, NSE_DUMMY_REQ_URL
 
-def dummy_request(url: str):
+def dummy_request(url: str = NSE_DUMMY_REQ_URL):
     session = requests.Session()
     r = session.get(url, headers=REQ_HEADER)
     return r
