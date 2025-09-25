@@ -14,12 +14,12 @@ else
   set shortmess=aoO
 endif
 badd +1 tests/src/test_core.py
-badd +0 tests/src/helpers/test_common.py
+badd +1 tests/src/helpers/test_common.py
 badd +1 tests/src/helpers/test_file_readers.py
 argglobal
 %argdel
 $argadd tests/src/test_core.py
-edit tests/src/helpers/test_file_readers.py
+edit tests/src/test_core.py
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -39,7 +39,7 @@ set winwidth=1
 exe 'vert 1resize ' . ((&columns * 117 + 118) / 236)
 exe 'vert 2resize ' . ((&columns * 118 + 118) / 236)
 argglobal
-balt tests/src/test_core.py
+balt tests/src/helpers/test_file_readers.py
 setlocal foldmethod=manual
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
@@ -50,19 +50,19 @@ setlocal foldnestmax=20
 setlocal foldenable
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 31) / 63)
+let s:l = 7 - ((6 * winheight(0) + 31) / 63)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 7
 normal! 0
 wincmd w
 argglobal
-if bufexists(fnamemodify("tests/src/helpers/test_common.py", ":p")) | buffer tests/src/helpers/test_common.py | else | edit tests/src/helpers/test_common.py | endif
+if bufexists(fnamemodify("tests/src/helpers/test_file_readers.py", ":p")) | buffer tests/src/helpers/test_file_readers.py | else | edit tests/src/helpers/test_file_readers.py | endif
 if &buftype ==# 'terminal'
-  silent file tests/src/helpers/test_common.py
+  silent file tests/src/helpers/test_file_readers.py
 endif
-balt tests/src/test_core.py
+balt tests/src/helpers/test_common.py
 setlocal foldmethod=manual
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
@@ -80,6 +80,7 @@ normal! zt
 keepjumps 1
 normal! 0
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 117 + 118) / 236)
 exe 'vert 2resize ' . ((&columns * 118 + 118) / 236)
 tabnext 1

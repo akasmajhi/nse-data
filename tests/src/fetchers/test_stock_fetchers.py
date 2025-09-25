@@ -1,5 +1,6 @@
 import datetime
-from src.fetchers.stock_fetchers import get_listing_date, read_listing_date_from_file, fetch_stock_data
+from src.fetchers.stock_fetchers import get_listing_date,\
+    read_listing_date_from_file, get_stock_data_since_listing
 from src.constants import DATE_FMT
 
 def test_get_listing_date():
@@ -11,7 +12,8 @@ def test_read_listing_date_from_file():
     assert read_listing_date_from_file(stock_name="JUNK_STOCK") == ""
 
 def test_fetch_stock_data():
-    assert fetch_stock_data("UCOBANK", datetime.datetime.today().strftime(DATE_FMT)) is not None
+    # assert get_stock_data_since_listing("UCOBANK", datetime.datetime.today().strftime(DATE_FMT)) is not None
+    assert get_stock_data_since_listing("UCOBANK") is not None
 
 
 

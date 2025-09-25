@@ -8,7 +8,7 @@ from loguru import logger
 from src.helpers.common import compose_dates_from_range, get_last_trading_date
 from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT
 from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
-from src.fetchers.stock_fetchers import fetch_stock_data
+from src.fetchers.stock_fetchers import get_stock_data_since_listing
 
 def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFrame:
     """
@@ -157,8 +157,20 @@ def get_local_index_constituents(index_name: str) -> list:
     return constituents
 
 def get_local_stock_data(stock_name: str) -> pd.DataFrame:
+    """Gets the since-listing stock data from local files. If data not found locally,
+        then issue a remote fetch.
+    Parameters
+    ----------
+    stock_name
+        str
+    The name of the stock.
+    Returns
+    -------
+        pandas.DataFrame
+    Data frame containing the since-listing stock data.
+    """
     logger.debug(f"Stock Name : [{stock_name}]")
-    #NOTE: Read the local file, if it exists
+    #NOTE: Read the local file, if it exists. Use meta-info files to check past fectches.
     file_type:str = SUPPORTED_FILE_TYPES["STOCK"]
     trading_date: str= get_last_trading_date(datetime.today().strftime(DATE_FMT))
     logger.info(f"Getting data for stock: [{stock_name}], for date: [{trading_date}]")
@@ -171,7 +183,7 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
     except FileNotFoundError:
         logger.error(f"File not found for [{stock_name}], for date [{trading_date}]")
         #NOTE: If the local file does not exist then issue a fetch
-        return fetch_stock_data(stock_name, trading_date)
+        return get_stock_data_since_listing(stock_name, trading_date)
     return pd.DataFrame()
 
 if __name__ == "__main__":

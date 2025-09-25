@@ -1,5 +1,7 @@
 from src.constants import DATE_FMT
-from src.helpers.common import compose_dates_from_range, get_last_trading_date, get_last_monday, is_date_in_future, get_last_trading_date, get_all_stock_names
+from src.helpers.common import compose_dates_from_range, get_last_trading_date, get_last_monday,\
+    is_date_in_future, get_last_trading_date, get_all_stock_names, get_stock_fetch_history,\
+    set_stock_fetch_history, get_latest_history
 from datetime import datetime, timedelta
 
 def test_composeDatesFromRange():
@@ -46,3 +48,23 @@ def test_get_last_trading_date():
 def test_get_all_stock_names():
     # print(get_all_stock_names())
     assert len(get_all_stock_names()) > 0
+
+def test_get_stock_fetch_history():
+    stock_name = "STOCK_NON_EXISTING_1"
+    result = get_stock_fetch_history(stock_name)
+    assert len(result) == 0
+    stock_name = "Unit_Test_Stock"
+    result = get_stock_fetch_history(stock_name)
+    assert len(result) > 0
+
+def test_set_stock_fetch_history():
+    # stock_name = "STOCK_NON_EXISTING"
+    # assert set_stock_fetch_history(stock_name) is True
+    # # assert set_stock_fetch_history(
+    #     stock_name="Unit_Test_Stock", 
+    #     start_of_fetch="01-Jan-2001", 
+    #     end_of_fetch="23-Sep-2005") is True
+    pass
+def test_get_latest_history():
+    stock_name = "STOCK_NON_EXISTING"
+    assert get_latest_history(get_stock_fetch_history(stock_name)) is not None

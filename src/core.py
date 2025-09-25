@@ -124,12 +124,20 @@ def get_data_since_listing(stock_name: str = "") -> pd.DataFrame:
     DataFrame containing Price information about the stock
     """
     logger.info(f"Getting data since listing for stock [{stock_name}]")
+    data = list()
     if not stock_name: #NOTE: Get the since listing data for all the stocks <<One Time>>
         # NOTE: For all stocks
-        for stock in get_all_stock_names():
-            pass
+        all_stocks = get_all_stock_names()
+        logger.info(f"Total {all_stocks} stocks data to process.")
+        processed = 0
+        for stock in all_stocks:
+            logger.info(f"Processing {stock}")
+            #NOTE: Call the scraper for each stock
+            data.append(file_readers.get_local_stock_data(stock))
+            processed += 1
+            logger.info(f"{processed}/{all_stocks} Stocks processed.")
         return pd.DataFrame()
-    return pd.DataFrame()
+    return file_readers.get_local_stock_data(stock_name) #NOTE: For single stock
 
 def get_index_constituents(index_name: str) -> list:
     logger.debug(f"Getting constituents for index: [{index_name}]")

@@ -9,3 +9,7 @@ def test_get_local_index_names():
 def test_get_local_index_constituents():
     assert len(file_readers.get_local_index_constituents("NIFTY 50")) > 0
 
+def test_get_local_stock_data():
+    #NOTE: For a single stock
+    pass
+

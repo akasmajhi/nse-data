@@ -13,11 +13,15 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +86 src/core.py
-badd +93 analytics/core.py
+badd +35 src/fetchers/stock_fetchers.py
+badd +136 src/core.py
+badd +0 ~/source/nse-data/src/helpers/file_readers.py
+badd +0 ~/source/nse-data/tests/src/fetchers/test_stock_fetchers.py
+badd +302 src/helpers/common.py
 argglobal
 %argdel
-edit src/core.py
+$argadd src/fetchers/stock_fetchers.py
+edit src/helpers/common.py
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -34,31 +38,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 117 + 118) / 236)
-exe 'vert 2resize ' . ((&columns * 118 + 118) / 236)
+exe 'vert 1resize ' . ((&columns * 118 + 118) / 236)
+exe 'vert 2resize ' . ((&columns * 117 + 118) / 236)
 argglobal
-setlocal foldmethod=manual
-setlocal foldexpr=0
-setlocal foldmarker={{{,}}}
-setlocal foldignore=#
-setlocal foldlevel=0
-setlocal foldminlines=1
-setlocal foldnestmax=20
-setlocal foldenable
-silent! normal! zE
-let &fdl = &fdl
-let s:l = 86 - ((45 * winheight(0) + 31) / 63)
-if s:l < 1 | let s:l = 1 | endif
-keepjumps exe s:l
-normal! zt
-keepjumps 86
-normal! 0
-wincmd w
-argglobal
-if bufexists(fnamemodify("analytics/core.py", ":p")) | buffer analytics/core.py | else | edit analytics/core.py | endif
-if &buftype ==# 'terminal'
-  silent file analytics/core.py
-endif
 balt src/core.py
 setlocal foldmethod=manual
 setlocal foldexpr=0
@@ -70,15 +52,37 @@ setlocal foldnestmax=20
 setlocal foldenable
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 93 - ((59 * winheight(0) + 31) / 63)
+let s:l = 302 - ((39 * winheight(0) + 31) / 63)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 93
+keepjumps 302
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 117 + 118) / 236)
-exe 'vert 2resize ' . ((&columns * 118 + 118) / 236)
+argglobal
+if bufexists(fnamemodify("src/fetchers/stock_fetchers.py", ":p")) | buffer src/fetchers/stock_fetchers.py | else | edit src/fetchers/stock_fetchers.py | endif
+if &buftype ==# 'terminal'
+  silent file src/fetchers/stock_fetchers.py
+endif
+setlocal foldmethod=manual
+setlocal foldexpr=0
+setlocal foldmarker={{{,}}}
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldenable
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 36 - ((14 * winheight(0) + 31) / 63)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 36
+normal! 06|
+wincmd w
+exe 'vert 1resize ' . ((&columns * 118 + 118) / 236)
+exe 'vert 2resize ' . ((&columns * 117 + 118) / 236)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

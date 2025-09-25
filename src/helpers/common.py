@@ -1,8 +1,10 @@
+import json
 from loguru import logger
 
 from datetime import datetime, timedelta, date
 import  time
 import os
+import glob
 
 from src.helpers.validators import isDateValid, isNSEHoliday, get_latest_file
 from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR
@@ -229,3 +231,97 @@ def get_all_stock_names() -> list:
     symbol_col_name = "TckrSymb"
     logger.info(list(latest_bhavcopy[symbol_col_name].unique()))
     return list(latest_bhavcopy[symbol_col_name].unique())
+
+def get_stock_fetch_history(stock_name: str) -> list:
+    """Read the stock fetch history from the META/HISTORY folder.
+    Parameters
+    ----------
+        str
+    stock name
+    Returns
+    -------
+        list
+    List containing history, if it exists or blank list otherwise.
+    """
+    logger.info(f"Fetching stock history for [{stock_name}]")
+    stock_history = list()
+    if not stock_name:
+        logger.info(f"Stock name: [{stock_name}] cannot be blank")
+        return stock_history
+    file_type = SUPPORTED_FILE_TYPES["STOCK"]
+    pattern = f"META/HISTORY/*{stock_name.upper()}*json" # JSON files store history
+    files_path = os.path.join(FILES_BASE_DIR, file_type, pattern)
+    # logger.debug(f"Files path for [{stock_name}] is: [{files_path}]")
+    files_list = glob.glob(files_path)
+    # logger.info(f"History files for [{stock_name}] are: [{files_list}]")
+    for f in files_list:
+        # Read each file and add it to the stock_history list
+        with open(f, "r") as file:
+            json_history_dict = json.load(file)
+            stock_history.append(json_history_dict)
+    return stock_history
+
+def set_stock_fetch_history(stock_name: str, start_trading_date: str = "", end_trading_date:str = "") -> bool:
+    """Write the stock fetch history onto the META/HISTORY folder.
+    Parameters
+    ----------
+        stock_name: str
+    stock name
+        start_of_fetch: str
+    Strating date (DD-MMM-YYY format) for the stock fetch
+        end_of_fetchL str
+    Ending date (DD-MMM-YYY format) for the stock fetch
+
+    Returns
+    -------
+        list
+    List containing history, if it exists or blank list otherwise.
+    """
+    logger.info(f"Writing stock history for [{stock_name}]")
+    if not stock_name:
+        logger.info(f"stock name:[{stock_name}] cannot be blank")
+        return False
+    file_type = SUPPORTED_FILE_TYPES["STOCK"]
+    ts = datetime.now().strftime(f"{DATE_FMT}_%H-%M-%S")
+    pattern = f"META/HISTORY/{stock_name.upper()}-{ts}.json"
+    file_path = os.path.join(FILES_BASE_DIR, file_type, pattern)
+    logger.info(f"Files path: [{file_path}]")
+    history = {}
+    history["stock_name"] = stock_name
+    history["start_trading_date"] = start_trading_date
+    history["end_trading_date"] = end_trading_date
+    history["fetch_date"] = datetime.now().strftime(f"{DATE_FMT}:%H-%M-%S")
+    try:
+        with open(file_path, "w") as file:
+            json.dump(history, file, indent=4)
+    except:
+        logger.error(f"Error writing history file!")
+    return True
+
+def get_latest_history(hist_list: list) -> dict:
+    if len(hist_list) > 0:
+    #NOTE: Determine the latest fetch history
+        if len(hist_list) == 1:
+            latest_fetch_dict = hist_list[0]
+        else:
+            D_T_FMT = f"{DATE_FMT}:%H-%M-%S"
+            latest_fetch_dict = hist_list[0] 
+            for cnt in range(len(hist_list) - 1):
+                # Compare 
+                dt_cnt = datetime.strptime(latest_fetch_dict["fetch_date"], D_T_FMT )
+                dt_cnt_plus_1 = datetime.strptime(hist_list[cnt+1]["fetch_date"], D_T_FMT)
+                if  dt_cnt > dt_cnt_plus_1 :
+                    pass
+                    # latest_fetch_dict = hist_list[cnt]
+                else:
+                    latest_fetch_dict = hist_list[cnt+1]
+        logger.debug(f"The latest history dict is: [{latest_fetch_dict}]")
+        return latest_fetch_dict
+    return dict() # Return empty dictionary if the history_list is empty
+
+if __name__ == "__main__":
+    # stock_name = "STOCK_NON_EXISTING"
+    # stock_name = "UNIT_TEST_STOCK"
+    # stock_name = "NON_EXISTING_STOCK"
+    stock_name = "UCOBANK"
+    print(get_latest_history(get_stock_fetch_history(stock_name)))
