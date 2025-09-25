@@ -183,7 +183,7 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
     except FileNotFoundError:
         logger.error(f"File not found for [{stock_name}], for date [{trading_date}]")
         #NOTE: If the local file does not exist then issue a fetch
-        return get_stock_data_since_listing(stock_name, trading_date)
+        return get_stock_data_since_listing(stock_name)
     return pd.DataFrame()
 
 if __name__ == "__main__":

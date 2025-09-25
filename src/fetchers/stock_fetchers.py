@@ -7,7 +7,7 @@ import requests
 from loguru import logger
 from src.fetchers.common import dummy_request
 from src.constants import DATE_FMT_1, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, NSE_STOCK_HISTORY_URL, NSE_STOCK_QUOTE_URL, REQ_HEADER,FILES_BASE_DIR, DATE_FMT
-from src.helpers.common import get_stock_fetch_history, get_latest_history, set_stock_fetch_history
+from src.helpers.common import get_stock_fetch_history, get_latest_history, register_fetch_fail, set_stock_fetch_history
 
 def get_stock_data_since_listing(stock_name: str) -> pd.DataFrame:
     """
@@ -149,10 +149,13 @@ def stock_fetch(stock_name: str, from_date: str, to_date: str):
         )
     except requests.exceptions.Timeout:
         logger.error(f"Timeout exception while fetching [{stock_name}] for year [{from_date}]")
+        register_fetch_fail(stock_name, from_date, to_date, "requests.exceptions.Timeout" )
     except requests.exceptions.TooManyRedirects:
         logger.error(f"Too many redirects fetching [{stock_name}] for year [{from_date}]")
+        register_fetch_fail(stock_name, from_date, to_date, "requests.exceptions.TooManyRedirects" )
     except requests.exceptions.ConnectionError as e:
         logger.error(f"Connection error fetching [{stock_name}] for year [{from_date}]")
+        register_fetch_fail(stock_name, from_date, to_date, "requests.exceptions.ConnectionError" )
         logger.error(e)
     STOCK = SUPPORTED_FILE_TYPES["STOCK"]
     year = from_date[-4:]

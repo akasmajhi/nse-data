@@ -29,7 +29,7 @@ def fetch_idx_list(file_type: str = "INDEX", trading_date:str = datetime.strftim
     if (idx_res.status_code == HTTPStatus.OK):
         
         with open(os.path.join(FILES_BASE_DIR, file_type.upper(), "raw/", f"{file_type.lower()}_{trading_date}_raw.csv"), "w") as file:
-            file.write(idx_res.content.decode())
+            file.write(idx_res.content.decode("utf-8"))
         # Read the same CSV and return as pandas dataframe
         df = pd.read_csv(os.path.join(FILES_BASE_DIR, file_type.upper(), "raw/", f"{file_type.lower()}_{trading_date}_raw.csv"), names=INDEX_LIST_COLUMNS, header=None, skiprows=INDEX_LIST_SKIPROWS)
         

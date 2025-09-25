@@ -10,6 +10,7 @@ from src.helpers.validators import isDateValid, isFileTypeValid
 from src.helpers import file_readers
 from src.helpers.common import get_all_stock_names, get_first_day_of_month
 from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
+from src.fetchers.stock_fetchers import get_stock_data_since_listing
 
 import pandas as pd 
 
@@ -112,32 +113,26 @@ def get_all_index_constituents():
         get_index_constituents(index_name)
 
 
-def get_data_since_listing(stock_name: str = "") -> pd.DataFrame:
-    """Gets the price information for a given stock since listing
+def fetch_stock_data_since_listing():
+    """Fetches the price information for all stocks since listing
     Parameters
     ----------
-        stock_name: str
-    The name of the stock.
+        None
     Returns
     -------
-        pandas.DataFrame
-    DataFrame containing Price information about the stock
+        None
     """
-    logger.info(f"Getting data since listing for stock [{stock_name}]")
+    logger.info(f"Fewtching since-listing data for all stocks")
     data = list()
-    if not stock_name: #NOTE: Get the since listing data for all the stocks <<One Time>>
-        # NOTE: For all stocks
-        all_stocks = get_all_stock_names()
-        logger.info(f"Total {all_stocks} stocks data to process.")
-        processed = 0
-        for stock in all_stocks:
-            logger.info(f"Processing {stock}")
-            #NOTE: Call the scraper for each stock
-            data.append(file_readers.get_local_stock_data(stock))
-            processed += 1
-            logger.info(f"{processed}/{all_stocks} Stocks processed.")
-        return pd.DataFrame()
-    return file_readers.get_local_stock_data(stock_name) #NOTE: For single stock
+    all_stocks = get_all_stock_names()
+    logger.info(f"Total {all_stocks} stocks data to process.")
+    processed = 0
+    for stock in all_stocks:
+        logger.info(f"Processing {stock}")
+        #NOTE: Call the scraper for each stock
+        get_stock_data_since_listing(stock)
+        processed += 1
+        logger.info(f"{processed}/{len(all_stocks)} Stocks processed.")
 
 def get_index_constituents(index_name: str) -> list:
     logger.debug(f"Getting constituents for index: [{index_name}]")
@@ -176,5 +171,6 @@ def daily_fetchers():
 
     get_all_index_constituents()
 if __name__ == "__main__":
-    daily_fetchers()
+    # daily_fetchers()
+    fetch_stock_data_since_listing()
 

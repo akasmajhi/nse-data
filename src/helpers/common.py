@@ -319,6 +319,21 @@ def get_latest_history(hist_list: list) -> dict:
         return latest_fetch_dict
     return dict() # Return empty dictionary if the history_list is empty
 
+def register_fetch_fail(stock_name: str, from_date: str, to_date: str, err: str):
+    """In case the fetch fails, call this method to register a fetch failure.
+    """
+    failure_dict = dict()
+    failure_dict["stock_name"] = stock_name 
+    failure_dict["from_date"] = from_date 
+    failure_dict["to_date"] = to_date 
+    failure_dict["year"] = from_date[-4:]
+    failure_dict["error"] = err
+    try:
+        with open("failed_fetches.json", "a") as file:
+            json.dump(failure_dict, file, indent=4)
+    except:
+        logger.error(f"Error writing fetch failure!")
+    pass
 if __name__ == "__main__":
     # stock_name = "STOCK_NON_EXISTING"
     # stock_name = "UNIT_TEST_STOCK"

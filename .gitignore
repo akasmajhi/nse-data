@@ -175,3 +175,4 @@ cython_debug/
 data_files/*
 All_data.csv
 data_files.zip
+failed_fetches.json
