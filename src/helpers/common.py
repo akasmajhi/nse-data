@@ -240,7 +240,7 @@ def get_all_stock_names(series: str = "") -> list:
     if not series:
         logger.debug(list(latest_bhavcopy[symbol_col_name].unique()))
     else:
-        #Filer the series
+        #TODO: Filer the series
         pass
     #TODO: Insert try-except below
     return list(latest_bhavcopy[symbol_col_name].unique())

@@ -28,6 +28,7 @@ SUPPORTED_TIME_DURATIONS = {
     "DAY": "DAY",
     "WEEK": "WEEK",
 }
+MCAP_FOLDER = "market_cap"
 SUPPORTED_INSTR_TYPES = ("STK", "IDX", "OPT")
 DATE_FMT="%d-%b-%Y"
 DATE_FMT_1="%d-%m-%Y"

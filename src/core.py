@@ -48,16 +48,11 @@ def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
         logger.error(f"{file_type = }is Invalid")
     return data
 
-def get_entire_market_cap() -> pd.DataFrame:
-    """For every stock in the BHAVCOPY fetch the market caps and combine
-    """
-    # TODO: Get all stock names
-    # TODO: For a stock get it's market cap data
-
-    return pd.DataFrame()
-
-def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
-    """Gets the market cap of an index, if file_type=="INDEX", or gets the market cap of a stock specified by the second parameter.
+def get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | dict :
+    """Gets the market cap of an index, if file_type=="INDEX", 
+    or gets the market cap of a stock specified by the second parameter.
+    If the file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None then
+    calculate/return the market cap of all the stocks.
     
     Parameters
     ----------
@@ -73,16 +68,24 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
         Dictionary with key as attribute and pd.DataFrame as value
     """
     logger.info(f"{file_type = }, {stock_name = }")
-    if file_type is None and stock_name is None:
+    #NOTE: Case where we fetch m-cap for all stocks
+    if file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None:
         # Get the combined market cap of all the stocks
-        return get_entire_market_cap().to_dict()
-    if file_type and is_file_type_valid(file_type):
-        return {}
-    if ((file_type is None) and stock_name):
-        file_readers.get_local_stock_data(stock_name)
-    #NOTE: Use the below API to fetch market cap (Total & FF)
-    # https://www.nseindia.com/api/quote-equity?symbol=UCOBANK&section=trade_info
-    return {}
+        all_stocks: list = get_all_stock_names()
+        all_market_caps: list[dict] = list()
+        for stock in all_stocks:
+            # For a stock get it's market cap data
+            all_market_caps.append(file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock))
+        return all_market_caps
+
+    #NOTE: Case where we fetch m-cap for a stock
+    if file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name:
+        return file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock_name)
+
+    #TODO: Case where we fetch m-cap for an index
+    if file_type == SUPPORTED_FILE_TYPES["INDEX"] :
+        pass
+    return list(dict()) # Unhandled / unimplemented cases gets a blank dictionary
 
 
 def get_supported_file_types() -> dict:
@@ -181,5 +184,6 @@ def daily_fetchers():
 
 if __name__ == "__main__":
     # daily_fetchers()
-    fetch_stock_data_since_listing(skip_current_year=True)
+    # fetch_stock_data_since_listing(skip_current_year=True)
+    get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)
 

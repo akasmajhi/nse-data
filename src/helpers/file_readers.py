@@ -6,9 +6,9 @@ import pandas as pd
 from loguru import logger
 
 from src.helpers.common import compose_dates_from_range, get_last_trading_date
-from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT
+from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT, MCAP_FOLDER
 from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
-from src.fetchers.stock_fetchers import get_stock_data_since_listing
+from src.fetchers.stock_fetchers import get_stock_data_since_listing, fetch_market_cap, read_market_cap_from_file
 
 def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFrame:
     """
@@ -185,5 +185,32 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
         return get_stock_data_since_listing(stock_name)
     return pd.DataFrame()
 
+def get_local_market_cap(file_type: str,
+                         instr_name: str) -> dict:
+    """Method for getting market cap for a stock or INDEX. In case of INDEX,
+    the aggregate market cap of the constituents is used.
+
+    Parameters
+    ----------
+        file_type: str
+    This is valid type based on constants.SUPPORTED_FILE_TYPES
+        instr_name: str
+    Could be stock name or INDEX name
+    """
+    logger.debug(f"{file_type = }, {instr_name = }")
+    if file_type == SUPPORTED_FILE_TYPES["STOCK"]:
+        # NOTE: For individual stocks. First try reading the local file
+        m_cap = read_market_cap_from_file(instr_name)
+        #TODO: If such file is not present then fetch and store in the file
+        if not m_cap:
+            return fetch_market_cap(instr_name)
+        else:
+            return m_cap
+    if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
+        # NOTE: For INDEX. Aggregate the constituents' market caps.
+        pass
+    return dict() # Return empty dict for any invalid file type(s)
 if __name__ == "__main__":
-    get_local_index_names("30-AUG-2025")
+    # get_local_index_names("30-AUG-2025")
+    logger.info(f'[{get_local_market_cap("STOCK", "TCS") = }]')
+    # logger.info(f'{get_local_market_cap("STOCK", "ICICIBANK") = }')

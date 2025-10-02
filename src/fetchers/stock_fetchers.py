@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from loguru import logger
 from src.fetchers.common import dummy_request
-from src.constants import DATE_FMT_1, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, NSE_STOCK_HISTORY_URL, NSE_STOCK_QUOTE_URL, REQ_HEADER,FILES_BASE_DIR, DATE_FMT
+from src.constants import DATE_FMT_1, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, NSE_STOCK_HISTORY_URL, NSE_STOCK_QUOTE_URL, REQ_HEADER,FILES_BASE_DIR, DATE_FMT, MCAP_FOLDER
 from src.helpers.common import get_stock_fetch_history, get_latest_history, register_failed_fetch, set_stock_fetch_history
 
 def get_stock_data_since_listing(stock_name: str, skip_current_year: bool = False) -> pd.DataFrame:
@@ -188,10 +188,65 @@ def process_failed_fetches(file_name: str = ""):
     logger.info(f"Processing failed fetches for file: [{file_name = }]")
     pass
 
+def read_market_cap_from_file(stock_name: str) ->dict:
+    STOCK = SUPPORTED_FILE_TYPES["STOCK"]
+    file_name = os.path.join(FILES_BASE_DIR, STOCK, MCAP_FOLDER, f"{stock_name.upper()}.json")
+    if os.path.exists(file_name):
+        logger.debug(f"Market Cap file exists for [{stock_name = }]. Going to use it!")
+        try:
+            with open(file_name, "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            logger.error(f"[file_name = ] not found!")
+        except json.JSONDecodeError:
+            logger.error(f"Error decoding JSON from the file: [{file_name = }]")
+    else:
+        logger.info(f'File does not exist for [{stock_name = }]')
+        #NOTE: Caller needs to fetch from remote. Caller to check for empty dict!
+    return dict() #NOTE: Blank return for any error condition. Caller must check!
+
+def fetch_market_cap(stock_name: str) -> dict:
+    """Fetches the market cap for a stock.
+    Parameters
+    ----------
+        stock_name: str
+    The name of the stock.
+    Returns
+    -------
+        dict
+    Dictionary containing the details (along with market cap)
+    """
+    logger.debug(f'Fetching market cap for [{stock_name = }]')
+    dummy_res = dummy_request()
+
+    payload = {
+        "symbol":stock_name,
+        "section":"trade_info",
+    }
+    stock_quote_res = requests.get(
+        url=NSE_STOCK_QUOTE_URL,
+        headers=REQ_HEADER,
+        params=payload,
+        cookies=dummy_res.cookies,
+        timeout=30)
+    logger.debug(f"The stock_quote_res code is: [{stock_quote_res.status_code = }]")
+    if(stock_quote_res.status_code == HTTPStatus.OK):
+        #NOTE: Store the file inside the MCAP_FOLDER
+        STOCK = SUPPORTED_FILE_TYPES["STOCK"]
+        file_name = os.path.join(FILES_BASE_DIR, STOCK, MCAP_FOLDER, f"{stock_name.upper()}.json")
+        with open(file_name, "w") as file:
+            file.write(stock_quote_res.content.decode('utf-8'))
+        return read_market_cap_from_file(stock_name)
+    else:
+        logger.error(f'HTTP Error occurred! [{stock_quote_res.status_code = }]')
+        #TODO: Consider putting a retry logic here.
+    return dict() # Empty dict return in case anything goes wrong
 if __name__ == "__main__":
     # fetch_stock_data_for_a_year("UCOBANK", 2025)
     # get_stock_data_since_listing("UCOBANK")
     # get_stock_data_since_listing("UCOBANK")
     # get_stock_data_since_listing("HDFCBANK")
     # get_stock_data_since_listing("ICICIBANK")
-    get_listing_date(stock_name="9MMFSML")
+    # get_listing_date(stock_name="9MMFSML")
+    # fetch_market_cap("ICICIBANK")
+    logger.info(read_market_cap_from_file("ICICIBANK1"))
