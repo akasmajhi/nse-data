@@ -8,7 +8,7 @@ from loguru import logger
 from src.helpers.common import get_last_monday, compose_dates_from_range, compose_local_index_file_name
 from src.constants import SUPPORTED_FILE_TYPES, SUPPORTED_TIME_DURATIONS, \
     DATE_FMT 
-from src.helpers.validators import isDateValid
+from src.helpers.validators import is_date_valid
 
 def top_gainers(file_type: str = SUPPORTED_FILE_TYPES["INDEX"], 
                 duration: str = SUPPORTED_TIME_DURATIONS["WEEK"], 
@@ -40,7 +40,7 @@ def top_gainers(file_type: str = SUPPORTED_FILE_TYPES["INDEX"],
         logger.error(f"Invalid time duration: [{duration}]")
         return data
     #NOTE:  Verify that the date is correct (not in future etc.)
-    if not isDateValid(start_date):
+    if not is_date_valid(start_date):
         logger.error(f"Invalid start date: [{start_date}]")
         return data
     #TODO: Get the dataset for the specified time

@@ -33,14 +33,13 @@ def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFram
     #TODO
     """
     df = pd.DataFrame()
-    logger.debug(f"Getting data for: file_type: {file_type}, start_date: {start_date}, \
-            end_date: {end_date}")
+    logger.debug(f"Getting data for: {file_type = }, {start_date = },{end_date = }")
 
     # Extract date ranges (Validations provided by the called method
     # Following call gets the DD-MMM-YYYY ranges as list
     d_range = compose_dates_from_range(start_date, end_date)
     if not d_range:
-        logger.info(f"No dates to process for file_type: [{file_type}], start_date: [{start_date}] end_date: [{end_date}]")
+        logger.info(f"No dates to process for [{file_type = }], [{start_date = }], [{end_date = }]")
         return df
     
     for trading_date in d_range:
@@ -58,17 +57,17 @@ def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFram
                 trd_dt_data["TRADING_DATE"] = trading_date
             #TODO: Need to handle empty file case. Refresh with fetch???
             if trd_dt_data.size == 0:
-                logger.error(f"Data not found in local for [{trading_date}]")
+                logger.error(f"Data NOT found in local for [{trading_date = }]")
             # Data found in local; Append data to DF 
             else:
-                logger.debug(f"[{file_type}] Data found locally for [{trading_date}]")
+                logger.debug(f"[{file_type}] Data FOUND locally for [{trading_date = }]")
                 df = pd.concat([df,trd_dt_data], ignore_index=True)
         #TODO Should be similar to the first case
         except pd.errors.EmptyDataError:
-            logger.error(f"WTF: No data for [{trading_date}], for file_type: [{file_type}]")
+            logger.error(f"WTF: No data for [{trading_date = }], [{file_type = }]")
         # If data not found locally, issue remote fetch
         except FileNotFoundError:
-            logger.info(f"No file for [{trading_date}], file_type: {file_type}. Calling Fetcher")
+            logger.info(f"No file for [{trading_date = }], {file_type = }. Calling Fetcher")
             trd_dt_data = fetch_data(file_type, trading_date)
             if (file_type.upper() == SUPPORTED_FILE_TYPES["INDEX"]):
                 trd_dt_data["TRADING_DATE"] = trading_date
@@ -90,7 +89,7 @@ def isFileExisting(file_type: str, trading_date: str):
         boolean
     True if the file exists; False otherwise
     """
-    logger.debug(f"Checking for [{file_type}] for trading date [{trading_date}]")
+    logger.debug(f"Checking for [{file_type = }] for [{trading_date = }]")
 
 def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> list:
     """
@@ -136,7 +135,7 @@ def get_local_index_constituents(index_name: str) -> list:
         list
     List containing the names of stocks in the index
     """
-    logger.debug(f"Index name is [{index_name}]")
+    logger.debug(f"[{index_name = }]")
     constituents = list()
     #NOTE: Check if there is a file already present with index names
     file_type:str = SUPPORTED_FILE_TYPES["IDX_CONSTITUENTS"]
@@ -150,7 +149,7 @@ def get_local_index_constituents(index_name: str) -> list:
         # logger.info(f"The index [{index_name}] constituents are [{constituents}]")
         # logger.info(df)
     except pd.errors.EmptyDataError:
-        logger.error(f"WTF: File Present but No data for [{index_name}]")
+        logger.error(f"WTF: File Present but No data for [{index_name = }]")
     #TODO: If such file is not present then fetch and store in the file
     except FileNotFoundError:
         return fetch_index_constituents_data(index_name)
@@ -169,11 +168,11 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
         pandas.DataFrame
     Data frame containing the since-listing stock data.
     """
-    logger.debug(f"Stock Name : [{stock_name}]")
+    logger.debug(f"[{stock_name = }]")
     #NOTE: Read the local file, if it exists. Use meta-info files to check past fectches.
     file_type:str = SUPPORTED_FILE_TYPES["STOCK"]
     trading_date: str= get_last_trading_date(datetime.today().strftime(DATE_FMT))
-    logger.info(f"Getting data for stock: [{stock_name}], for date: [{trading_date}]")
+    logger.info(f"Getting data [{stock_name = }], [{trading_date = }]")
     try:
         file_name = os.path.join(FILES_BASE_DIR,
                                         file_type.upper(),
@@ -181,7 +180,7 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
         data = json.load(open(file_name))
         df = pd.DataFrame(data["data"])
     except FileNotFoundError:
-        logger.error(f"File not found for [{stock_name}], for date [{trading_date}]")
+        logger.error(f"File not found for [{stock_name = }], [{trading_date = }]")
         #NOTE: If the local file does not exist then issue a fetch
         return get_stock_data_since_listing(stock_name)
     return pd.DataFrame()

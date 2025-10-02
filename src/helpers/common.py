@@ -6,7 +6,7 @@ import  time
 import os
 import glob
 
-from src.helpers.validators import isDateValid, isNSEHoliday, get_latest_file
+from src.helpers.validators import is_date_valid, is_NSE_holiday, get_latest_file
 from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR
 
 def compose_dates_from_range(s_date: str, e_date:str):
@@ -30,19 +30,19 @@ Compose a list of trading dates from the supplied range.
     Both dates are validated against valid trading dates and holidays along with sanity. 
     """
     start_time = time.perf_counter()
-    logger.debug(f"start_date: [{s_date}], end_date: [{e_date}]")
+    logger.debug(f"start_date: [{s_date = }], end_date: [{e_date = }]")
     d_range = list()
     # Validations - 1: Ensure both trading dates are valid
-    if (not (isDateValid(s_date) and isDateValid(e_date))):
-        logger.error(f"Range dates are Invalid")
+    if (not (is_date_valid(s_date) and is_date_valid(e_date))):
+        logger.error(f"Range dates are invalid")
         return d_range # Empty list return (BAD IDEA) #TODO
     # Validations - 2: Ensure e_date >= s_date
     if(datetime.strptime(s_date, DATE_FMT) > datetime.strptime(e_date, DATE_FMT) ):
         # Log the error and pass empty list
-        logger.error(f"Start date: [{s_date}] cannot be > than end date: [{e_date}]")
+        logger.error(f"Start date: [{s_date = }] cannot be > than end date: [{e_date = }]")
         return d_range 
 
-    logger.info(f"Valid trading dates: [{s_date}, {e_date}]")
+    logger.debug(f"Valid trading dates: [{s_date = }, {e_date = }]")
     
     s_dt = datetime.strptime(s_date, DATE_FMT).date()
     e_dt = datetime.strptime(e_date, DATE_FMT).date()
@@ -53,12 +53,12 @@ Compose a list of trading dates from the supplied range.
         trading_dt = s_dt + timedelta(days=cnt)
         #Add check for NSE Holidays
         if ( ((trading_dt.weekday()) <= 4) and 
-                (not isNSEHoliday(trading_dt.strftime(DATE_FMT)))):
+                (not is_NSE_holiday(trading_dt.strftime(DATE_FMT)))):
             d_range.append((s_dt + timedelta(days=cnt)).strftime('%d-%b-%Y'))
-    logger.debug(f"Date Range list: [{d_range}]")
+    logger.debug(f"Date Range list: [{d_range = }]")
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
-    logger.info(f"Total time taken: [{elapsed_time:.4f}] seconds")
+    logger.debug(f"Total time taken: [{elapsed_time:.4f}] seconds")
     return d_range
 
 def composeFileNameFromDate(trading_date: str):
@@ -74,7 +74,7 @@ def composeFileNameFromDate(trading_date: str):
         str
     File name in the form of a string.
     """
-    logger.debug(f"trading date received: [{trading_date}]")
+    logger.debug(f"trading date received: [{trading_date = }]")
 
 def compose_local_filename(file_type: str, trading_date: str):
     """
@@ -91,8 +91,7 @@ def compose_local_filename(file_type: str, trading_date: str):
         str
     File name in the form of a string.
     """
-    logger.debug(f"Composing local file name from type [{file_type}] and \
-        trading date [{trading_date}]")
+    logger.debug(f"Composing local file name [{file_type = }] and [{trading_date = }]")
     if (file_type == 'PE'):
         logger.debug(f"Composing local PE file name")
         return f"pe_{trading_date}"
@@ -118,13 +117,13 @@ def is_start_date_Monday(i_date) -> bool :
     True if the incoming date is a Monday. False otherwise (even in error conditions)
 
     """
-    logger.debug(f"Incoming date is: [{i_date}]")
+    logger.debug(f"Incoming date [{i_date = }]")
     try:
         i_dt = datetime.strptime(i_date, DATE_FMT)
         if i_dt.weekday() == 0: # For Monday == 0
             return True
     except ValueError:
-        logger.error(f"Invalid date [{i_date}] or fomrat provided!")
+        logger.error(f"Invalid date [{i_date = }] or fomrat provided!")
     return False
 
 def get_week_ending_date(start_date: str) -> str :
@@ -140,14 +139,14 @@ def get_week_ending_date(start_date: str) -> str :
     False if there is any problem with the date otherwise weend ending date ('DD-Mon-YYYY')
 
     """
-    logger.debug(f"Incoming date is: [{start_date}]")
+    logger.debug(f"Incoming date is: [{start_date = }]")
     try:
         start_dt = datetime.strptime(start_date, DATE_FMT)
         #TODO: Check if you need to add 4 days or 5
         end_dt = start_dt + timedelta(days=4)
         return end_dt.strftime(DATE_FMT)
     except ValueError:
-        logger.error(f"Invalid date [{start_date}] or fomrat provided!")
+        logger.error(f"Invalid date [{start_date = }] or fomrat provided!")
         return ""
 
 def compose_local_index_file_name(trading_date: str = datetime.today().strftime(DATE_FMT)):
@@ -180,7 +179,7 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
         str
     The last trading date
     """
-    logger.debug(f"Incoming date is: [{i_date}]")
+    logger.debug(f"Incoming date is: [{i_date = }]")
     #NOTE: Is the date in future?
     trading_date = ""
     if is_date_in_future(i_date):
@@ -193,15 +192,24 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
         prev_week_day = (datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)).strftime(DATE_FMT)
         trading_date = prev_week_day
     # If the last weekday was a exchange holiday then try previous day
-    if isNSEHoliday(trading_date):
+    if is_NSE_holiday(trading_date):
         prev_working_day = (datetime.strptime(trading_date, DATE_FMT) - timedelta(days=1)).strftime(DATE_FMT)
         trading_date = prev_working_day
     return trading_date
 
 def is_date_in_future(i_date: str) -> bool:
-    logger.info(f"Incoming Date is: [{i_date}]")
+    """Checks if a given date is in future.
+    Parameters
+    ----------
+        i_date: str
+    The inout date in DD-MMM-YYYY format (as present in src.constants.DATE_FMT)
+    Returns
+        bool
+    True if the input date is in future; False otherwise
+    """
+    logger.debug(f"Incoming Date is: [{i_date = }]")
     if datetime.strptime(i_date, DATE_FMT) > datetime.today():
-        logger.error(f"Incoming date is: [{i_date}] is in future!")
+        logger.error(f"Incoming date is: [{i_date = }] is in future!")
         return True
     return False
 def get_first_day_of_month() -> str:
@@ -217,7 +225,7 @@ def get_first_day_of_month() -> str:
     #TODO: 
     return datetime.now().replace(day=1).strftime(DATE_FMT)
 
-def get_all_stock_names() -> list:
+def get_all_stock_names(series: str = "") -> list:
     """Gets all the stock name from the latest bhavcopy.
     Parameter
     ---------
@@ -229,24 +237,29 @@ def get_all_stock_names() -> list:
     """
     latest_bhavcopy = get_latest_file(file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"])
     symbol_col_name = "TckrSymb"
-    logger.info(list(latest_bhavcopy[symbol_col_name].unique()))
+    if not series:
+        logger.debug(list(latest_bhavcopy[symbol_col_name].unique()))
+    else:
+        #Filer the series
+        pass
+    #TODO: Insert try-except below
     return list(latest_bhavcopy[symbol_col_name].unique())
 
 def get_stock_fetch_history(stock_name: str) -> list:
-    """Read the stock fetch history from the META/HISTORY folder.
+    """Read the stock fetch history from the STOCK/META/HISTORY folder.
     Parameters
     ----------
         str
-    stock name
+    Stock name
     Returns
     -------
         list
     List containing history, if it exists or blank list otherwise.
     """
-    logger.info(f"Fetching stock history for [{stock_name}]")
+    logger.info(f"Fetching stock history for [{stock_name = }]")
     stock_history = list()
     if not stock_name:
-        logger.info(f"Stock name: [{stock_name}] cannot be blank")
+        logger.info(f"[{stock_name = }] cannot be blank")
         return stock_history
     file_type = SUPPORTED_FILE_TYPES["STOCK"]
     pattern = f"META/HISTORY/*{stock_name.upper()}*json" # JSON files store history
@@ -277,15 +290,15 @@ def set_stock_fetch_history(stock_name: str, start_trading_date: str = "", end_t
         list
     List containing history, if it exists or blank list otherwise.
     """
-    logger.info(f"Writing stock history for [{stock_name}]")
+    logger.info(f"Writing stock history for [{stock_name = }]")
     if not stock_name:
-        logger.info(f"stock name:[{stock_name}] cannot be blank")
+        logger.info(f"[{stock_name = }] cannot be blank")
         return False
     file_type = SUPPORTED_FILE_TYPES["STOCK"]
     ts = datetime.now().strftime(f"{DATE_FMT}_%H-%M-%S")
     pattern = f"META/HISTORY/{stock_name.upper()}-{ts}.json"
     file_path = os.path.join(FILES_BASE_DIR, file_type, pattern)
-    logger.info(f"Files path: [{file_path}]")
+    # logger.info(f"Files path: [{file_path}]")
     history = {}
     history["stock_name"] = stock_name
     history["start_trading_date"] = start_trading_date
@@ -295,7 +308,7 @@ def set_stock_fetch_history(stock_name: str, start_trading_date: str = "", end_t
         with open(file_path, "w") as file:
             json.dump(history, file, indent=4)
     except:
-        logger.error(f"Error writing history file!")
+        logger.error(f"Error writing history file! [{stock_name = }]")
     return True
 
 def get_latest_history(hist_list: list) -> dict:
@@ -315,25 +328,25 @@ def get_latest_history(hist_list: list) -> dict:
                     # latest_fetch_dict = hist_list[cnt]
                 else:
                     latest_fetch_dict = hist_list[cnt+1]
-        logger.debug(f"The latest history dict is: [{latest_fetch_dict}]")
+        logger.debug(f"The latest history dict is: [{latest_fetch_dict = }]")
         return latest_fetch_dict
     return dict() # Return empty dictionary if the history_list is empty
 
-def register_fetch_fail(stock_name: str, from_date: str, to_date: str, err: str):
+def register_failed_fetch(stock_name: str, from_date: str, to_date: str, err: str):
     """In case the fetch fails, call this method to register a fetch failure.
     """
     failure_dict = dict()
     failure_dict["stock_name"] = stock_name 
     failure_dict["from_date"] = from_date 
     failure_dict["to_date"] = to_date 
-    failure_dict["year"] = from_date[-4:]
+    failure_dict["year"] = from_date[-4:] # useful for re-trying yearly failed fetches
     failure_dict["error"] = err
     try:
         with open("failed_fetches.json", "a") as file:
             json.dump(failure_dict, file, indent=4)
     except:
-        logger.error(f"Error writing fetch failure!")
-    pass
+        logger.error(f"Error writing fetch failure! [{stock_name = }]")
+
 if __name__ == "__main__":
     # stock_name = "STOCK_NON_EXISTING"
     # stock_name = "UNIT_TEST_STOCK"

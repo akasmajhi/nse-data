@@ -42,7 +42,7 @@ def fetch_data(file_type: str, trading_date: str):
     # Block for fetching PE files
     # Processing for NOTE: PE
     if (file_type.lower() == 'pe'):
-        logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        logger.debug(f"Fetching [{file_type = }] for [{trading_date = }]")
 
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
@@ -69,7 +69,7 @@ def fetch_data(file_type: str, trading_date: str):
     # For bhavcopy specific fetch
     # Processing for NOTE: BHAVCOPY
     if (file_type.lower() == 'bhavcopy'):
-        logger.info(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        logger.info(f"Fetching [{file_type = }] for [{trading_date = }]")
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
         payload = {
@@ -105,7 +105,7 @@ def fetch_data(file_type: str, trading_date: str):
         #NOTE: PREOPEN is valid only for the current day. 
         # Exchanges do not have mechanism for historical dates being processed for PREOPEN
         trading_date = datetime.strftime(datetime.today(), DATE_FMT)
-        logger.debug(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        logger.debug(f"Fetching [{file_type = }] for [{trading_date = }]")
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
         for payload in PREOPEN_PAYLOADS:
@@ -125,7 +125,7 @@ def fetch_data(file_type: str, trading_date: str):
         return df 
     if (file_type.lower() == SUPPORTED_FILE_TYPES["FNOBHAVCOPY"].lower()):
         FNOBHAVCOPY = SUPPORTED_FILE_TYPES["FNOBHAVCOPY"]
-        logger.info(f"Fetching [{file_type}] for trading date: [{trading_date}]")
+        logger.info(f"Fetching [{file_type = }] for [{trading_date = }]")
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
 
         payload = {
@@ -160,14 +160,14 @@ def fetch_data(file_type: str, trading_date: str):
                                           f"{FNOBHAVCOPY.lower()}_{trading_date}.csv"))
             return df 
         else:
-            logger.error(f"Error getting response for trading date: [{trading_date}], file_type: [{file_type}]")
-            logger.error(f"The error URL is: [{fno_bhavcopy_res.url}]")
+            logger.error(f"Error getting response for [{trading_date = }], [{file_type = }]")
+            logger.error(f"The error URL is: [{fno_bhavcopy_res.url = }]")
     if (file_type.lower() == "index"):
         return idx_fetchers.fetch_idx_list(file_type)
     return df
 
 def fetch_index_constituents_data(index_name: str) -> list:
-    logger.debug(f"Fetching the constituents for index: [{index_name}]")
+    logger.debug(f"Fetching the constituents for index: [{index_name = }]")
     dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
     payload = {
         'index':index_name,
@@ -178,7 +178,7 @@ def fetch_index_constituents_data(index_name: str) -> list:
         params=payload, 
         cookies=dummy_res.cookies,
         timeout=8)
-    logger.info(f"The URL formed isL [{res.url}]")
+    logger.info(f"The URL formed isL [{res.url = }]")
     if(res.status_code == HTTPStatus.OK):
         # Write the data to the file
         file_type:str = SUPPORTED_FILE_TYPES["IDX_CONSTITUENTS"]
@@ -190,7 +190,7 @@ def fetch_index_constituents_data(index_name: str) -> list:
         data = json.load(open(file_name))
         df = pd.DataFrame(data["data"])
         return list(df["symbol"][1:])
-    logger.error(f"Seems like url fetch error for index [{index_name}]")
+    logger.error(f"Seems like url fetch error for index [{index_name = }]")
     return list() # Blank list returned in case of fetch error
 
 

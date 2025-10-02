@@ -12,7 +12,7 @@ from src.fetchers.common import dummy_request
 def fetch_idx_list(file_type: str = "INDEX", trading_date:str = datetime.strftime(datetime.today(), DATE_FMT)):
     """ Fetch all the index names along with OHLC for a given trading date.
     """
-    logger.info(f"Fetching details for the indices with file_type: [{file_type}], date: [{trading_date}]")
+    logger.info(f"Fetching details for the indices with [{file_type = }], [{trading_date = }]")
     df = pd.DataFrame()
     dummy_res = dummy_request("https://www.nseindia.com/market-data/live-market-indices") 
     payload = {
@@ -45,7 +45,7 @@ def fetch_index_constituents(idx: str):
     """Fetch details about the index constituent.
     """
     #TODO:
-    logger.info(f"Fetching details for the index [{idx}] ")
+    logger.info(f"Fetching details for the index [{idx = }] ")
     return
 
 if __name__ == "__main__":

@@ -3,16 +3,16 @@
     Entry method for the callers to request data from the service.
 """
 from datetime import datetime
+import pandas as pd 
 
 from loguru import logger
 
-from src.helpers.validators import isDateValid, isFileTypeValid
+from src.helpers.validators import is_date_valid, is_file_type_valid
 from src.helpers import file_readers
 from src.helpers.common import get_all_stock_names, get_first_day_of_month
 from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
 from src.fetchers.stock_fetchers import get_stock_data_since_listing
 
-import pandas as pd 
 
 def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
     """ Gets the data for the 'file_type' supplied.
@@ -33,24 +33,27 @@ def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
     pandas.DataFrame
         Data Frame containing the results
     """
-    logger.info(f"file_type: {file_type}, start_date: {start_date}, end_date: {end_date}")
+    logger.info(f"{file_type = }, {start_date = }, {end_date = }")
     data = pd.DataFrame()
-    if isFileTypeValid(file_type):
+    if is_file_type_valid(file_type):
         # logger.debug(f"File type {file_type} is valid")        
-        if isDateValid(start_date) and isDateValid(end_date):
-            logger.debug(f"Dates: {start_date} and {end_date} are valid")
+        if is_date_valid(start_date) and is_date_valid(end_date):
+            logger.debug(f"Dates: {start_date = } and {end_date = } are valid")
             # param validatins okay. Read the files now.
             data = file_readers.get_local_data(file_type, start_date, end_date)
             # logger.info(f"Got data: {data}")
         else:
-            logger.debug(f"start_date: [{start_date}] or end_date: [{end_date}]is invalid")
+            logger.debug(f"[{start_date = }] or [{end_date = }]is invalid")
     else:
-        logger.error(f"File type {file_type} is Invalid")
+        logger.error(f"{file_type = }is Invalid")
     return data
 
 def get_entire_market_cap() -> pd.DataFrame:
     """For every stock in the BHAVCOPY fetch the market caps and combine
     """
+    # TODO: Get all stock names
+    # TODO: For a stock get it's market cap data
+
     return pd.DataFrame()
 
 def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
@@ -69,18 +72,20 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> dict :
     pd.array
         Dictionary with key as attribute and pd.DataFrame as value
     """
-    logger.info(f"file_type: {file_type}, stock_name: {stock_name}")
+    logger.info(f"{file_type = }, {stock_name = }")
     if file_type is None and stock_name is None:
         # Get the combined market cap of all the stocks
         return get_entire_market_cap().to_dict()
-    if file_type and isFileTypeValid(file_type):
+    if file_type and is_file_type_valid(file_type):
         return {}
     if ((file_type is None) and stock_name):
         file_readers.get_local_stock_data(stock_name)
+    #NOTE: Use the below API to fetch market cap (Total & FF)
+    # https://www.nseindia.com/api/quote-equity?symbol=UCOBANK&section=trade_info
     return {}
 
 
-def get_supported_file_types():
+def get_supported_file_types() -> dict:
     """ Returns the file types supported.
 
     Parameters
@@ -88,8 +93,8 @@ def get_supported_file_types():
         None
     Returns
     -------
-        set
-    Contains the supported file types
+        dict
+    Contains the SUPPORTED_FILE_TYPES from src.constants
     """
     return SUPPORTED_FILE_TYPES
 
@@ -113,7 +118,7 @@ def get_all_index_constituents():
         get_index_constituents(index_name)
 
 
-def fetch_stock_data_since_listing():
+def fetch_stock_data_since_listing(skip_current_year: bool = False):
     """Fetches the price information for all stocks since listing
     Parameters
     ----------
@@ -122,42 +127,44 @@ def fetch_stock_data_since_listing():
     -------
         None
     """
-    logger.info(f"Fewtching since-listing data for all stocks")
-    data = list()
+    logger.info(f"Fetching since-listing data for all stocks. Current year skipped? [{skip_current_year = }]")
     all_stocks = get_all_stock_names()
-    logger.info(f"Total {all_stocks} stocks data to process.")
+    logger.info(f"Total {len(all_stocks)} stocks data to process.")
     processed = 0
     for stock in all_stocks:
-        logger.info(f"Processing {stock}")
+        logger.info(f"Processing {stock = }")
         #NOTE: Call the scraper for each stock
-        get_stock_data_since_listing(stock)
+        get_stock_data_since_listing(stock, skip_current_year)
         processed += 1
         logger.info(f"{processed}/{len(all_stocks)} Stocks processed.")
 
 def get_index_constituents(index_name: str) -> list:
-    logger.debug(f"Getting constituents for index: [{index_name}]")
+    logger.debug(f"Getting constituents for index: [{index_name = }]")
     constituents = list()
     #NOTE: Index name should be non-null
     if not index_name:
-        logger.error(f"Index name [{index_name}] cannot be null or blank")
+        logger.error(f"[{index_name = }]cannot be null or blank")
         return constituents
     #NOTE: Index name should be valid
     if index_name not in get_index_names():
-        logger.error(f"Invalid Index Name: [{index_name}]")
+        logger.error(f"Invalid Index Name: [{index_name = }]")
         return constituents
-    logger.debug(f"Index Name: [{index_name}] is valid")
+    logger.debug(f"[{index_name = }]is valid")
     return file_readers.get_local_index_constituents(index_name)
 
 def daily_fetchers():
     #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
+    
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
     #
-    get_data(file_type='BHAVCOPY', start_date=get_first_day_of_month(), 
+    get_data(file_type='BHAVCOPY',
+             start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
 
-    get_data(file_type='PE', start_date=get_first_day_of_month(), 
+    get_data(file_type='PE',
+             start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
 
     # # TODO: Needs a design change revisit at a later time!
@@ -165,12 +172,14 @@ def daily_fetchers():
     get_data(file_type='INDEX', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
+
     get_data(file_type='FNOBHAVCOPY', 
              start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
 
     get_all_index_constituents()
+
 if __name__ == "__main__":
     # daily_fetchers()
-    fetch_stock_data_since_listing()
+    fetch_stock_data_since_listing(skip_current_year=True)
 
