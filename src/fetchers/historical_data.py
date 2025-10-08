@@ -14,13 +14,7 @@ from src.constants import FILES_BASE_DIR, REQ_HEADER, NSE_REPORTS_URL, DATE_FMT,
 from src.fetchers.common import dummy_request
 from src.fetchers import idx_fetchers
 
-# def dummy_request():
-#     tmp_url = 'https://www.nseindia.com/all-reports'
-#     session = requests.Session()
-#     r = session.get(url=tmp_url, headers=REQ_HEADER)
-#     return r
-
-def fetch_data(file_type: str, trading_date: str):
+def fetch_data(file_type: str, trading_date: str) -> pd.DataFrame:
     """
         Fetches the data from remote and stores in local file.
 

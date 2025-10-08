@@ -31,16 +31,17 @@ def compose_weekly_data(start_date: str = get_last_monday(),
     2. 
     """
     data = pd.DataFrame()
-    logger.debug(f"start_date: [{start_date}], instr_type: [{file_type}],  \
-        instr_name: [{instr_name}]")
+    logger.debug(f"[{start_date = }], [{file_type = }], [{instr_name = }]")
     if start_date != get_last_monday():
         # Ensure that it is a Monday
         if not is_start_date_Monday(start_date):
-            logger.error(f"start_date [{start_date}] is not Monday.")
+            logger.error(f"[{start_date = }] is not a Monday.")
             return data
     end_date = get_week_ending_date(start_date)
-    if not instr_name:
-        return get_local_data(file_type, start_date, end_date)
+    if not instr_name and file_type == SUPPORTED_FILE_TYPES["STOCK"]:
+        return get_local_data(file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"], 
+                              start_date=start_date, 
+                              end_date=end_date)
     # There is a stock or index name provided
     else:
         #TODO: Handle this scenario
@@ -49,7 +50,5 @@ def compose_weekly_data(start_date: str = get_last_monday(),
     return data
 
 if __name__ == "__main__":
-    data = compose_weekly_data(start_date="18-Aug-2025",
-                        file_type="INDEX",
-                        instr_name="")
-    data.to_csv("Test_data.csv")
+    data = compose_weekly_data()
+    data.to_csv("weekly_data.csv")

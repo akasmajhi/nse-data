@@ -5,43 +5,48 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 
 from loguru import logger
+from analytics.composers import compose_weekly_data
+from analytics.gainers import daily_gainer, weekly_gainer, monthly_gainer
 from src.helpers.common import get_last_monday, compose_dates_from_range, compose_local_index_file_name
 from src.constants import SUPPORTED_FILE_TYPES, SUPPORTED_TIME_DURATIONS, \
     DATE_FMT 
 from src.helpers.validators import is_date_valid
 
-def top_gainers(file_type: str = SUPPORTED_FILE_TYPES["INDEX"], 
+def top_gainers(file_type: str = SUPPORTED_FILE_TYPES["BHAVCOPY"], 
                 duration: str = SUPPORTED_TIME_DURATIONS["WEEK"], 
-                start_date: str = get_last_monday()) -> pd.DataFrame:
+                start_date: str = get_last_monday(),
+                series: str = 'BE') -> pd.DataFrame:
     """All top level gainers for a specific instrument and for a given period of time.
     
     Parameters
     ----------
-
-    file_type : str
-        The type of file required. (bhavcopy, pe, etc.) 
-        Invoke core.supported_file_types for all the supported file types.
-    start_date : str
-        Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
-    end_date : str
-        Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
+        file_type : str
+    The type of file required. (bhavcopy, pe, etc.) 
+    Invoke core.supported_file_types for all the supported file types.
+        start_date : str
+    Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
+        end_date : str
+    Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
+        series: str
+    The series of the instrument, defaulted to 'BE'
 
     Returns
     -------
     pandas.DataFrame
-        Data Frame containing the results
+        Data Frame containing the results OR empty DF in case of any error/exceptions.
     """
-    logger.info(f"file_type: [{file_type}], duration: [{duration}], start_date: [{start_date}]")
+    logger.info(f"[{file_type = }], [{duration = }], [{start_date = }], [{series = }]")
     data = pd.DataFrame()
-    if file_type not in SUPPORTED_FILE_TYPES.values():
-        logger.error(f"Invalid file type: [{file_type}]")
+    #NOTE: Basic validations
+    if file_type.upper() not in SUPPORTED_FILE_TYPES:
+        logger.error(f"Invalid [{file_type = }]")
         return data
-    if duration not in SUPPORTED_TIME_DURATIONS.values():
-        logger.error(f"Invalid time duration: [{duration}]")
+    if duration.upper() not in SUPPORTED_TIME_DURATIONS:
+        logger.error(f"Invalid [{duration = }]")
         return data
     #NOTE:  Verify that the date is correct (not in future etc.)
     if not is_date_valid(start_date):
-        logger.error(f"Invalid start date: [{start_date}]")
+        logger.error(f"Invalid [{start_date = }]")
         return data
     #TODO: Get the dataset for the specified time
     match file_type:
@@ -51,6 +56,13 @@ def top_gainers(file_type: str = SUPPORTED_FILE_TYPES["INDEX"],
         case "PE": #TODO: 
             logger.error(f"NOT IMPLEMENTED . . . . ..  ")
             return data
+        case "STOCK":
+            match duration.upper():
+                case "WEEK":
+                    return get_weekly_gainers(start_date, series)
+                case _:
+                    pd.DataFrame()
+            return data 
         case _: #Unkown type
             logger.error(f"Unknown file type!")
             return data 
@@ -58,7 +70,7 @@ def top_gainers(file_type: str = SUPPORTED_FILE_TYPES["INDEX"],
 def get_index_gainers(
                 duration: str = SUPPORTED_TIME_DURATIONS["WEEK"], 
                 start_date: str = get_last_monday()) -> pd.DataFrame:
-    logger.info(f"duration: [{duration}], start_date: [{start_date}]")
+    logger.info(f"[{duration = }], [{start_date = }]")
     data = pd.DataFrame()
     #NOTE: For weekly index data processing
     if duration == SUPPORTED_TIME_DURATIONS.get("WEEK"):
@@ -73,6 +85,7 @@ def get_index_gainers(
         weekly_data_list = list() # Gather all daily data in a temporary list
         daily_index_data = pd.DataFrame()
         for dt in date_range:
+            #TODO: try using get local file name
             index_file = compose_local_index_file_name(dt)
             try:
                 daily_index_data = pd.read_csv(index_file)
@@ -94,8 +107,14 @@ def get_index_gainers(
         #TODO: Now, process the data for gainers.
         # data.groupby()
         return data
-
     return data
+
+def get_stock_gainers(start_date, series: str):
+    """
+    """
+    logger.debug(f'[{start_date = }], [{series = }]')
+    weekly_data = compose_weekly_data(start_date, SUPPORTED_FILE_TYPES["STOCK"]) # Default falls back to STOCK
+
 
 if __name__ == "__main__":
     logger.info(f"Main Called.")

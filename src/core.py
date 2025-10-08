@@ -52,7 +52,7 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | 
     """Gets the market cap of an index, if file_type=="INDEX", 
     or gets the market cap of a stock specified by the second parameter.
     If the file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None then
-    calculate/return the market cap of all the stocks.
+    calculate/return the market cap of all the stocks (as a list of dict).
     
     Parameters
     ----------
@@ -64,18 +64,25 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | 
 
     Returns
     -------
-    pd.array
-        Dictionary with key as attribute and pd.DataFrame as value
+    list(dict) | dict
+        List containing dicts if there are more than 1 items or 
+        a dictionary if the data is for a single item like, single stock
+        market cap.
     """
-    logger.info(f"{file_type = }, {stock_name = }")
+    logger.debug(f"{file_type = }, {stock_name = }")
     #NOTE: Case where we fetch m-cap for all stocks
     if file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None:
         # Get the combined market cap of all the stocks
         all_stocks: list = get_all_stock_names()
+        all_stocks.sort(key=None, reverse=False)
         all_market_caps: list[dict] = list()
+        total_stocks = len(all_stocks)
+        processed_stocks = 0
         for stock in all_stocks:
             # For a stock get it's market cap data
             all_market_caps.append(file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock))
+            processed_stocks = processed_stocks + 1
+            logger.info(f'[{processed_stocks = }] of [{total_stocks = }]')
         return all_market_caps
 
     #NOTE: Case where we fetch m-cap for a stock
@@ -156,12 +163,11 @@ def get_index_constituents(index_name: str) -> list:
     return file_readers.get_local_index_constituents(index_name)
 
 def daily_fetchers():
-    #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
-    
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
-    #
+    #TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
+    
     get_data(file_type='BHAVCOPY',
              start_date=get_first_day_of_month(), 
              end_date=datetime.today().strftime(DATE_FMT))
@@ -183,7 +189,7 @@ def daily_fetchers():
     get_all_index_constituents()
 
 if __name__ == "__main__":
-    # daily_fetchers()
+    daily_fetchers()
     # fetch_stock_data_since_listing(skip_current_year=True)
-    get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)
+    # get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)
 

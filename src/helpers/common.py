@@ -2,16 +2,15 @@ import json
 from loguru import logger
 
 from datetime import datetime, timedelta, date
-import  time
+# import  time
 import os
 import glob
 
 from src.helpers.validators import is_date_valid, is_NSE_holiday, get_latest_file
-from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR
+from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, MCAP_FOLDER
 
-def compose_dates_from_range(s_date: str, e_date:str):
-    """
-Compose a list of trading dates from the supplied range.
+def compose_dates_from_range(s_date: str, e_date:str) -> list[str] | list:
+    """ Compose a list of trading dates from the supplied range.
 
     Parameters
     ----------
@@ -29,20 +28,20 @@ Compose a list of trading dates from the supplied range.
     -----------
     Both dates are validated against valid trading dates and holidays along with sanity. 
     """
-    start_time = time.perf_counter()
+    # start_time = time.perf_counter()
     logger.debug(f"start_date: [{s_date = }], end_date: [{e_date = }]")
     d_range = list()
     # Validations - 1: Ensure both trading dates are valid
     if (not (is_date_valid(s_date) and is_date_valid(e_date))):
         logger.error(f"Range dates are invalid")
-        return d_range # Empty list return (BAD IDEA) #TODO
+        return d_range # Empty list return (BAD IDEA). Returning empty struct is a global design.
     # Validations - 2: Ensure e_date >= s_date
     if(datetime.strptime(s_date, DATE_FMT) > datetime.strptime(e_date, DATE_FMT) ):
         # Log the error and pass empty list
-        logger.error(f"Start date: [{s_date = }] cannot be > than end date: [{e_date = }]")
+        logger.error(f"[{s_date = }] cannot be > than [{e_date = }]")
         return d_range 
 
-    logger.debug(f"Valid trading dates: [{s_date = }, {e_date = }]")
+    # logger.debug(f"Valid trading dates: [{s_date = }, {e_date = }]")
     
     s_dt = datetime.strptime(s_date, DATE_FMT).date()
     e_dt = datetime.strptime(e_date, DATE_FMT).date()
@@ -55,28 +54,13 @@ Compose a list of trading dates from the supplied range.
         if ( ((trading_dt.weekday()) <= 4) and 
                 (not is_NSE_holiday(trading_dt.strftime(DATE_FMT)))):
             d_range.append((s_dt + timedelta(days=cnt)).strftime('%d-%b-%Y'))
-    logger.debug(f"Date Range list: [{d_range = }]")
-    end_time = time.perf_counter()
-    elapsed_time = end_time - start_time
-    logger.debug(f"Total time taken: [{elapsed_time:.4f}] seconds")
+    # logger.debug(f"Date Range list: [{d_range = }]")
+    # end_time = time.perf_counter()
+    # elapsed_time = end_time - start_time
+    # logger.debug(f"Total time taken: [{elapsed_time:.4f}] seconds")
     return d_range
 
-def composeFileNameFromDate(trading_date: str):
-    """
-        Composes a valid (remote) file name from a trading date.
-    Parameters
-    ----------
-        trading_date: str
-    Trading Date in the form of DD-Mon-YYYY (e.g., 12-Jun-2025)
-
-    Returns
-    -------
-        str
-    File name in the form of a string.
-    """
-    logger.debug(f"trading date received: [{trading_date = }]")
-
-def compose_local_filename(file_type: str, trading_date: str):
+def compose_local_filename(file_type: str, trading_date: str, stock_name: str = "", year: str = "") -> str | None:
     """
         Composes a local file name from a given file type & trading date.
     Parameters
@@ -91,18 +75,58 @@ def compose_local_filename(file_type: str, trading_date: str):
         str
     File name in the form of a string.
     """
-    logger.debug(f"Composing local file name [{file_type = }] and [{trading_date = }]")
-    if (file_type == 'PE'):
-        logger.debug(f"Composing local PE file name")
-        return f"pe_{trading_date}"
-    return "" # Return nil for unknown file_type
+    logger.debug(f'Composing file name for [{file_type = }], [{trading_date = }], [{stock_name = }]')
+    match file_type:
+        case "STOCK" if file_type == SUPPORTED_FILE_TYPES["STOCK"]:
+            return os.path.join(FILES_BASE_DIR,
+                                SUPPORTED_FILE_TYPES["STOCK"],
+                                f"{stock_name}_{year}.csv")
 
-def get_last_monday():
+        case "BHAVCOPY" if file_type == SUPPORTED_FILE_TYPES["BHAVCOPY"]:
+            pass
+
+        case "PE" if file_type == SUPPORTED_FILE_TYPES["PE"]:
+            pass
+
+        case "INDEX" if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
+            pass
+
+        case "FNOBHAVCOPY" if file_type == SUPPORTED_FILE_TYPES["IFNOBHAVCOPY"]:
+            pass
+
+        case "MARKET_CAP" if file_type == SUPPORTED_FILE_TYPES["MARKET_CAP"]:
+            #NOTE: Keeping market cap in folder named after fetch/trading date
+            if not trading_date:
+                trading_date = datetime.today().strftime(DATE_FMT)
+            #NOTE: Check if the folder exists for the trading_date
+            if not os.path.isdir(trading_date):
+                #NOTE: Create the folder if it does not exist
+                try:
+                    os.mkdir(os.path.join(FILES_BASE_DIR,
+                                          SUPPORTED_FILE_TYPES["STOCK"],
+                                          MCAP_FOLDER,
+                                          trading_date))
+                except FileExistsError:
+                    #NOTE: If the folder exists then do nothing
+                    pass
+
+            return os.path.join(FILES_BASE_DIR, 
+                                SUPPORTED_FILE_TYPES["STOCK"],
+                                MCAP_FOLDER,
+                                trading_date,
+                                f"{stock_name.upper()}.json")
+        case _:
+            logger.error(f'Unknown [{file_type = }]')
+    return None # Return None for unknown file_type
+
+def get_last_monday() -> str:
     """
         Gets the immediate last Monday in DD-MMM-YYYY format. Useful for analytics.
+        If you are in any part of the week, then this function will return the
+        Monday of the previous week.
     """
     today = date.today()
-    return (today - timedelta(days=(today.weekday()))).strftime(DATE_FMT)
+    return (today - timedelta(days=(today.weekday() + 7))).strftime(DATE_FMT)
 
 def is_start_date_Monday(i_date) -> bool :
     """
@@ -117,7 +141,7 @@ def is_start_date_Monday(i_date) -> bool :
     True if the incoming date is a Monday. False otherwise (even in error conditions)
 
     """
-    logger.debug(f"Incoming date [{i_date = }]")
+    # logger.debug(f"Incoming date [{i_date = }]")
     try:
         i_dt = datetime.strptime(i_date, DATE_FMT)
         if i_dt.weekday() == 0: # For Monday == 0
@@ -142,13 +166,13 @@ def get_week_ending_date(start_date: str) -> str :
     logger.debug(f"Incoming date is: [{start_date = }]")
     try:
         start_dt = datetime.strptime(start_date, DATE_FMT)
-        #TODO: Check if you need to add 4 days or 5
         end_dt = start_dt + timedelta(days=4)
         return end_dt.strftime(DATE_FMT)
     except ValueError:
         logger.error(f"Invalid date [{start_date = }] or fomrat provided!")
         return ""
 
+#TODO: Delete this function. Use compose_local_filename instead
 def compose_local_index_file_name(trading_date: str = datetime.today().strftime(DATE_FMT)):
     """Compose a local index file name, with full path, based on supplied trading date.
 
@@ -207,7 +231,7 @@ def is_date_in_future(i_date: str) -> bool:
         bool
     True if the input date is in future; False otherwise
     """
-    logger.debug(f"Incoming Date is: [{i_date = }]")
+    # logger.debug(f"Incoming Date is: [{i_date = }]")
     if datetime.strptime(i_date, DATE_FMT) > datetime.today():
         logger.error(f"Incoming date is: [{i_date = }] is in future!")
         return True
@@ -238,7 +262,8 @@ def get_all_stock_names(series: str = "") -> list:
     latest_bhavcopy = get_latest_file(file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"])
     symbol_col_name = "TckrSymb"
     if not series:
-        logger.debug(list(latest_bhavcopy[symbol_col_name].unique()))
+        # logger.debug(list(latest_bhavcopy[symbol_col_name].unique()))        
+        pass
     else:
         #TODO: Filer the series
         pass
