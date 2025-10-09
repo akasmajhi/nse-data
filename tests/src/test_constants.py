@@ -19,6 +19,7 @@ def test_supported_file_types():
     "OPT": "OPT",
     "FNOBHAVCOPY": "FNOBHAVCOPY",
     "IDX_CONSTITUENTS": "IDX_CONSTITUENTS",
+    "MARKET_CAP": "MARKET_CAP",
 }
     assert valid_file_types == SUPPORTED_FILE_TYPES
 

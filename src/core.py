@@ -19,10 +19,9 @@ def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
 
     Parameters
     ----------
-
     file_type : str
         The type of file required. (bhavcopy, pe, etc.) 
-        Invoke core.supported_file_types for all the supported file types.
+        Invoke src.core.supported_file_types for all the supported file types.
     start_date : str
         Starting date. (Format: 'DD-Mon-YYYY. Ex., 12-Jun-2025)
     end_date : str

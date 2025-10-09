@@ -30,6 +30,10 @@ SUPPORTED_TIME_DURATIONS = {
     "WEEK": "WEEK",
 }
 MCAP_FOLDER = "market_cap"
+MCAP_SOURCE = {
+    "LAST_FETCHED": "LAST_FETCHED",
+    "LATEST": "LATEST"
+} 
 SUPPORTED_INSTR_TYPES = ("STK", "IDX", "OPT")
 DATE_FMT="%d-%b-%Y"
 DATE_FMT_1="%d-%m-%Y"

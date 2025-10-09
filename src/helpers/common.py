@@ -99,7 +99,7 @@ def compose_local_filename(file_type: str, trading_date: str, stock_name: str = 
             if not trading_date:
                 trading_date = datetime.today().strftime(DATE_FMT)
             #NOTE: Check if the folder exists for the trading_date
-            if not os.path.isdir(trading_date):
+            if not os.path.isdir(trading_date): #BUG: Partial path checked
                 #NOTE: Create the folder if it does not exist
                 try:
                     os.mkdir(os.path.join(FILES_BASE_DIR,
