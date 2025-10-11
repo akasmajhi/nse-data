@@ -28,6 +28,7 @@ SUPPORTED_TIME_DURATIONS = {
     "HOUR": "HOUR",
     "DAY": "DAY",
     "WEEK": "WEEK",
+    "MONTH": "MONTH",
 }
 MCAP_FOLDER = "market_cap"
 MCAP_SOURCE = {

@@ -210,6 +210,9 @@ def get_local_market_cap(file_type: str,
         # NOTE: For INDEX. Aggregate the constituents' market caps.
         pass
     return dict() # Return empty dict for any invalid file type(s)
+def get_local_stock_info(stock: str) -> dict:
+    logger.debug(f'[{stock = }]')
+    return dict()
 if __name__ == "__main__":
     # get_local_index_names("30-AUG-2025")
     logger.info(f'[{get_local_market_cap("STOCK", "TCS") = }]')

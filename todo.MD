@@ -7,3 +7,10 @@
     - Market cap dist of stocks 
 #### 10-Oct-2025
     - Fix mcap errors for these fetches - '9MMFSML.json', 'MOS.json', 'WONDERLA.json',
+	- get_stock_info for all the meta info about the stock
+
+
+	core --> get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | dict :
+		get_all_stock_names()
+		for each stock --> file_readers.get_local_market_cap(stock)
+				--> stock_fetchers.read_market_cap_from_file()

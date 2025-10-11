@@ -5,6 +5,8 @@ import os
 from loguru import logger
 
 import src.constants as const
+from src.helpers.validators import is_date_valid
+from src.helpers.common import compose_dates_for_duration, compose_local_filename
 
 def m_cap(folder: str) -> pd.DataFrame:
     """
@@ -57,5 +59,66 @@ def m_cap(folder: str) -> pd.DataFrame:
         logger.error(f'Permission denied to access [{mcap_folder = }].')
     return pd.DataFrame()
 
+def ratios(folder: str) -> pd.DataFrame:
+    """Reads the STOCK/META/dd-Mon-YYYY folder for stock info 
+    and returns ratios associated with the stock. (PE)
+
+    Parameters
+    ----------
+        folder: str
+    Folder containing the individual JSON files with PEs and other details.
+
+    Returns
+    -------
+        pandas.DataFrame
+    DF containing structured data
+    """
+    logger.debug(f'[{folder = }]')
+    return pd.DataFrame()
+
+def pe(file_type: str, instr_name: str, trading_dt: str, duration: str) -> pd.DataFrame:
+    """Reads the PE files present in FILES_BASE_DIR/PE and gets teh data back
+    """
+    logger.debug(f'[{file_type = }], [{instr_name = }], [{trading_dt = }], [{duration = }], ')
+    pe_folder = os.path.join(const.FILES_BASE_DIR, const.SUPPORTED_FILE_TYPES["PE"])
+    if not pe_folder:
+        logger.error(f'Something critically wrong! [{pe_folder = }]Does not exist.')
+    match file_type:
+        case "STOCK" if file_type == const.SUPPORTED_FILE_TYPES["STOCK"]:
+            # NOTE: Read the folder data for the duration and trading date
+            if trading_dt and is_date_valid(trading_dt):
+                date_range = compose_dates_for_duration(trading_dt, duration)
+                data_list: list[pd.DataFrame] = list()
+                for trading_date in date_range:
+                    #NOTE: Read the PE file for each trading_date
+                    pe_file_name = compose_local_filename(const.SUPPORTED_FILE_TYPES["PE"],
+                                               trading_date=trading_date,
+                                               stock_name="",
+                                               year="")
+
+                    logger.debug(f'[{pe_file_name = }]')
+                    if pe_file_name:
+                        df = pd.read_csv(pe_file_name)
+                        df["TRADING_DATE"] = trading_date #NOTE: Add trading_date col
+                        data_list.append(df)
+                    # END FOR each trading_date
+                if instr_name:
+                    all_data: pd.DataFrame = pd.concat(data_list, ignore_index=True)
+                    only_stock:pd.DataFrame = all_data[all_data.SYMBOL == instr_name] # pyright: ignore [reportAssignmentType]
+                    if (not all_data.empty) and (type(only_stock) == pd.DataFrame) :
+                        return only_stock
+                return pd.concat(data_list, ignore_index=True)
+            # NOTE: Filter out the instr_name if provided
+            return pd.DataFrame()
+        case "INDEX" if file_type == const.SUPPORTED_FILE_TYPES["INDEX"]:
+            logger.error(f'Not implemented for [{file_type = }]')
+            return pd.DataFrame()
+        case _:
+            logger.error(f'Invalid [{file_type = }]')
+    return pd.DataFrame()
 if __name__ == "__main__":
-    print(m_cap("09-Oct-2025"))
+    # print(m_cap("09-Oct-2025"))
+    logger.debug(pe(file_type="STOCK",
+                    instr_name="NESTLEIND",
+                    trading_dt="10-Oct-2025",
+                    duration="MONTH"))

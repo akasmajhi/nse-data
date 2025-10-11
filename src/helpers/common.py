@@ -7,7 +7,46 @@ import os
 import glob
 
 from src.helpers.validators import is_date_valid, is_NSE_holiday, get_latest_file
-from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, MCAP_FOLDER
+from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, MCAP_FOLDER, SUPPORTED_TIME_DURATIONS
+
+def compose_dates_for_duration(trading_date: str, duration: str) -> list[str] | list:
+    """Composes a range of dates for the duration and starting date (a.k.a.)
+    trading_date provided.
+
+    Parameters
+    ----------
+        trading_date: str
+    This is the upper boundary of the date. (src.constants.DATE_FMT formatted)
+        duration: str
+    The duration which is one of src.constants.SUPPORTED_TIME_DURATIONS.
+
+    Business case, you may seek top gainers for a month. In which case,
+    the trading_date is last date of the month and duration is "MONTH".
+    """
+    logger.debug(f'[{trading_date = }], [{duration = }]')
+    d_range = list()
+    #NOTE: Duration should be valid
+    if duration not in SUPPORTED_TIME_DURATIONS:
+        logger.error(f'Invalid [{duration = }]')
+        return d_range
+    if not is_date_valid(trading_date):
+        logger.error(f'Invalid [{trading_date = }]')
+        return d_range
+
+    end_dt: datetime = datetime.strptime(trading_date, DATE_FMT)
+    start_dt: datetime
+    match duration:
+        case "DAY" if duration == SUPPORTED_TIME_DURATIONS["DAY"]:
+            start_dt = end_dt
+        case "WEEK" if duration == SUPPORTED_TIME_DURATIONS["WEEK"]:
+            start_dt = end_dt - timedelta(days=7)
+            # logger.info(f'[{start_dt = }]')
+        case "MONTH" if duration == SUPPORTED_TIME_DURATIONS["MONTH"]:
+            start_dt = end_dt - timedelta(days=30)
+        case _:
+            logger.error(f'Unspported [{duration = }]')
+            return d_range
+    return compose_dates_from_range(start_dt.strftime(DATE_FMT), end_dt.strftime(DATE_FMT))
 
 def compose_dates_from_range(s_date: str, e_date:str) -> list[str] | list:
     """ Compose a list of trading dates from the supplied range.
@@ -86,7 +125,10 @@ def compose_local_filename(file_type: str, trading_date: str, stock_name: str = 
             pass
 
         case "PE" if file_type == SUPPORTED_FILE_TYPES["PE"]:
-            pass
+            return os.path.join(FILES_BASE_DIR,
+                                SUPPORTED_FILE_TYPES["PE"],
+                                f'{SUPPORTED_FILE_TYPES["PE"].lower()}_{trading_date}.csv')\
+            if trading_date else None
 
         case "INDEX" if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
             pass
@@ -376,5 +418,18 @@ if __name__ == "__main__":
     # stock_name = "STOCK_NON_EXISTING"
     # stock_name = "UNIT_TEST_STOCK"
     # stock_name = "NON_EXISTING_STOCK"
-    stock_name = "UCOBANK"
-    print(get_latest_history(get_stock_fetch_history(stock_name)))
+    # stock_name = "UCOBANK"
+    # print(get_latest_history(get_stock_fetch_history(stock_name)))
+    # logger.debug(compose_dates_for_duration(duration="DADDY", trading_date="0-Oct-2025"))
+    # logger.info('****************************************************')
+    # logger.debug(compose_dates_for_duration(duration="DAY", trading_date="0-Oct-2025"))
+    # logger.info('****************************************************')
+    # logger.debug(compose_dates_for_duration(duration="DAY", trading_date="10-Oct-2025"))
+    # logger.info('****************************************************')
+    # logger.debug(compose_dates_for_duration(duration="WEEK", trading_date="10-Oct-2025"))
+    # logger.info('****************************************************')
+    # logger.debug(compose_dates_for_duration(duration="MONTH", trading_date="10-Oct-2025"))
+    logger.debug(compose_local_filename(file_type="PE", 
+                           trading_date="10-Oct-2025", 
+                           stock_name="",
+                           year="2025"))

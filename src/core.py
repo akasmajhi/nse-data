@@ -187,6 +187,25 @@ def daily_fetchers():
 
     get_all_index_constituents()
 
+def weekly_fetchers():
+    #TODO: 
+    pass
+def get_stock_info(stock_name: str | None = None) -> pd.DataFrame:
+    logger.debug(f'[{stock_name = }]')
+    if stock_name: #NOTE: Meta info for single stock
+        pass
+    #NOTE: Meta info for all stock
+    all_stocks: list = get_all_stock_names()
+    all_stocks.sort(key=None, reverse=False)
+    all_stocks_info: list[dict] = list()
+    total_stocks = len(all_stocks_info)
+    processed_stocks = 0
+    for stock in all_stocks:
+        all_stocks_info.append(file_readers.get_local_stock_info(stock))
+        processed_stocks = processed_stocks + 1
+        logger.info(f'[{processed_stocks = }] of [{total_stocks = }]')
+    return pd.DataFrame()
+
 if __name__ == "__main__":
     daily_fetchers()
     # fetch_stock_data_since_listing(skip_current_year=True)
