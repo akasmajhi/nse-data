@@ -1,9 +1,10 @@
-import os
 import pandas as pd
 from loguru import logger
 from analytics.wranglers.fundamentals import m_cap
 from src.constants import SUPPORTED_FILE_TYPES, MCAP_SOURCE
 from src.fetchers.common import get_last_fetch_date
+from src.core import get_index_names, get_index_constituents
+from src.core import get_market_cap as src_core_m_cap
 
 def get_market_cap(file_type: str, instr_name: str, source: str = MCAP_SOURCE["LAST_FETCHED"]) -> pd.DataFrame:
     """Returns the market cap along with other info.
@@ -50,8 +51,41 @@ def get_market_cap(file_type: str, instr_name: str, source: str = MCAP_SOURCE["L
 
     return pd.DataFrame()
 
+def get_idx_market_cap(index: str, trading_date: str = "") -> dict | None:
+    """Gets the market at the basket level. It's an aggregated market cap.
+    Parameters
+    ----------
+
+    idx : str
+        The name of the index as presented in the index listing page.
+        https://www.nseindia.com/market-data/live-market-indices
+
+    Returns
+    -------
+    pandas.DataFrame
+        Data Frame containing the results
+    """
+    logger.info(f"[{index = }], [{trading_date = }]")
+    #NOTE: Get all valid indeax names and check that incoming index is valid
+    valid_indices: list[str] = get_index_names()
+    if index not in valid_indices:
+        logger.error(f'[{index = }] is invalid!')
+        return None
+    #TODO: For the valid index, get all it's constituents
+    index_constituents = get_index_constituents(index_name=index)
+    if not index_constituents:
+        logger.error(f'Something is wrong! [{index_constituents = }] for [{index = }]')
+        return None
+    #TODO: For each constituent, get it's market cap and aggregate
+    for item in index_constituents:
+        # m_cap = src_core_m_cap(file_type='STOCK', stock_name=item)
+        # logger.debug(m_cap)
+        pass
+    return {"NIFTY 50": 10_000}
 if __name__ == "__main__":
-    get_market_cap(file_type="INVALID", instr_name="", source="INVALID").empty
-    get_market_cap(file_type="STOCK", instr_name="", source="INVALID").empty
+    # get_market_cap(file_type="INVALID", instr_name="", source="INVALID").empty
+    # get_market_cap(file_type="STOCK", instr_name="", source="INVALID").empty
     # get_market_cap(file_type="STOCK", instr_name="", source="LAST_FETCHED").empty
-    print(get_market_cap(file_type="STOCK", instr_name="", source="LAST_FETCHED"))
+    # print(get_market_cap(file_type="STOCK", instr_name="", source="LAST_FETCHED"))
+    # print(get_idx_market_cap("NIFTY 500000")) #NOTE: Invalid Index name
+    print(get_idx_market_cap("NIFTY 50")) #NOTE: Valid Index name

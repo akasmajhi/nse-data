@@ -6,8 +6,9 @@ from datetime import datetime, timedelta, date
 import os
 import glob
 
+from src.fetchers.common import get_last_fetch_date
 from src.helpers.validators import is_date_valid, is_NSE_holiday, get_latest_file
-from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, MCAP_FOLDER, SUPPORTED_TIME_DURATIONS
+from src.constants import DATE_FMT, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, SUPPORTED_TIME_DURATIONS
 
 def compose_dates_for_duration(trading_date: str, duration: str) -> list[str] | list:
     """Composes a range of dates for the duration and starting date (a.k.a.)
@@ -99,7 +100,10 @@ def compose_dates_from_range(s_date: str, e_date:str) -> list[str] | list:
     # logger.debug(f"Total time taken: [{elapsed_time:.4f}] seconds")
     return d_range
 
-def compose_local_filename(file_type: str, trading_date: str, stock_name: str = "", year: str = "") -> str | None:
+def compose_local_filename(i_file_type: str, \
+                           i_stock_name: str = "",\
+                           i_trading_date: str = "",\
+                           i_year: str = "") -> str | None:
     """
         Composes a local file name from a given file type & trading date.
     Parameters
@@ -114,51 +118,75 @@ def compose_local_filename(file_type: str, trading_date: str, stock_name: str = 
         str
     File name in the form of a string.
     """
-    logger.debug(f'Composing file name for [{file_type = }], [{trading_date = }], [{stock_name = }]')
-    match file_type:
-        case "STOCK" if file_type == SUPPORTED_FILE_TYPES["STOCK"]:
+    logger.debug(f'Composing file name [{i_file_type = }],[{i_stock_name = }],[{i_trading_date = }]')
+    match i_file_type:
+        case "STOCK" if i_file_type == SUPPORTED_FILE_TYPES["STOCK"]:
             return os.path.join(FILES_BASE_DIR,
                                 SUPPORTED_FILE_TYPES["STOCK"],
-                                f"{stock_name}_{year}.csv")
+                                f"{i_stock_name}_{i_year}.csv")\
+            if i_stock_name and i_year else None
 
-        case "BHAVCOPY" if file_type == SUPPORTED_FILE_TYPES["BHAVCOPY"]:
-            pass
+        case "BHAVCOPY" if i_file_type == SUPPORTED_FILE_TYPES["BHAVCOPY"]:
+            return os.path.join(FILES_BASE_DIR,
+                                SUPPORTED_FILE_TYPES["BHAVCOPY"],
+                                f'{SUPPORTED_FILE_TYPES["BHAVCOPY"].lower()}_{i_trading_date}.csv')\
+            if i_trading_date else None
 
-        case "PE" if file_type == SUPPORTED_FILE_TYPES["PE"]:
+        case "PE" if i_file_type == SUPPORTED_FILE_TYPES["PE"]:
             return os.path.join(FILES_BASE_DIR,
                                 SUPPORTED_FILE_TYPES["PE"],
-                                f'{SUPPORTED_FILE_TYPES["PE"].lower()}_{trading_date}.csv')\
-            if trading_date else None
+                                f'{SUPPORTED_FILE_TYPES["PE"].lower()}_{i_trading_date}.csv')\
+            if i_trading_date else None
 
-        case "INDEX" if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
-            pass
+        case "INDEX" if i_file_type == SUPPORTED_FILE_TYPES["INDEX"]:
+            return os.path.join(FILES_BASE_DIR,
+                                SUPPORTED_FILE_TYPES["INDEX"],
+                                f'{SUPPORTED_FILE_TYPES["INDEX"].lower()}_{i_trading_date}.csv')\
+            if i_trading_date else None
 
-        case "FNOBHAVCOPY" if file_type == SUPPORTED_FILE_TYPES["IFNOBHAVCOPY"]:
-            pass
+        case "FNOBHAVCOPY" if i_file_type == SUPPORTED_FILE_TYPES["IFNOBHAVCOPY"]:
+            return os.path.join(FILES_BASE_DIR,
+                                SUPPORTED_FILE_TYPES["FNOBHAVCOPY"],
+                                f'{SUPPORTED_FILE_TYPES["FNOBHAVCOPY"].lower()}_{i_trading_date}.csv')\
+            if i_trading_date else None
 
-        case "MARKET_CAP" if file_type == SUPPORTED_FILE_TYPES["MARKET_CAP"]:
+        case "MARKET_CAP" if i_file_type == SUPPORTED_FILE_TYPES["MARKET_CAP"]:
             #NOTE: Keeping market cap in folder named after fetch/trading date
-            if not trading_date:
-                trading_date = datetime.today().strftime(DATE_FMT)
-            #NOTE: Check if the folder exists for the trading_date
-            if not os.path.isdir(trading_date): #BUG: Partial path checked
-                #NOTE: Create the folder if it does not exist
-                try:
-                    os.mkdir(os.path.join(FILES_BASE_DIR,
-                                          SUPPORTED_FILE_TYPES["STOCK"],
-                                          MCAP_FOLDER,
-                                          trading_date))
-                except FileExistsError:
-                    #NOTE: If the folder exists then do nothing
-                    pass
+            if not i_trading_date:
+                # trading_date = datetime.today().strftime(DATE_FMT)
+                #NOTE: Ideally, you should use last fetch_date
+                trading_date  = get_last_fetch_date(SUPPORTED_FILE_TYPES["MARKET_CAP"])
+                #NOTE: Check if the folder exists for the trading_date
+                if trading_date:
+                    m_cap_folder = os.path.join(FILES_BASE_DIR,
+                                        SUPPORTED_FILE_TYPES["STOCK"],
+                                        SUPPORTED_FILE_TYPES["MARKET_CAP"].lower(),
+                                        trading_date)
+                    if not os.path.isdir(m_cap_folder): #RESOLVED: Partial path checked
+                        #NOTE: Create the folder if it does not exist
+                        try:
+                            os.mkdir(os.path.join(m_cap_folder))
+                        except FileExistsError:
+                            #NOTE: If the folder exists then do nothing
+                            pass
+                    else:
+                        logger.info(f'[{m_cap_folder = }]Folder exists for [{trading_date = }]')
+                        return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
+            else: #NOTE: The input parameter contains the trading date
+                logger.debug(f'Going to check if m_cap exists for [{i_trading_date = }]')
+                m_cap_folder = os.path.join(FILES_BASE_DIR,
+                                    SUPPORTED_FILE_TYPES["STOCK"],
+                                    SUPPORTED_FILE_TYPES["MARKET_CAP"].lower(),
+                                    i_trading_date)
+                logger.info(f'M_Cap Folder: [{m_cap_folder = }], [{i_stock_name}],\
+                                    [{i_trading_date = }]')
+                if not os.path.isdir(m_cap_folder):
+                    logger.error(f'Market cap does not exist for [{i_trading_date = }]')
+                    return None
+                return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
 
-            return os.path.join(FILES_BASE_DIR, 
-                                SUPPORTED_FILE_TYPES["STOCK"],
-                                MCAP_FOLDER,
-                                trading_date,
-                                f"{stock_name.upper()}.json")
         case _:
-            logger.error(f'Unknown [{file_type = }]')
+            logger.error(f'Unknown [{i_file_type = }]')
     return None # Return None for unknown file_type
 
 def get_last_monday() -> str:
@@ -429,7 +457,19 @@ if __name__ == "__main__":
     # logger.debug(compose_dates_for_duration(duration="WEEK", trading_date="10-Oct-2025"))
     # logger.info('****************************************************')
     # logger.debug(compose_dates_for_duration(duration="MONTH", trading_date="10-Oct-2025"))
-    logger.debug(compose_local_filename(file_type="PE", 
-                           trading_date="10-Oct-2025", 
-                           stock_name="",
-                           year="2025"))
+    # logger.debug(compose_local_filename(i_file_type="PE", 
+    #                        i_trading_date="10-Oct-2025", 
+    #                        i_stock_name="",
+    #                        i_year="2025"))
+    # logger.debug(compose_local_filename(i_file_type="MARKET_CAP", 
+    #                        i_trading_date="10-Oct-2025", 
+    #                        i_stock_name="ICICIBANK",
+    #                        i_year="2025"))
+    # logger.debug(compose_local_filename(i_file_type="MARKET_CAP", 
+    #                        i_trading_date="09-Oct-2025", 
+    #                        i_stock_name="ICICIBANK",
+    #                        i_year="2025"))
+    logger.debug(compose_local_filename(i_file_type="MARKET_CAP", 
+                           i_trading_date="", 
+                           i_stock_name="ICICIBANK",
+                           i_year="2025"))

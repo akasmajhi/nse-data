@@ -60,7 +60,7 @@ def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFram
                 logger.error(f"Data NOT found in local for [{trading_date = }]")
             # Data found in local; Append data to DF 
             else:
-                logger.debug(f"[{file_type}] Data FOUND locally for [{trading_date = }]")
+                logger.debug(f"[{file_type = }] Data FOUND locally for [{trading_date = }]")
                 df = pd.concat([df,trd_dt_data], ignore_index=True)
         #TODO Should be similar to the first case
         except pd.errors.EmptyDataError:
@@ -198,7 +198,8 @@ def get_local_market_cap(file_type: str,
     Could be stock name or INDEX name
     """
     logger.debug(f"{file_type = }, {instr_name = }")
-    if file_type == SUPPORTED_FILE_TYPES["STOCK"]:
+
+    if file_type == SUPPORTED_FILE_TYPES["STOCK"] and instr_name:
         # NOTE: For individual stocks. First try reading the local file
         m_cap = read_market_cap_from_file(instr_name)
         #TODO: If such file is not present then fetch and store in the file
@@ -210,9 +211,11 @@ def get_local_market_cap(file_type: str,
         # NOTE: For INDEX. Aggregate the constituents' market caps.
         pass
     return dict() # Return empty dict for any invalid file type(s)
+
 def get_local_stock_info(stock: str) -> dict:
     logger.debug(f'[{stock = }]')
     return dict()
+
 if __name__ == "__main__":
     # get_local_index_names("30-AUG-2025")
     logger.info(f'[{get_local_market_cap("STOCK", "TCS") = }]')

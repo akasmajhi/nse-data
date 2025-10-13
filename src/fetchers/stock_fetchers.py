@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from loguru import logger
 from src.fetchers.common import dummy_request
-from src.constants import DATE_FMT_1, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, NSE_STOCK_HISTORY_URL, NSE_STOCK_QUOTE_URL, REQ_HEADER,FILES_BASE_DIR, DATE_FMT
+from src.constants import DATE_FMT_1, MCAP_BLACKL_ISTED, SUPPORTED_FILE_TYPES, FILES_BASE_DIR, NSE_STOCK_HISTORY_URL, NSE_STOCK_QUOTE_URL, REQ_HEADER,FILES_BASE_DIR, DATE_FMT
 from src.helpers.common import get_stock_fetch_history, get_latest_history, register_failed_fetch, set_stock_fetch_history, compose_local_filename
 
 def get_stock_data_since_listing(stock_name: str, skip_current_year: bool = False) -> pd.DataFrame:
@@ -95,10 +95,10 @@ def read_listing_date_from_file(stock_name: str) ->str:
 def fetch_stock_data_for_a_year(stock_name: str, year: int, skip_current_year: bool = False):
     logger.debug(f"Fetching data for [{stock_name = }] for [{year = }]")
     #NOTE: If a file exists for a year and if it's not current year then skip fetch for that year
-    file_name = compose_local_filename(file_type=SUPPORTED_FILE_TYPES["STOCK"],
-                                       trading_date="",
-                                       stock_name=stock_name,
-                                       year=str(year))
+    file_name = compose_local_filename(i_file_type=SUPPORTED_FILE_TYPES["STOCK"],
+                                       i_trading_date="",
+                                       i_stock_name=stock_name,
+                                       i_year=str(year))
     current_year = datetime.now().year
 
     #NOTE: Current year 
@@ -170,10 +170,10 @@ def fetch_stock(stock_name: str, from_date: str, to_date: str):
         register_failed_fetch(stock_name, from_date, to_date, "requests.exceptions.ConnectionError" )
         logger.error(e)
     year = from_date[-4:]
-    file_name = compose_local_filename(file_type=SUPPORTED_FILE_TYPES["STOCK"],
-                                       trading_date="",
-                                       stock_name=stock_name,
-                                       year=year)
+    file_name = compose_local_filename(i_file_type=SUPPORTED_FILE_TYPES["STOCK"],
+                                       i_trading_date="",
+                                       i_stock_name=stock_name,
+                                       i_year=year)
     if(stock_res and stock_res.status_code == HTTPStatus.OK):
         if file_name:
             with open(file_name, "w", encoding="utf-8") as file:
@@ -196,18 +196,42 @@ def process_failed_fetches(file_name: str = ""):
     logger.info(f"Processing failed fetches for file: [{file_name = }]")
     pass
 
-def read_market_cap_from_file(stock_name: str) ->dict:
-    file_name = compose_local_filename(file_type=SUPPORTED_FILE_TYPES["MARKET_CAP"],
-                                       trading_date="",
-                                       stock_name=stock_name)
+def read_market_cap_from_file(stock_name: str, trading_date: str = "") ->dict:
+    """Reads the market cap from stored file. If it does not exist then issues
+    a fetch request to get the market cap from NSE.
 
-    if file_name and os.path.exists(file_name):
+    Parameters
+    ----------
+        stock_name: str
+    Name of the stock
+        trading_date: str
+    The trading date in src.constants.DATE_FMT format
+
+    Returns
+    -------
+        dict
+    Dictionary containing stock name as key and m_cap as value.
+    """
+    logger.debug(f'Reading market cap for [{stock_name = }], [{trading_date = }] from file')
+    file_name = compose_local_filename(i_file_type=SUPPORTED_FILE_TYPES["MARKET_CAP"],
+                                       i_trading_date=trading_date,
+                                       i_stock_name=stock_name)
+
+    if file_name and os.path.exists(file_name) and stock_name not in MCAP_BLACKL_ISTED:
         logger.debug(f"Market Cap file exists for [{stock_name = }]. Going to use it!")
         try:
             with open(file_name, "r") as file:
-                return json.load(file)
+                data = json.load(file)
+                m_cap_dict: dict = dict()
+                m_cap_dict["STOCK"] = stock_name
+                m_cap_dict["TOTAL_M_CAP"] = data["marketDeptOrderBook"]["tradeInfo"]["totalMarketCap"]
+                m_cap_dict["FF_M_CAP"] = data["marketDeptOrderBook"]["tradeInfo"]["ffmc"]
+                m_cap_dict["TRADING_DATE"] = trading_date
+                return m_cap_dict
+        except KeyError:
+            logger.error(f'Market Cap Key Error: [{stock_name}]')
         except FileNotFoundError:
-            logger.error(f"[file_name = ] not found!")
+            logger.error(f"[{file_name = }] not found!")
         except json.JSONDecodeError:
             logger.error(f"Error decoding JSON from the file: [{file_name = }]")
     else:
@@ -215,7 +239,8 @@ def read_market_cap_from_file(stock_name: str) ->dict:
         #NOTE: Caller needs to fetch from remote. Caller to check for empty dict!
     return dict() #NOTE: Blank return for any error condition. Caller must check!
 
-def fetch_market_cap(stock_name: str) -> dict:
+def fetch_market_cap(stock_name: str,\
+                     i_trading_date: str = datetime.now().strftime(DATE_FMT)) -> dict:
     """Fetches the market cap for a stock.
     Parameters
     ----------
@@ -226,7 +251,7 @@ def fetch_market_cap(stock_name: str) -> dict:
         dict
     Dictionary containing the details (along with market cap)
     """
-    logger.debug(f'Fetching market cap for [{stock_name = }]')
+    logger.debug(f'Fetching market cap for [{stock_name = }], [{i_trading_date}]')
     dummy_res = dummy_request()
 
     payload = {
@@ -242,9 +267,9 @@ def fetch_market_cap(stock_name: str) -> dict:
     logger.debug(f"The stock_quote_res code is: [{stock_quote_res.status_code = }]")
     if(stock_quote_res.status_code == HTTPStatus.OK):
         #NOTE: Store the file inside the MCAP_FOLDER
-        file_name = compose_local_filename(file_type=SUPPORTED_FILE_TYPES["MARKET_CAP"],
-                                       trading_date="",
-                                       stock_name=stock_name)
+        file_name = compose_local_filename(i_file_type=SUPPORTED_FILE_TYPES["MARKET_CAP"],
+                                       i_trading_date=i_trading_date,
+                                       i_stock_name=stock_name)
         if file_name:
             with open(file_name, "w") as file:
                 file.write(stock_quote_res.content.decode('utf-8'))

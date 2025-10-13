@@ -92,9 +92,9 @@ def pe(file_type: str, instr_name: str, trading_dt: str, duration: str) -> pd.Da
                 for trading_date in date_range:
                     #NOTE: Read the PE file for each trading_date
                     pe_file_name = compose_local_filename(const.SUPPORTED_FILE_TYPES["PE"],
-                                               trading_date=trading_date,
-                                               stock_name="",
-                                               year="")
+                                               i_trading_date=trading_date,
+                                               i_stock_name="",
+                                               i_year="")
 
                     logger.debug(f'[{pe_file_name = }]')
                     if pe_file_name:

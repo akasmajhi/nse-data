@@ -107,7 +107,7 @@ def get_supported_file_types() -> dict:
     """
     return SUPPORTED_FILE_TYPES
 
-def get_index_names() -> list:
+def get_index_names() -> list[str]:
     """ Returns names of all the indices.
     Parameters
     ----------
@@ -119,13 +119,52 @@ def get_index_names() -> list:
     """
     return file_readers.get_local_index_names()
 
-def get_all_index_constituents():
+def get_all_index_constituents() -> list[dict]:
+    """Returns the constituents for each index.
+    Parameters
+    ----------
+        None
+    Returns
+    -------
+        list[dict]
+    Each list item contains a dict and each dict contains index name
+    (as key) and a list of constient items as value.
+    """
     logger.debug(f"Getting constituents for all indices")
+    all_indices: list[dict] = list()
     for index_name in get_index_names():
         if "/" in index_name:
             index_name = index_name.replace("/", "By")
-        get_index_constituents(index_name)
+        index_dict: dict = dict()
+        index_dict[index_name] = get_index_constituents(index_name)
+        all_indices.append(index_dict)
+    return all_indices
 
+def get_index_constituents(index_name: str) -> list:
+    """For a gievn index name, returns all it's constituents
+    Parameters
+    ----------
+        index_name: str
+    The name of the index.
+
+    Returns
+    -------
+        list[str] or blank list (if the index name is invalid)
+    List containing the index constituents
+
+    """
+    logger.debug(f"Getting constituents for index: [{index_name = }]")
+    constituents = list()
+    #NOTE: Index name should be non-null
+    if not index_name:
+        logger.error(f"[{index_name = }]cannot be null or blank")
+        return constituents
+    #NOTE: Index name should be valid
+    if index_name not in get_index_names():
+        logger.error(f"Invalid Index Name: [{index_name = }]")
+        return constituents
+    logger.debug(f"[{index_name = }]is valid")
+    return file_readers.get_local_index_constituents(index_name)
 
 def fetch_stock_data_since_listing(skip_current_year: bool = False):
     """Fetches the price information for all stocks since listing
@@ -147,19 +186,6 @@ def fetch_stock_data_since_listing(skip_current_year: bool = False):
         processed += 1
         logger.info(f"{processed}/{len(all_stocks)} Stocks processed.")
 
-def get_index_constituents(index_name: str) -> list:
-    logger.debug(f"Getting constituents for index: [{index_name = }]")
-    constituents = list()
-    #NOTE: Index name should be non-null
-    if not index_name:
-        logger.error(f"[{index_name = }]cannot be null or blank")
-        return constituents
-    #NOTE: Index name should be valid
-    if index_name not in get_index_names():
-        logger.error(f"Invalid Index Name: [{index_name = }]")
-        return constituents
-    logger.debug(f"[{index_name = }]is valid")
-    return file_readers.get_local_index_constituents(index_name)
 
 def daily_fetchers():
     get_data(file_type='PREOPEN', 
@@ -208,6 +234,9 @@ def get_stock_info(stock_name: str | None = None) -> pd.DataFrame:
 
 if __name__ == "__main__":
     daily_fetchers()
+    # logger.debug(get_index_names())
+    # logger.debug(f'<<{get_all_index_constituents()}>>')
+    # logger.debug(f'<<{get_index_constituents("NIFTY 50")}>>')
     # fetch_stock_data_since_listing(skip_current_year=True)
-    # get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)
+    # print(f'****************{get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)}')
 

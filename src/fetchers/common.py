@@ -11,6 +11,18 @@ def dummy_request(url: str = NSE_DUMMY_REQ_URL):
     return r
 
 def get_subfolders(folder: str) -> list[str]:
+    """Gets the dubfolders for a given folder.
+
+    Parameters
+    ----------
+        folder: str
+    The name of the folder.
+
+    Returns
+    -------
+        list[str]
+    The names of the subfolder(s).
+    """
     logger.debug(f'[{folder = }]')
     subfolders = list()
     for item in os.listdir(folder):
@@ -50,7 +62,7 @@ def get_last_fetch_date(file_type: str) -> str | None:
             valid_subfolders = list()
             for item in mcap_subfolders:
                 try:
-                    logger.info(f'[{item = }]')
+                    # logger.info(f'[{item = }]')
                     sub_folder_dt = datetime.strptime(item, DATE_FMT)
                     valid_subfolders.append(sub_folder_dt)
                 except ValueError:
