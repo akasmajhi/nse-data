@@ -188,6 +188,8 @@ def fetch_stock_data_since_listing(skip_current_year: bool = False):
 
 
 def daily_fetchers():
+    """Group of operations that fetch data on a daily/EOD basis
+    """
     get_data(file_type='PREOPEN', 
              start_date=datetime.today().strftime(DATE_FMT), 
              end_date=datetime.today().strftime(DATE_FMT))
@@ -216,27 +218,42 @@ def daily_fetchers():
 def weekly_fetchers():
     #TODO: 
     pass
-def get_stock_info(stock_name: str | None = None) -> pd.DataFrame:
-    logger.debug(f'[{stock_name = }]')
+def get_stock_info(stock_name: str | None = None, 
+                   trading_date: str = datetime.today().strftime(DATE_FMT)) -> list[dict] | dict:
+    """Fetches/reads the meta information associated with a stock(s)
+
+    Parameters
+    ----------
+        stock_name: str
+    The name of the stock. Pass None to fetch meta for all stocks
+
+    Returns
+    -------
+        pd.DataFrame
+    Meta info(s) associated with stock(s)
+
+    """
+    logger.debug(f'[{stock_name = }], [{trading_date = }]')
     if stock_name: #NOTE: Meta info for single stock
-        pass
+        return file_readers.get_local_stock_info(stock_name, trading_date)
     #NOTE: Meta info for all stock
     all_stocks: list = get_all_stock_names()
     all_stocks.sort(key=None, reverse=False)
     all_stocks_info: list[dict] = list()
-    total_stocks = len(all_stocks_info)
+    total_stocks = len(all_stocks)
     processed_stocks = 0
     for stock in all_stocks:
-        all_stocks_info.append(file_readers.get_local_stock_info(stock))
+        all_stocks_info.append(file_readers.get_local_stock_info(stock, trading_date))
         processed_stocks = processed_stocks + 1
         logger.info(f'[{processed_stocks = }] of [{total_stocks = }]')
-    return pd.DataFrame()
+    return all_stocks_info
 
 if __name__ == "__main__":
-    daily_fetchers()
+    # daily_fetchers()
     # logger.debug(get_index_names())
     # logger.debug(f'<<{get_all_index_constituents()}>>')
     # logger.debug(f'<<{get_index_constituents("NIFTY 50")}>>')
     # fetch_stock_data_since_listing(skip_current_year=True)
     # print(f'****************{get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)}')
+    get_stock_info()
 

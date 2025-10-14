@@ -8,7 +8,7 @@ from loguru import logger
 from src.helpers.common import compose_dates_from_range, get_last_trading_date
 from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT, MCAP_FOLDER
 from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
-from src.fetchers.stock_fetchers import get_stock_data_since_listing, fetch_market_cap, read_market_cap_from_file
+from src.fetchers.stock_fetchers import fetch_stock_info, get_stock_data_since_listing, fetch_market_cap, read_market_cap_from_file, read_stock_info_from_file
 
 def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFrame:
     """
@@ -212,9 +212,33 @@ def get_local_market_cap(file_type: str,
         pass
     return dict() # Return empty dict for any invalid file type(s)
 
-def get_local_stock_info(stock: str) -> dict:
-    logger.debug(f'[{stock = }]')
-    return dict()
+def get_local_stock_info(stock: str, trading_date: str = datetime.today().strftime(DATE_FMT)) -> dict:
+    """Reads the meta info from local file system. If not found,
+    It issues a remote fetch request.
+    Parameters
+    ----------
+        stock: str
+    Stock name
+        trading_date: str
+    The trading date in src.constants.DATE_FMT format.
+
+    Returns
+    -------
+        pd.DataFrame
+    DataFrame containing dict-representation of the stock info
+    """
+
+    logger.debug(f'[{stock = }], [{trading_date}]')
+    today = datetime.today().strftime(DATE_FMT)
+    data = read_stock_info_from_file(stock=stock, trading_date=trading_date)
+
+    if trading_date != today:
+        return data
+
+    if trading_date == today and not data:
+        return fetch_stock_info(stock=stock)
+
+    return data #NOTE: data exists for today!
 
 if __name__ == "__main__":
     # get_local_index_names("30-AUG-2025")

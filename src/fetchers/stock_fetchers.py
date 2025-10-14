@@ -196,6 +196,89 @@ def process_failed_fetches(file_name: str = ""):
     logger.info(f"Processing failed fetches for file: [{file_name = }]")
     pass
 
+def read_stock_info_from_file(stock: str, 
+                              trading_date: str = datetime.today().strftime(DATE_FMT)) -> dict:
+    """Reads the meta info about the stock from the local file.
+
+    Parameters
+    ----------
+        stock: str
+    Name of the stock
+        trading_date: str
+    Trading date in src.constants.DATE_FMT (DD-Mon-YYYY) format
+
+    Returns
+    -------
+    pd.DataFrame containing the stock info
+    """
+    logger.debug(f'[{stock = }], [{trading_date = }]')
+    file_name = compose_local_filename(i_file_type=SUPPORTED_FILE_TYPES["META"],
+                                       i_trading_date=trading_date,
+                                       i_stock_name=stock)
+    if file_name and os.path.exists(file_name):
+        logger.debug(f"Meta file exists for [{stock = }]. Going to use it!")
+        try:
+            with open(file_name, "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            logger.error(f"[{file_name = }] not found!")
+        except json.JSONDecodeError:
+            logger.error(f"Error decoding JSON from the file: [{file_name = }]")
+    else:
+        logger.info(f'Meta file does not exist for [{stock = }]')
+        #NOTE: Caller needs to fetch from remote. Caller to check for empty dict!
+    return dict()
+
+def fetch_stock_info(stock: str) -> dict:
+    """Fetches the META info for a given stock.
+
+    Parameters
+    ----------
+        stock: str
+    Name of the stock
+
+    Returns
+    -------
+        pd.DataFrame
+    DF containing the META info
+    """
+        #NOTE: Assume that the stock name is valid, make a URL fetch
+    logger.debug(f'Fetching META for [{stock = }]')
+    dummy_res = dummy_request()
+
+    payload = {
+        "symbol":stock,
+    }
+    stock_quote_res = requests.get(
+        url=NSE_STOCK_QUOTE_URL,
+        headers=REQ_HEADER,
+        params=payload,
+        cookies=dummy_res.cookies,
+        timeout=30)
+    logger.debug(f"The stock_quote_res code is: [{stock_quote_res.status_code = }]")
+    if(stock_quote_res.status_code == HTTPStatus.OK):
+        #NOTE: Fetch should create the subfolder to store META, if the subfolder dows not exist
+        meta_folder = os.path.join(FILES_BASE_DIR,
+                            SUPPORTED_FILE_TYPES["STOCK"],
+                            SUPPORTED_FILE_TYPES["META"],
+                            datetime.today().strftime(DATE_FMT))
+        if not os.path.isdir(meta_folder):
+            logger.debug(f'META Folder: [{meta_folder = }] does not exist. Creating . . . ')
+            os.mkdir(meta_folder)
+            logger.debug(f'META Folder: [{meta_folder = }] Created.')
+
+        #NOTE: Store the file inside the META folder
+        file_name = compose_local_filename(i_file_type=SUPPORTED_FILE_TYPES["META"],
+                                       i_trading_date=datetime.today().strftime(DATE_FMT),
+                                       i_stock_name=stock)
+        if file_name:
+            with open(file_name, "w") as file :
+                file.write(stock_quote_res.text)
+            return read_stock_info_from_file(stock)
+
+    logger.error(f'Something went wrong while getting meta info for: [{stock = }]')
+    return dict() #NOTE: This should be interpreted as an error condition
+
 def read_market_cap_from_file(stock_name: str, trading_date: str = "") ->dict:
     """Reads the market cap from stored file. If it does not exist then issues
     a fetch request to get the market cap from NSE.

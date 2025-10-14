@@ -171,7 +171,7 @@ def compose_local_filename(i_file_type: str, \
                             pass
                     else:
                         logger.info(f'[{m_cap_folder = }]Folder exists for [{trading_date = }]')
-                        return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
+                    return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
             else: #NOTE: The input parameter contains the trading date
                 logger.debug(f'Going to check if m_cap exists for [{i_trading_date = }]')
                 m_cap_folder = os.path.join(FILES_BASE_DIR,
@@ -185,6 +185,54 @@ def compose_local_filename(i_file_type: str, \
                     return None
                 return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
 
+        case "META" if i_file_type == SUPPORTED_FILE_TYPES["META"]:
+            #NOTE: Use the last fetch date if no trading_date provided
+            if not i_trading_date:
+                trading_date = get_last_fetch_date(SUPPORTED_FILE_TYPES["META"])
+                if trading_date:
+                    meta_folder = os.path.join(FILES_BASE_DIR,
+                                        SUPPORTED_FILE_TYPES["STOCK"],
+                                        SUPPORTED_FILE_TYPES["META"],
+                                        trading_date)
+                    if not os.path.isdir(meta_folder): #RESOLVED: Partial path checked
+                        #NOTE: Create the folder if it does not exist
+                        try:
+                            os.mkdir(os.path.join(meta_folder))
+                        except FileExistsError:
+                            #NOTE: If the folder exists then do nothing
+                            pass
+                        except Exception as e:
+                            logger.error(f'Error occured while creating folder: [{meta_folder = }]')
+                            logger.error(f'Exception is: [{e}]')
+                    else:
+                        logger.info(f'[{meta_folder = }]Folder exists for [{trading_date = }]')
+                    return os.path.join(meta_folder, f'{i_stock_name.upper()}_meta.json')
+                else: #NOTE: Case for first-time fetch
+                    trading_date = datetime.today().strftime(DATE_FMT)
+                    meta_folder = os.path.join(FILES_BASE_DIR,
+                                        SUPPORTED_FILE_TYPES["STOCK"],
+                                        SUPPORTED_FILE_TYPES["META"],
+                                        trading_date)
+                    #NOTE: Create the folder 
+                    try:
+                        os.mkdir(os.path.join(meta_folder))
+                    except Exception as e:
+                        logger.error(f'Error occured while creating folder: [{meta_folder = }]')
+                        logger.error(f'Exception is: [{e}]')
+                    return os.path.join(meta_folder, f'{i_stock_name.upper()}_meta.json')
+
+            else: #NOTE: The input parameter contains the trading date
+                logger.debug(f'Going to check if meta folder exists for [{i_trading_date = }]')
+                meta_folder = os.path.join(FILES_BASE_DIR,
+                                    SUPPORTED_FILE_TYPES["STOCK"],
+                                    SUPPORTED_FILE_TYPES["META"],
+                                    i_trading_date)
+                logger.debug(f'META Folder: [{meta_folder = }], [{i_stock_name = }],\
+                                    [{i_trading_date = }]')
+                if not os.path.isdir(meta_folder):
+                    logger.error(f'Meta folder does not exist for [{i_trading_date = }]')
+                    return None
+                return os.path.join(meta_folder, f'{i_stock_name.upper()}_meta.json')
         case _:
             logger.error(f'Unknown [{i_file_type = }]')
     return None # Return None for unknown file_type
@@ -469,7 +517,11 @@ if __name__ == "__main__":
     #                        i_trading_date="09-Oct-2025", 
     #                        i_stock_name="ICICIBANK",
     #                        i_year="2025"))
-    logger.debug(compose_local_filename(i_file_type="MARKET_CAP", 
+    # logger.debug(compose_local_filename(i_file_type="MARKET_CAP", 
+    #                        i_trading_date="", 
+    #                        i_stock_name="ICICIBANK",
+    #                        i_year="2025"))
+    logger.debug(compose_local_filename(i_file_type="META", 
                            i_trading_date="", 
                            i_stock_name="ICICIBANK",
                            i_year="2025"))
