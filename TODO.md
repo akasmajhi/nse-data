@@ -26,6 +26,9 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
 
 
 #### 14-Oct-2025
+	- Compete the META part for the stocks #DONE: 
+
+#### 15-Oct-2025
 	- Compete the META part for the stocks #TODO: 
 
 ------------------------------------------------------------------------------
