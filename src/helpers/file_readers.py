@@ -186,7 +186,9 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
     return pd.DataFrame()
 
 def get_local_market_cap(file_type: str,
-                         instr_name: str) -> dict:
+                         instr_name: str,
+                         trading_date: str = datetime.today().strftime(DATE_FMT)
+                         ) -> dict:
     """Method for getting market cap for a stock or INDEX. In case of INDEX,
     the aggregate market cap of the constituents is used.
 
@@ -197,14 +199,14 @@ def get_local_market_cap(file_type: str,
         instr_name: str
     Could be stock name or INDEX name
     """
-    logger.debug(f"{file_type = }, {instr_name = }")
+    logger.debug(f"{file_type = }, {instr_name = }, [{trading_date = }]")
 
     if file_type == SUPPORTED_FILE_TYPES["STOCK"] and instr_name:
         # NOTE: For individual stocks. First try reading the local file
-        m_cap = read_market_cap_from_file(instr_name)
+        m_cap = read_market_cap_from_file(instr_name, trading_date)
         #TODO: If such file is not present then fetch and store in the file
         if not m_cap:
-            return fetch_market_cap(instr_name)
+            return fetch_market_cap(instr_name, trading_date)
         else:
             return m_cap
     if file_type == SUPPORTED_FILE_TYPES["INDEX"]:

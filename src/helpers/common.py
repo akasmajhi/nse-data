@@ -152,26 +152,26 @@ def compose_local_filename(i_file_type: str, \
 
         case "MARKET_CAP" if i_file_type == SUPPORTED_FILE_TYPES["MARKET_CAP"]:
             #NOTE: Keeping market cap in folder named after fetch/trading date
-            if not i_trading_date:
+            if i_trading_date and i_trading_date == datetime.today().strftime(DATE_FMT):
                 # trading_date = datetime.today().strftime(DATE_FMT)
                 #NOTE: Ideally, you should use last fetch_date
-                trading_date  = get_last_fetch_date(SUPPORTED_FILE_TYPES["MARKET_CAP"])
+                # trading_date  = get_last_fetch_date(SUPPORTED_FILE_TYPES["MARKET_CAP"])
                 #NOTE: Check if the folder exists for the trading_date
-                if trading_date:
-                    m_cap_folder = os.path.join(FILES_BASE_DIR,
-                                        SUPPORTED_FILE_TYPES["STOCK"],
-                                        SUPPORTED_FILE_TYPES["MARKET_CAP"].lower(),
-                                        trading_date)
-                    if not os.path.isdir(m_cap_folder): #RESOLVED: Partial path checked
-                        #NOTE: Create the folder if it does not exist
-                        try:
-                            os.mkdir(os.path.join(m_cap_folder))
-                        except FileExistsError:
-                            #NOTE: If the folder exists then do nothing
-                            pass
-                    else:
-                        logger.info(f'[{m_cap_folder = }]Folder exists for [{trading_date = }]')
-                    return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
+                # if trading_date:
+                m_cap_folder = os.path.join(FILES_BASE_DIR,
+                                    SUPPORTED_FILE_TYPES["STOCK"],
+                                    SUPPORTED_FILE_TYPES["MARKET_CAP"].lower(),
+                                    i_trading_date)
+                if not os.path.isdir(m_cap_folder) : #RESOLVED: Partial path checked
+                    #NOTE: Create the folder if it does not exist
+                    try:
+                        os.mkdir(os.path.join(m_cap_folder))
+                    except FileExistsError:
+                        #NOTE: If the folder exists then do nothing
+                        pass
+                else:
+                    logger.info(f'[{m_cap_folder = }] for [{i_trading_date = }]')
+                return os.path.join(m_cap_folder, f'{i_stock_name.upper()}.json')
             else: #NOTE: The input parameter contains the trading date
                 logger.debug(f'Going to check if m_cap exists for [{i_trading_date = }]')
                 m_cap_folder = os.path.join(FILES_BASE_DIR,

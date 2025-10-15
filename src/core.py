@@ -47,7 +47,10 @@ def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
         logger.error(f"{file_type = }is Invalid")
     return data
 
-def get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | dict :
+def get_market_cap(file_type:str | None, 
+                   stock_name:str | None, 
+                   trading_date: str = datetime.today().strftime(DATE_FMT)
+                   ) -> list[dict] | dict :
     """Gets the market cap of an index, if file_type=="INDEX", 
     or gets the market cap of a stock specified by the second parameter.
     If the file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None then
@@ -56,11 +59,13 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | 
     Parameters
     ----------
 
-    file_type : str
-        As enumerated by src/constants/SUPPORTED_FILE_TYPES 
-    stock_name : str
-        Name of the stock if file_type=STOCK
-
+        file_type : str
+    As enumerated by src/constants/SUPPORTED_FILE_TYPES 
+        stock_name : str
+    Name of the stock if file_type=STOCK
+        trading_date: str
+    Trading date. Defauted to today if not provided.
+    
     Returns
     -------
     list(dict) | dict
@@ -79,14 +84,14 @@ def get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | 
         processed_stocks = 0
         for stock in all_stocks:
             # For a stock get it's market cap data
-            all_market_caps.append(file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock))
+            all_market_caps.append(file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock, trading_date))
             processed_stocks = processed_stocks + 1
             logger.info(f'[{processed_stocks = }] of [{total_stocks = }]')
         return all_market_caps
 
     #NOTE: Case where we fetch m-cap for a stock
     if file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name:
-        return file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock_name)
+        return file_readers.get_local_market_cap(SUPPORTED_FILE_TYPES["STOCK"], stock_name, trading_date)
 
     #TODO: Case where we fetch m-cap for an index
     if file_type == SUPPORTED_FILE_TYPES["INDEX"] :
@@ -216,7 +221,10 @@ def daily_fetchers():
     get_all_index_constituents()
 
 def weekly_fetchers():
-    #TODO: 
+    """Fetchers for weekending dates
+    """
+    get_market_cap(file_type=SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
+    get_stock_info()
     pass
 def get_stock_info(stock_name: str | None = None, 
                    trading_date: str = datetime.today().strftime(DATE_FMT)) -> list[dict] | dict:
@@ -249,11 +257,14 @@ def get_stock_info(stock_name: str | None = None,
     return all_stocks_info
 
 if __name__ == "__main__":
-    # daily_fetchers()
+    # NOTE:  Run daily fetchers after 7 PM
+    if datetime.today().weekday() < 5 and datetime.today().hour > 19:
+        daily_fetchers()
     # logger.debug(get_index_names())
     # logger.debug(f'<<{get_all_index_constituents()}>>')
     # logger.debug(f'<<{get_index_constituents("NIFTY 50")}>>')
     # fetch_stock_data_since_listing(skip_current_year=True)
-    # print(f'****************{get_market_cap(SUPPORTED_FILE_TYPES["STOCK"], None)}')
-    get_stock_info()
+    # NOTE:  Run weekly fetchers only on Saturdays
+    if datetime.today().weekday() == 5:
+        weekly_fetchers()
 

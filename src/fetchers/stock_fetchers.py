@@ -279,7 +279,7 @@ def fetch_stock_info(stock: str) -> dict:
     logger.error(f'Something went wrong while getting meta info for: [{stock = }]')
     return dict() #NOTE: This should be interpreted as an error condition
 
-def read_market_cap_from_file(stock_name: str, trading_date: str = "") ->dict:
+def read_market_cap_from_file(stock_name: str, trading_date: str = datetime.today().strftime(DATE_FMT)) ->dict:
     """Reads the market cap from stored file. If it does not exist then issues
     a fetch request to get the market cap from NSE.
 
