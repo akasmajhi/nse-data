@@ -7,7 +7,7 @@ def daily_gainer(file_type: str = SUPPORTED_FILE_TYPES['BHAVCOPY'],
     logger.debug(f'[{file_type = }], [{series = }]')
     return pd.DataFrame()
 
-def weekly_gainer(file_type: str = SUPPORTED_FILE_TYPES['BHAVCOPY'],
+def weekly_gainers(file_type: str = SUPPORTED_FILE_TYPES['BHAVCOPY'],
                       series: str = 'EQ') -> pd.DataFrame :
     logger.debug(f'[{file_type = }], [{series = }]')
     return pd.DataFrame()

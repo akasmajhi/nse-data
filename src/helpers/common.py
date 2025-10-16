@@ -322,10 +322,25 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
     The last trading date
     """
     logger.debug(f"Incoming date is: [{i_date = }]")
-    #NOTE: Is the date in future?
+    today = datetime.today()
     trading_date = ""
-    if is_date_in_future(i_date):
-        trading_date = datetime.today().strftime(DATE_FMT)
+    #NOTE: If a trading date is passed then it must be a valid date
+    if not i_date.strip():
+        try:
+            datetime.strptime(i_date, DATE_FMT)
+        except ValueError:
+            logger.error(f'Bad [{i_date = }] passed')
+            return trading_date
+
+    #NOTE: If -_date is None then default it to previous weekdays
+    if i_date is None and today.weekday() < 5 and today.hour < 19:
+        logger.debug(f'This is a weekday and it\'s before 7PM')
+        trading_date = (today - timedelta(days=1)).strftime(DATE_FMT)
+        return trading_date
+
+    #NOTE: Is the date in future?
+    if i_date and is_date_in_future(i_date):
+        trading_date = today.strftime(DATE_FMT)
     else:
         trading_date = i_date
     # If i_date is weekend then calculate the immediate last weekday
@@ -521,7 +536,10 @@ if __name__ == "__main__":
     #                        i_trading_date="", 
     #                        i_stock_name="ICICIBANK",
     #                        i_year="2025"))
-    logger.debug(compose_local_filename(i_file_type="META", 
-                           i_trading_date="", 
-                           i_stock_name="ICICIBANK",
-                           i_year="2025"))
+    # logger.debug(compose_local_filename(i_file_type="META", 
+    #                        i_trading_date="", 
+    #                        i_stock_name="ICICIBANK",
+    #                        i_year="2025"))
+    logger.debug(get_last_trading_date(i_date=""))
+    logger.debug(get_last_trading_date(i_date="  "))
+    logger.debug(get_last_trading_date(i_date="19-Oct-2025"))

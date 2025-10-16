@@ -257,14 +257,21 @@ def get_stock_info(stock_name: str | None = None,
     return all_stocks_info
 
 if __name__ == "__main__":
+    anything_executed: bool = False
     # NOTE:  Run daily fetchers after 7 PM
-    if datetime.today().weekday() < 5 and datetime.today().hour > 19:
-        daily_fetchers()
+    print(f'[{datetime.today().weekday() = }], [{datetime.today().hour = }]')
+    # if datetime.today().weekday() < 5 and datetime.today().hour >= 19:
+    #     daily_fetchers()
+    #     anything_executed = True
     # logger.debug(get_index_names())
     # logger.debug(f'<<{get_all_index_constituents()}>>')
     # logger.debug(f'<<{get_index_constituents("NIFTY 50")}>>')
     # fetch_stock_data_since_listing(skip_current_year=True)
     # NOTE:  Run weekly fetchers only on Saturdays
+    weekly_fetchers()
     if datetime.today().weekday() == 5:
         weekly_fetchers()
+        anything_executed = True
+    if not anything_executed:
+        print("Nothing Executed . . . ")
 

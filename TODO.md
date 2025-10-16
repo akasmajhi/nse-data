@@ -24,7 +24,6 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
     --> stock_fetchers.read_stock_info_from_file(stock, trading_date) --> dict
 	OR  stock_fetchers.fetch_stock_info(stock) --> dict
 
-
 ## 14-Oct-2025
 	- [ DONE ] Compete the META part for the stocks: 
 
@@ -32,4 +31,9 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
 	- [ DONE ] Compete the META part for the stocks.
 
 ## 16-Oct-2025
+    - [ DONE ] Pintoo PAN
+    - [ DONE ] Pintoo AADHAR
 
+## 16-Oct-2025
+    - [ TODO ] Market cap dist of stocks.
+	- [ TODO ] Complete the top_gainers module:

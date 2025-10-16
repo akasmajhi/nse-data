@@ -6,7 +6,7 @@ import pandas as pd
 from loguru import logger
 
 from src.helpers.common import compose_dates_from_range, get_last_trading_date
-from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT, MCAP_FOLDER
+from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT 
 from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
 from src.fetchers.stock_fetchers import fetch_stock_info, get_stock_data_since_listing, fetch_market_cap, read_market_cap_from_file, read_stock_info_from_file
 
