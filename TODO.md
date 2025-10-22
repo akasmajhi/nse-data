@@ -34,6 +34,16 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
     - [ DONE ] Pintoo PAN
     - [ DONE ] Pintoo AADHAR
 
-## 16-Oct-2025
+## 17-Oct-2025, 18-Oct-2025
     - [ TODO ] Market cap dist of stocks.
 	- [ TODO ] Complete the top_gainers module:
+    - [ TODO ] get_last_monday() requires a bug fix.
+
+## 20-Oct-2025
+    - [ TODO ] Pandas: sorting of data frames 
+# PARKING LOT 
+
+## SHORT POSITIONS FILE FETCH
+## CORP. ACTION FILE FETCH
+## RESULTS CALENDAR FETCH
+## REVIVE TESTING FRAMEWORK

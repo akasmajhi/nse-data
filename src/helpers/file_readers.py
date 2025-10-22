@@ -122,6 +122,7 @@ def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
         return index_names # Reurn Blank Index names
 
 def get_local_index_constituents(index_name: str) -> list:
+    #TODO: Needs a design review (for storing individual files & history
     """
         Get's the index constituents for the passed index name. It is assumed that 
         the index_name passed is valid.
