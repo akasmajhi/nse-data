@@ -41,6 +41,13 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
 
 ## 20-Oct-2025
     - [ TODO ] Pandas: sorting of data frames 
+## 21-Oct-2025 & 22-Oct-2025
+    - [ DONE ] Industry to stock mapping
+## 23-Oct-2025
+    - [ DONE ] Industry to PE mapping
+        - For a given industry, find out the stock names and their corresponding PEs
+        - src.derived.readers.get_pe_for_industry
+
 # PARKING LOT 
 
 ## SHORT POSITIONS FILE FETCH
