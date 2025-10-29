@@ -1,3 +1,4 @@
+import time
 import json
 import pandas as pd
 import os
@@ -7,6 +8,7 @@ from loguru import logger
 import src.constants as const
 from src.helpers.validators import is_date_valid
 from src.helpers.common import compose_dates_for_duration, compose_local_filename
+
 
 def m_cap(folder: str) -> pd.DataFrame:
     """
@@ -22,21 +24,26 @@ def m_cap(folder: str) -> pd.DataFrame:
         pandas.DataFrame
     DF containing structured data
     """
-    logger.debug(f'[{folder = }]')
-    mcap_folder = os.path.join(const.FILES_BASE_DIR,\
-                             const.SUPPORTED_FILE_TYPES["STOCK"],\
-                             const.MCAP_FOLDER,\
-                             folder)
-    logger.debug(f'[{mcap_folder = }]')
-    #NOTE: Check if the folder exists
+    start_time = time.perf_counter()
+    logger.debug(f"[{folder = }]")
+    mcap_folder = os.path.join(
+        const.FILES_BASE_DIR,
+        const.SUPPORTED_FILE_TYPES["STOCK"],
+        const.MCAP_FOLDER,
+        folder,
+    )
+    logger.debug(f"[{mcap_folder = }]")
+    # NOTE: Check if the folder exists
     if not os.path.isdir(mcap_folder):
-        logger.error(f'Invalid [{mcap_folder = }]')
+        logger.error(f"Invalid [{mcap_folder = }]")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return pd.DataFrame()
-    #NOTE: Read each file and extract market cap
+    # NOTE: Read each file and extract market cap
     try:
         mcap_files = os.listdir(mcap_folder)
         mcap_dicts: list[dict] = list()
-        for m_cap_file in mcap_files: #NOTE: Process each file
+        for m_cap_file in mcap_files:  # NOTE: Process each file
             mcap_json_file = os.path.join(mcap_folder, m_cap_file)
             # logger.debug(f'[{mcap_json_file = }]')
             with open(mcap_json_file, "r") as file:
@@ -44,23 +51,42 @@ def m_cap(folder: str) -> pd.DataFrame:
                 try:
                     mcap_dict = dict()
                     mcap_dict["STOCK"] = m_cap_file[:-4]
-                    mcap_dict["FF_MCAP"] = mcap_json["marketDeptOrderBook"]["tradeInfo"]["ffmc"] 
-                    mcap_dict["TOTAL_MCAP"] = mcap_json["marketDeptOrderBook"]["tradeInfo"]["totalMarketCap"]
+                    mcap_dict["FF_MCAP"] = mcap_json["marketDeptOrderBook"][
+                        "tradeInfo"
+                    ]["ffmc"]
+                    mcap_dict["TOTAL_MCAP"] = mcap_json["marketDeptOrderBook"][
+                        "tradeInfo"
+                    ]["totalMarketCap"]
                     mcap_dict["DATE_MCAP"] = folder
                     mcap_dicts.append(mcap_dict)
                 except KeyError:
-                    logger.error(f'Error reading m_cap for [{m_cap_file = }]')
+                    logger.error(f"Error reading m_cap for [{m_cap_file = }]")
+                    end_time = time.perf_counter()
+                    logger.info(
+                        f"Execution time: {(end_time - start_time):.6f} seconds"
+                    )
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return pd.DataFrame(mcap_dicts)
     except FileNotFoundError:
-        logger.error(f'Directory not found at [{mcap_folder = }]')
+        logger.error(f"Directory not found at [{mcap_folder = }]")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     except NotADirectoryError:
-        logger.error(f'[{mcap_folder = }] is not a directory')
+        logger.error(f"[{mcap_folder = }] is not a directory")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     except PermissionError:
-        logger.error(f'Permission denied to access [{mcap_folder = }].')
+        logger.error(f"Permission denied to access [{mcap_folder = }].")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+    end_time = time.perf_counter()
+    logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     return pd.DataFrame()
 
+
 def ratios(folder: str) -> pd.DataFrame:
-    """Reads the STOCK/META/dd-Mon-YYYY folder for stock info 
+    """Reads the STOCK/META/dd-Mon-YYYY folder for stock info
     and returns ratios associated with the stock. (PE)
 
     Parameters
@@ -73,16 +99,18 @@ def ratios(folder: str) -> pd.DataFrame:
         pandas.DataFrame
     DF containing structured data
     """
-    logger.debug(f'[{folder = }]')
+    logger.debug(f"[{folder = }]")
     return pd.DataFrame()
 
+
 def pe(file_type: str, instr_name: str, trading_dt: str, duration: str) -> pd.DataFrame:
-    """Reads the PE files present in FILES_BASE_DIR/PE and gets teh data back
-    """
-    logger.debug(f'[{file_type = }], [{instr_name = }], [{trading_dt = }], [{duration = }], ')
+    """Reads the PE files present in FILES_BASE_DIR/PE and gets teh data back"""
+    logger.debug(
+        f"[{file_type = }], [{instr_name = }], [{trading_dt = }], [{duration = }], "
+    )
     pe_folder = os.path.join(const.FILES_BASE_DIR, const.SUPPORTED_FILE_TYPES["PE"])
     if not pe_folder:
-        logger.error(f'Something critically wrong! [{pe_folder = }]Does not exist.')
+        logger.error(f"Something critically wrong! [{pe_folder = }]Does not exist.")
     match file_type:
         case "STOCK" if file_type == const.SUPPORTED_FILE_TYPES["STOCK"]:
             # NOTE: Read the folder data for the duration and trading date
@@ -90,35 +118,42 @@ def pe(file_type: str, instr_name: str, trading_dt: str, duration: str) -> pd.Da
                 date_range = compose_dates_for_duration(trading_dt, duration)
                 data_list: list[pd.DataFrame] = list()
                 for trading_date in date_range:
-                    #NOTE: Read the PE file for each trading_date
-                    pe_file_name = compose_local_filename(const.SUPPORTED_FILE_TYPES["PE"],
-                                               i_trading_date=trading_date,
-                                               i_stock_name="",
-                                               i_year="")
+                    # NOTE: Read the PE file for each trading_date
+                    pe_file_name = compose_local_filename(
+                        const.SUPPORTED_FILE_TYPES["PE"],
+                        i_trading_date=trading_date,
+                        i_stock_name="",
+                        i_year="",
+                    )
 
-                    logger.debug(f'[{pe_file_name = }]')
+                    logger.debug(f"[{pe_file_name = }]")
                     if pe_file_name:
                         df = pd.read_csv(pe_file_name)
-                        df["TRADING_DATE"] = trading_date #NOTE: Add trading_date col
+                        df["TRADING_DATE"] = trading_date  # NOTE: Add trading_date col
                         data_list.append(df)
                     # END FOR each trading_date
                 if instr_name:
                     all_data: pd.DataFrame = pd.concat(data_list, ignore_index=True)
-                    only_stock:pd.DataFrame = all_data[all_data.SYMBOL == instr_name] # pyright: ignore [reportAssignmentType]
-                    if (not all_data.empty) and (type(only_stock) == pd.DataFrame) :
+                    only_stock: pd.DataFrame = all_data[
+                        all_data.SYMBOL == instr_name
+                    ]  # pyright: ignore [reportAssignmentType]
+                    if (not all_data.empty) and (type(only_stock) == pd.DataFrame):
                         return only_stock
                 return pd.concat(data_list, ignore_index=True)
             # NOTE: Filter out the instr_name if provided
             return pd.DataFrame()
         case "INDEX" if file_type == const.SUPPORTED_FILE_TYPES["INDEX"]:
-            logger.error(f'Not implemented for [{file_type = }]')
+            logger.error(f"Not implemented for [{file_type = }]")
             return pd.DataFrame()
         case _:
-            logger.error(f'Invalid [{file_type = }]')
+            logger.error(f"Invalid [{file_type = }]")
     return pd.DataFrame()
+
+
 if __name__ == "__main__":
+    print(m_cap("25-Oct-2025"))
     # print(m_cap("09-Oct-2025"))
-    logger.debug(pe(file_type="STOCK",
-                    instr_name="NESTLEIND",
-                    trading_dt="10-Oct-2025",
-                    duration="MONTH"))
+    # logger.debug(pe(file_type="STOCK",
+    #                 instr_name="NESTLEIND",
+    #                 trading_dt="10-Oct-2025",
+    #                 duration="MONTH"))

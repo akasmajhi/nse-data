@@ -86,5 +86,80 @@ def industry_to_stock(trading_date: str) -> dict:
     return industry_stock
 
 
+def combine_m_caps(folder: str) -> dict:
+    """Combine all the m_cap files data onto a fingle file for efficiency.
+    Parameters
+    ----------
+        str
+    Market Cap folder that contains all the individual m_cap file.
+    (1 for each stock).
+
+    Returns
+    -------
+        dict
+    Dictionary containing the combined market caps.
+
+    Note
+    ----
+    File name is hard-coded to combined.json
+    """
+    start_time = time.perf_counter()
+    logger.info(f"Combining market caps for [{folder = }]")
+    # NOTE: Check if the folder exists
+    mcap_folder = os.path.join(
+        C.FILES_BASE_DIR,
+        C.SUPPORTED_FILE_TYPES["STOCK"],
+        C.MCAP_FOLDER,
+        folder,
+    )
+    if not os.path.isdir(mcap_folder):
+        logger.error(f"Invalid [{mcap_folder = }]")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+        return dict()
+    # ERROR: do not combine if the combined file already exists
+    if os.path.isfile(os.path.join(mcap_folder, "combined.json")):
+        logger.error(f"Not combining since the combined file already exists!")
+        logger.info(f"Use the readers.combined_m_caps for reading content")
+        return {}
+    # NOTE: Read each file and extract market cap
+    try:
+        mcap_files = os.listdir(mcap_folder)
+        mcap_dict = dict()
+        for m_cap_file in mcap_files:  # NOTE: Process each file
+            mcap_json_file = os.path.join(mcap_folder, m_cap_file)
+            with open(mcap_json_file, "r") as file:
+                mcap_json = json.load(file)
+                try:
+                    mcap_dict[m_cap_file[:-5]] = mcap_json
+                except KeyError:
+                    logger.error(f"Error reading m_cap for [{m_cap_file = }]")
+                    end_time = time.perf_counter()
+                    logger.info(
+                        f"Execution time: {(end_time - start_time):.6f} seconds"
+                    )
+        output_filename = os.path.join(mcap_folder, "combined.json")
+        with open(output_filename, "w") as json_file:
+            json.dump(mcap_dict, json_file, indent=4)
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+        return mcap_dict
+    except FileNotFoundError:
+        logger.error(f"Directory not found at [{mcap_folder = }]")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+    except NotADirectoryError:
+        logger.error(f"[{mcap_folder = }] is not a directory")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+    except PermissionError:
+        logger.error(f"Permission denied to access [{mcap_folder = }].")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+    end_time = time.perf_counter()
+    logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+    return dict()
+
+
 if __name__ == "__main__":
     print(industry_to_stock("18-Oct-2025"))

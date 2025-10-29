@@ -171,5 +171,59 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
     return dict()
 
 
+def combined_m_caps(folder: str) -> dict:
+    """Read combined m_cap file for efficiency.
+    Parameters
+    ----------
+        str
+    Market Cap folder that contains combined m_cap file.
+
+    Returns
+    -------
+        dict
+    Dictionary containing the combined market caps.
+    {"STOCK": total_m_cap} format.
+
+    Note
+    ----
+    File name is hard-coded to combined.json
+    """
+    start_time = time.perf_counter()
+    logger.info(f"Combining market caps for [{folder = }]")
+    # NOTE: Check if the folder exists
+    mcap_folder = os.path.join(
+        C.FILES_BASE_DIR,
+        C.SUPPORTED_FILE_TYPES["STOCK"],
+        C.MCAP_FOLDER,
+        folder,
+    )
+    if not os.path.isdir(mcap_folder):
+        logger.error(f"Invalid [{mcap_folder = }]")
+        end_time = time.perf_counter()
+        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+        return dict()
+    # ERROR: if the combined file does not exist then it's an error
+    if not os.path.isfile(os.path.join(mcap_folder, "combined.json")):
+        logger.error(f"Combined file DOES NOT exists!")
+        logger.info(f"Use the writers.combine_m_caps for writing content")
+        return {}
+    output_filename = os.path.join(mcap_folder, "combined.json")
+    data: dict = dict()
+    mcap_dict: dict = dict()
+    with open(output_filename, "r") as json_file:
+        data = json.load(json_file)
+
+    for key in data.keys():
+        try:
+            mcap_dict[key] = data[key]["marketDeptOrderBook"]["tradeInfo"][
+                "totalMarketCap"
+            ]
+        except KeyError:
+            logger.error(f"Error reading market cap for [{key = }]")
+    end_time = time.perf_counter()
+    logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
+    return mcap_dict
+
+
 if __name__ == "__main__":
     print(get_industry_to_stock(i_trading_date="18-Oct-2025", i_file_name=None))

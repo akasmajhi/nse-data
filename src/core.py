@@ -12,6 +12,7 @@ from src.helpers import file_readers
 from src.helpers.common import get_all_stock_names, get_first_day_of_month
 from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
 from src.fetchers.stock_fetchers import get_stock_data_since_listing
+from src.derived.writers import combine_m_caps, industry_to_stock
 
 
 def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
@@ -93,6 +94,8 @@ def get_market_cap(
             )
             processed_stocks = processed_stocks + 1
             logger.info(f"[{processed_stocks = }] of [{total_stocks = }]")
+        # NOTE: Write the combined.json for combined market cap
+        combine_m_caps(folder=trading_date)
         return all_market_caps
 
     # NOTE: Case where we fetch m-cap for a stock
@@ -248,7 +251,7 @@ def weekly_fetchers():
     """Fetchers for weekending dates"""
     get_market_cap(file_type=SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
     get_stock_info()
-    pass
+    industry_to_stock(datetime.today().strftime(DATE_FMT))
 
 
 def get_stock_info(

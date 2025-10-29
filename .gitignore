@@ -177,3 +177,5 @@ All_data.csv
 data_files.zip
 failed_fetches.json
 failed_fetches*.json
+presentation/drills/*
+presentation/storage/*

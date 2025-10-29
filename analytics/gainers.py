@@ -4,18 +4,21 @@ import pandas as pd
 from loguru import logger
 import src.constants as C
 import src.headers as H
-from src.helpers.common import (
-    get_last_monday,
-    compose_dates_from_range,
-    compose_local_index_file_name,
-)
+import src.helpers.common as common
+from src.derived import readers
+from src.fetchers.common import get_last_fetch_date
+
+#     get_last_monday,
+#     compose_dates_from_range,
+#     compose_local_index_file_name,
+# )
 
 
 def daily_gainer(
     file_type: str = C.SUPPORTED_FILE_TYPES["STOCK"],
     gain_type: str = C.GAIN_TYPE["PRICE"],
     duration: str = C.SUPPORTED_TIME_DURATIONS["DAY"],
-    start_date: str = get_last_monday(),
+    start_date: str = common.get_last_monday(),
     series: str = "EQ",
 ) -> pd.DataFrame:
     """Gets the daily gainers. If you reverse the sequence, you get daily losers.
@@ -65,9 +68,10 @@ def daily_gainer(
         if not daily_data.empty:
             # NOTE: Re-arrange the data as per price % gain (compared to yesterday's value)
             # WARN: You must apply the series filter since dup symbol names are possible
-            daily_data = pd.DataFrame(
-                daily_data[daily_data[H.BHAVCOPY["series"]] == series]
-            )
+            if series:
+                daily_data = pd.DataFrame(
+                    daily_data[daily_data[H.BHAVCOPY["series"]] == series]
+                )
 
             previous_close = H.BHAVCOPY["previous_close"]
             close = H.BHAVCOPY["close"]
@@ -76,7 +80,26 @@ def daily_gainer(
                 (daily_data[close] - daily_data[previous_close])
                 / daily_data[previous_close]
             ) * 100
-            daily_data.sort_values(by="pct_change", ascending=False, inplace=True)
+            # NOTE: Merge the daily gainers with market cap for stocks
+            m_cap_date = get_last_fetch_date(
+                file_type=C.SUPPORTED_FILE_TYPES["MARKET_CAP"]
+            )
+            if m_cap_date:
+                m_cap_data = readers.combined_m_caps(folder=m_cap_date)
+                m_cap_data_df = pd.DataFrame(
+                    {"TckrSymb": m_cap_data.keys(), "total_m_cap": m_cap_data.values()}
+                )
+                combined_data: pd.DataFrame = pd.merge(
+                    daily_data, m_cap_data_df, on="TckrSymb"
+                )
+                logger.info(
+                    f"[{combined_data.columns = }], [{combined_data.head() = }]"
+                )
+                combined_data.sort_values(
+                    by="pct_change", ascending=False, inplace=True
+                )
+                return combined_data
+                # if final_data and not final_data.emp
             return daily_data
 
     except FileNotFoundError:
@@ -100,14 +123,16 @@ def monthly_gainer(
 
 def index_gainers(
     duration: str = C.SUPPORTED_TIME_DURATIONS["WEEK"],
-    start_date: str = get_last_monday(),
+    start_date: str = common.get_last_monday(),
 ) -> pd.DataFrame:
     logger.info(f"[{duration = }], [{start_date = }]")
     data = pd.DataFrame()
     # NOTE: For weekly index data processing
     if duration == C.SUPPORTED_TIME_DURATIONS.get("WEEK"):
         end_date = datetime.strptime(start_date, C.DATE_FMT) + timedelta(days=5)
-        date_range = compose_dates_from_range(start_date, end_date.strftime(C.DATE_FMT))
+        date_range = common.compose_dates_from_range(
+            start_date, end_date.strftime(C.DATE_FMT)
+        )
         # NOTE: You should not get an empty date range
         if not date_range:
             logger.error(
@@ -120,7 +145,7 @@ def index_gainers(
         daily_index_data = pd.DataFrame()
         for dt in date_range:
             # TODO: try using get local file name
-            index_file = compose_local_index_file_name(dt)
+            index_file = common.compose_local_index_file_name(dt)
             try:
                 daily_index_data = pd.read_csv(index_file)
                 daily_index_data["TRADING_DATE"] = datetime.strptime(

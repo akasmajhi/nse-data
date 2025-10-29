@@ -1,16 +1,16 @@
 ## 07-Oct-2025
-    - [ DONE ] Refactor code for using compose_local_filename method in all source:
+    - [ ✔️ ] Refactor code for using compose_local_filename method in all source:
 ## 08-Oct-2025
 	- [ TODO ] Complete the top_gainers module:
-	- [ DONE ] market cap scrapper and sorted data using pd.DataFrame: 
+	- [ ✔️ ] market cap scrapper and sorted data using pd.DataFrame: 
 ## 09-Oct-2025
     - [ TODO ] Market cap dist of stocks.
 ## 10-Oct-2025
-    - [ DONE ] Fix mcap errors for these fetches - '9MMFSML.json', 'MOS.json', 'WONDERLA.json', 
-	- [ DONE ] get_stock_info for all the meta info about the stock  
+    - [ ✔️ ] Fix mcap errors for these fetches - '9MMFSML.json', 'MOS.json', 'WONDERLA.json', 
+	- [ ✔️ ] get_stock_info for all the meta info about the stock  
 
 ## 13-Oct-2025
-	- [ DONE ] Complete pending work from last week.
+	- [ ✔️ ] Complete pending work from last week.
 
 core --> get_market_cap(file_type:str | None, stock_name:str | None) -> list[dict] | dict :
     get_all_stock_names()
@@ -25,14 +25,14 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
 	OR  stock_fetchers.fetch_stock_info(stock) --> dict
 
 ## 14-Oct-2025
-	- [ DONE ] Compete the META part for the stocks: 
+	- [ ✔️ ] Compete the META part for the stocks: 
 
 ## 15-Oct-2025
-	- [ DONE ] Compete the META part for the stocks.
+	- [ ✔️ ] Compete the META part for the stocks.
 
 ## 16-Oct-2025
-    - [ DONE ] Pintoo PAN
-    - [ DONE ] Pintoo AADHAR
+    - [ ✔️ ] Pintoo PAN
+    - [ ✔️ ] Pintoo AADHAR
 
 ## 17-Oct-2025, 18-Oct-2025
     - [ TODO ] Market cap dist of stocks.
@@ -40,13 +40,40 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
     - [ TODO ] get_last_monday() requires a bug fix.
 
 ## 20-Oct-2025
-    - [ TODO ] Pandas: sorting of data frames 
+    - [ ✔️ ] Pandas: sorting of data frames
+        - Learning: sort_values should be used for in-place sorting
 ## 21-Oct-2025 & 22-Oct-2025
-    - [ DONE ] Industry to stock mapping
+    - [ ✔️ ] Industry to stock mapping
 ## 23-Oct-2025
-    - [ DONE ] Industry to PE mapping
+    - [ ✔️ ] Industry to PE mapping
         - For a given industry, find out the stock names and their corresponding PEs
         - src.derived.readers.get_pe_for_industry
+## 24-Oct-2025
+    - [ ✔️ ] Day 1 / 5 of NiceGUI
+    - [ TODO ] get_last_monday() requires a bug fix.
+## 25-Oct-2025 & 26-Oct-2025
+    - [ ✔️ ] Day 2,3 / 5 of NiceGUI
+    - [ TODO ] get_last_friday() needs a fix to return gone by Friday
+## 27-Oct-2025
+    - [ ✔️ ] Day 4 / 5 of NiceGUI << Not very productive but could put a filter on the grid >>
+## 28-Oct-2025 & 29-Oct-2025
+    - [ TODO ] Stock Analysis page with the follwoing filter
+        - [ TODO ] STOCK find filter with name
+        - [ TODO ] Sector Selection dropdown
+        - [ TODO ] Valuation Filter (PE/PB)
+        - [ TODO ] Growth Filter
+    - [ ✔️ ] Day 5 of NiceGUI { Can proceed with it. Needs further learning as the code progresses. }
+    - [ ✔️ ] Add market_cap to the daily_gainers data
+    - [ ✔️ ] Combine all m_cap data into a single file to make it efficient.
+        > Reading individual files take 25+ seconds { Takes less than a second now }
+        - [ ✔️ ] Clean data for [revios fetches (using the writers.combine_m_caps
+        - [ ✔️ ] Integrate writers.combine_m_caps with m_cap_fetches
+## 30-Oct-2025
+    - [ TODO ] Style the grid { aggrid }
+        - [ TODO ] Format the cell values properly
+        - [ TODO ] Expand the grid
+    - [ TODO ] Work on Page layout
+        
 
 # PARKING LOT 
 
@@ -54,3 +81,22 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
 ## CORP. ACTION FILE FETCH
 ## RESULTS CALENDAR FETCH
 ## REVIVE TESTING FRAMEWORK
+
+# Tools to explore
+    > PyToolZ
+    > Tabulate
+    > Rich (For rich looking console output) - - | T R Y | - -
+    > Hypothesis (extended Unit tests)
+    > Pydantic (settings management)
+        >> pip install pydantic-settings
+    > HTTPX (improved version of requests)
+    > fastapi-pagination
+    > FastStream (I may not need it)
+        >> Works with Kafka, Rabbit, etc.
+    > NiceGUI
+    > Flet for native feeling apps - - | T R Y | - -
+        >> Alternative to NiceGUI
+    > Reflex - A React site UI library
+    > Textual - Another desktop based UI
+    > Marimo -  - - | T R Y | - -
+        >> Alternative to Jupiter with ricjer experience.

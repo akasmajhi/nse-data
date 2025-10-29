@@ -306,12 +306,13 @@ def compose_local_filename(
     return None  # Return None for unknown file_type
 
 
-def get_last_monday() -> str:
+def get_last_monday(i_date: str = date.today().strftime(DATE_FMT)) -> str:
     """
     Gets the immediate last Monday in DD-MMM-YYYY format. Useful for analytics.
     If you are in any part of the week, then this function will return the
     Monday of the previous week.
     """
+    logger.debug(f"[{i_date = }]")
     today = date.today()
     return (today - timedelta(days=(today.weekday() + 7))).strftime(DATE_FMT)
 
