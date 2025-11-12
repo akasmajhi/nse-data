@@ -3,7 +3,6 @@ from loguru import logger
 
 from datetime import datetime, timedelta, date
 
-# import  time
 import os
 import glob
 
@@ -407,7 +406,7 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
     logger.debug(f"Incoming date is: [{i_date = }]")
     today = datetime.today()
     trading_date = ""
-    # NOTE: If a trading date is passed then it must be a valid date
+    # NOTE: (Validate i_date) If a trading date is passed then it must be a valid date
     if not i_date.strip():
         try:
             datetime.strptime(i_date, DATE_FMT)
@@ -415,25 +414,39 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
             logger.error(f"Bad [{i_date = }] passed")
             return trading_date
 
-    # NOTE: If -_date is None then default it to previous weekdays
-    if i_date is None and today.weekday() < 5 and today.hour < 19:
-        logger.debug(f"This is a weekday and it's before 7PM")
-        trading_date = (today - timedelta(days=1)).strftime(DATE_FMT)
-        return trading_date
+    # NOTE: If i_date is None then default it to previous weekdays
+    # BUG: Incoming date cannot be null. commenting below
+    # if i_date is None and today.weekday() < 5 and today.hour < 19:
+    #     logger.debug(f"This is a weekday and it's before 7PM")
+    #     trading_date = (today - timedelta(days=1)).strftime(DATE_FMT)
+    #     return trading_date
 
     # NOTE: Is the date in future?
     if i_date and is_date_in_future(i_date):
         trading_date = today.strftime(DATE_FMT)
     else:
         trading_date = i_date
-    # If i_date is weekend then calculate the immediate last weekday
-    if datetime.strptime(trading_date, DATE_FMT).weekday() > 4:
-        excess_days = (datetime.strptime(trading_date, DATE_FMT).weekday() + 1) % 5
+    # NOTE: If the i_date is today and time is before 7 AM, then use previous day
+    if i_date == today.strftime(DATE_FMT) and today.hour < 19 and today.weekday() < 5:
+        excess_days = 1
+        logger.error(
+            f"It is'a Weekday and befoer 7 PM. Use previous day. [{excess_days = }]"
+        )
         prev_week_day = (
             datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)
         ).strftime(DATE_FMT)
         trading_date = prev_week_day
-    # If the last weekday was a exchange holiday then try previous day
+    # NOTE: If i_date is weekend then calculate the immediate last weekday
+    if datetime.strptime(trading_date, DATE_FMT).weekday() > 4 and (
+        i_date == today.strftime(DATE_FMT) and today.hour < 19
+    ):
+        excess_days = (7 + datetime.strptime(trading_date, DATE_FMT).weekday() + 1) % 5
+        logger.error(f"[{excess_days = }]")
+        prev_week_day = (
+            datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)
+        ).strftime(DATE_FMT)
+        trading_date = prev_week_day
+    # NOTE: If the last weekday was a exchange holiday then try previous day
     if is_NSE_holiday(trading_date):
         prev_working_day = (
             datetime.strptime(trading_date, DATE_FMT) - timedelta(days=1)

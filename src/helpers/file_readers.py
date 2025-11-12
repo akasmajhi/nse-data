@@ -6,11 +6,24 @@ import pandas as pd
 from loguru import logger
 
 from src.helpers.common import compose_dates_from_range, get_last_trading_date
-from src.constants import FILES_BASE_DIR, PREOPEN_SKIPROWS, PREOPEN_PAYLOADS, SUPPORTED_FILE_TYPES, DATE_FMT 
+from src.constants import (
+    FILES_BASE_DIR,
+    PREOPEN_SKIPROWS,
+    PREOPEN_PAYLOADS,
+    SUPPORTED_FILE_TYPES,
+    DATE_FMT,
+)
 from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
-from src.fetchers.stock_fetchers import fetch_stock_info, get_stock_data_since_listing, fetch_market_cap, read_market_cap_from_file, read_stock_info_from_file
+from src.fetchers.stock_fetchers import (
+    fetch_stock_info,
+    get_stock_data_since_listing,
+    fetch_market_cap,
+    read_market_cap_from_file,
+    read_stock_info_from_file,
+)
 
-def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFrame:
+
+def get_local_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
         Gets the data from the local store. If data is valid and not found
         locally, then you source the data from remote.
@@ -27,7 +40,7 @@ def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFram
     -------
         pandas.DataFrame
     Dataframe containg the in-range values.
-    
+
     Validations
     -----------
     #TODO
@@ -39,40 +52,60 @@ def get_local_data(file_type: str, start_date: str, end_date:str) -> pd.DataFram
     # Following call gets the DD-MMM-YYYY ranges as list
     d_range = compose_dates_from_range(start_date, end_date)
     if not d_range:
-        logger.info(f"No dates to process for [{file_type = }], [{start_date = }], [{end_date = }]")
+        logger.info(
+            f"No dates to process for [{file_type = }], [{start_date = }], [{end_date = }]"
+        )
         return df
-    
+
     for trading_date in d_range:
         try:
-            if(file_type.upper() == "PREOPEN"):
+            if file_type.upper() == "PREOPEN":
                 for payload in PREOPEN_PAYLOADS:
-                    data = pd.read_csv(os.path.join(FILES_BASE_DIR, "PREOPEN", f"preopen_{payload}_{trading_date}.csv"), encoding="utf-8", skiprows=PREOPEN_SKIPROWS)
-                    df = pd.concat([df, data ])
+                    data = pd.read_csv(
+                        os.path.join(
+                            FILES_BASE_DIR,
+                            "PREOPEN",
+                            f"preopen_{payload}_{trading_date}.csv",
+                        ),
+                        encoding="utf-8",
+                        skiprows=PREOPEN_SKIPROWS,
+                    )
+                    df = pd.concat([df, data])
                 return df
 
-            trd_dt_data = pd.read_csv(os.path.join(FILES_BASE_DIR,file_type.upper(),\
-                                                   f'{file_type.lower()}_{trading_date}.csv'))
-            #NOTE: For index file add trading_date column since it's absent in data file content
-            if (file_type.upper() == SUPPORTED_FILE_TYPES["INDEX"]):
+            trd_dt_data = pd.read_csv(
+                os.path.join(
+                    FILES_BASE_DIR,
+                    file_type.upper(),
+                    f"{file_type.lower()}_{trading_date}.csv",
+                )
+            )
+            # NOTE: For index file add trading_date column since it's absent in data file content
+            if file_type.upper() == SUPPORTED_FILE_TYPES["INDEX"]:
                 trd_dt_data["TRADING_DATE"] = trading_date
-            #TODO: Need to handle empty file case. Refresh with fetch???
+            # TODO: Need to handle empty file case. Refresh with fetch???
             if trd_dt_data.size == 0:
                 logger.error(f"Data NOT found in local for [{trading_date = }]")
-            # Data found in local; Append data to DF 
+            # Data found in local; Append data to DF
             else:
-                logger.debug(f"[{file_type = }] Data FOUND locally for [{trading_date = }]")
-                df = pd.concat([df,trd_dt_data], ignore_index=True)
-        #TODO Should be similar to the first case
+                logger.debug(
+                    f"[{file_type = }] Data FOUND locally for [{trading_date = }]"
+                )
+                df = pd.concat([df, trd_dt_data], ignore_index=True)
+        # TODO Should be similar to the first case
         except pd.errors.EmptyDataError:
             logger.error(f"WTF: No data for [{trading_date = }], [{file_type = }]")
         # If data not found locally, issue remote fetch
         except FileNotFoundError:
-            logger.info(f"No file for [{trading_date = }], {file_type = }. Calling Fetcher")
+            logger.info(
+                f"No file for [{trading_date = }], {file_type = }. Calling Fetcher"
+            )
             trd_dt_data = fetch_data(file_type, trading_date)
-            if (file_type.upper() == SUPPORTED_FILE_TYPES["INDEX"]):
+            if file_type.upper() == SUPPORTED_FILE_TYPES["INDEX"]:
                 trd_dt_data["TRADING_DATE"] = trading_date
-            df = pd.concat([df, trd_dt_data], ignore_index=True) 
+            df = pd.concat([df, trd_dt_data], ignore_index=True)
     return df
+
 
 def isFileExisting(file_type: str, trading_date: str):
     """
@@ -91,9 +124,10 @@ def isFileExisting(file_type: str, trading_date: str):
     """
     logger.debug(f"Checking for [{file_type = }] for [{trading_date = }]")
 
+
 def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> list:
     """
-        Retunr the list containing all index names for given date. 
+        Retunr the list containing all index names for given date.
         For weekends, date is defaulted to the latest Friady.
     Parameters
     ----------
@@ -108,25 +142,28 @@ def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
     i_weekday = datetime.strptime(i_date, DATE_FMT).weekday()
     if i_weekday > 4:
         days_to_go_back = (i_weekday + 3) % 7
-        i_date = (datetime.strptime(i_date, DATE_FMT) - timedelta(days=days_to_go_back)).strftime(DATE_FMT)
-    #TODO: What if the last Friday was a exchange holiday?
+        i_date = (
+            datetime.strptime(i_date, DATE_FMT) - timedelta(days=days_to_go_back)
+        ).strftime(DATE_FMT)
+    # TODO: What if the last Friday was a exchange holiday?
     try:
-        data = get_local_data(file_type=SUPPORTED_FILE_TYPES["INDEX"],
-                          start_date=i_date,
-                          end_date=i_date)
+        data = get_local_data(
+            file_type=SUPPORTED_FILE_TYPES["INDEX"], start_date=i_date, end_date=i_date
+        )
         index_names = list(data["INDEX"].unique())
         # logger.info(f"Index Names are: [{index_names}]")
         return index_names
     except:
         logger.error(f"Error Occured fetching data")
-        return index_names # Reurn Blank Index names
+        return index_names  # Reurn Blank Index names
+
 
 def get_local_index_constituents(index_name: str) -> list:
-    #TODO: Needs a design review (for storing individual files & history
+    # TODO: Needs a design review (for storing individual files & history
     """
-        Get's the index constituents for the passed index name. It is assumed that 
+        Get's the index constituents for the passed index name. It is assumed that
         the index_name passed is valid.
-    
+
     Parameters
     ----------
         index_name: str
@@ -138,23 +175,28 @@ def get_local_index_constituents(index_name: str) -> list:
     """
     logger.debug(f"[{index_name = }]")
     constituents = list()
-    #NOTE: Check if there is a file already present with index names
-    file_type:str = SUPPORTED_FILE_TYPES["IDX_CONSTITUENTS"]
+    # NOTE: Check if there is a file already present with index names
+    file_type: str = SUPPORTED_FILE_TYPES["IDX_CONSTITUENTS"]
     try:
-        file_name = os.path.join(FILES_BASE_DIR,
-                                        file_type.upper(),
-                                        f'{file_type.lower()}_{index_name}.json')
-        data = json.load(open(file_name))
-        df = pd.DataFrame(data["data"])
-        constituents = list(df["symbol"][1:])
-        # logger.info(f"The index [{index_name}] constituents are [{constituents}]")
-        # logger.info(df)
+        file_name = os.path.join(
+            FILES_BASE_DIR, file_type.upper(), f"{file_type.lower()}_{index_name}.json"
+        )
+        if file_name:
+            data = json.load(open(file_name))
+            try:
+                df = pd.DataFrame(data["data"])
+                constituents = list(df["symbol"][1:])
+            except KeyError:
+                logger.error(f"Possible File Corruption: [{file_name = }]")
+                # logger.info(f"The index [{index_name}] constituents are [{constituents}]")
+                # logger.info(df)
     except pd.errors.EmptyDataError:
         logger.error(f"WTF: File Present but No data for [{index_name = }]")
-    #TODO: If such file is not present then fetch and store in the file
+    # TODO: If such file is not present then fetch and store in the file
     except FileNotFoundError:
         return fetch_index_constituents_data(index_name)
     return constituents
+
 
 def get_local_stock_data(stock_name: str) -> pd.DataFrame:
     """Gets the since-listing stock data from local files. If data not found locally,
@@ -170,26 +212,28 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
     Data frame containing the since-listing stock data.
     """
     logger.debug(f"[{stock_name = }]")
-    #NOTE: Read the local file, if it exists. Use meta-info files to check past fectches.
-    file_type:str = SUPPORTED_FILE_TYPES["STOCK"]
-    trading_date: str= get_last_trading_date(datetime.today().strftime(DATE_FMT))
+    # NOTE: Read the local file, if it exists. Use meta-info files to check past fectches.
+    file_type: str = SUPPORTED_FILE_TYPES["STOCK"]
+    trading_date: str = get_last_trading_date(datetime.today().strftime(DATE_FMT))
     logger.info(f"Getting data [{stock_name = }], [{trading_date = }]")
     try:
-        file_name = os.path.join(FILES_BASE_DIR,
-                                        file_type.upper(),
-                                        f'{file_type.lower()}_{stock_name}.json')
+        file_name = os.path.join(
+            FILES_BASE_DIR, file_type.upper(), f"{file_type.lower()}_{stock_name}.json"
+        )
         data = json.load(open(file_name))
         df = pd.DataFrame(data["data"])
     except FileNotFoundError:
         logger.error(f"File not found for [{stock_name = }], [{trading_date = }]")
-        #NOTE: If the local file does not exist then issue a fetch
+        # NOTE: If the local file does not exist then issue a fetch
         return get_stock_data_since_listing(stock_name)
     return pd.DataFrame()
 
-def get_local_market_cap(file_type: str,
-                         instr_name: str,
-                         trading_date: str = datetime.today().strftime(DATE_FMT)
-                         ) -> dict:
+
+def get_local_market_cap(
+    file_type: str,
+    instr_name: str,
+    trading_date: str = datetime.today().strftime(DATE_FMT),
+) -> dict:
     """Method for getting market cap for a stock or INDEX. In case of INDEX,
     the aggregate market cap of the constituents is used.
 
@@ -205,7 +249,7 @@ def get_local_market_cap(file_type: str,
     if file_type == SUPPORTED_FILE_TYPES["STOCK"] and instr_name:
         # NOTE: For individual stocks. First try reading the local file
         m_cap = read_market_cap_from_file(instr_name, trading_date)
-        #TODO: If such file is not present then fetch and store in the file
+        # TODO: If such file is not present then fetch and store in the file
         if not m_cap:
             return fetch_market_cap(instr_name, trading_date)
         else:
@@ -213,9 +257,12 @@ def get_local_market_cap(file_type: str,
     if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
         # NOTE: For INDEX. Aggregate the constituents' market caps.
         pass
-    return dict() # Return empty dict for any invalid file type(s)
+    return dict()  # Return empty dict for any invalid file type(s)
 
-def get_local_stock_info(stock: str, trading_date: str = datetime.today().strftime(DATE_FMT)) -> dict:
+
+def get_local_stock_info(
+    stock: str, trading_date: str = datetime.today().strftime(DATE_FMT)
+) -> dict:
     """Reads the meta info from local file system. If not found,
     It issues a remote fetch request.
     Parameters
@@ -231,7 +278,7 @@ def get_local_stock_info(stock: str, trading_date: str = datetime.today().strfti
     DataFrame containing dict-representation of the stock info
     """
 
-    logger.debug(f'[{stock = }], [{trading_date}]')
+    logger.debug(f"[{stock = }], [{trading_date}]")
     today = datetime.today().strftime(DATE_FMT)
     data = read_stock_info_from_file(stock=stock, trading_date=trading_date)
 
@@ -241,7 +288,8 @@ def get_local_stock_info(stock: str, trading_date: str = datetime.today().strfti
     if trading_date == today and not data:
         return fetch_stock_info(stock=stock)
 
-    return data #NOTE: data exists for today!
+    return data  # NOTE: data exists for today!
+
 
 if __name__ == "__main__":
     # get_local_index_names("30-AUG-2025")

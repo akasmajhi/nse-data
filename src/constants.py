@@ -39,6 +39,7 @@ MCAP_BLACKL_ISTED = ["9MMFSML", "MOS", "WONDERLA"]
 SUPPORTED_INSTR_TYPES = ("STK", "IDX", "OPT")
 GAIN_TYPE = {"PRICE": "PRICE", "VOLUME": "VOLUME", "OI": "OI"}
 DATE_FMT = "%d-%b-%Y"
+UI_DATE_FMT = "DD-MMM-YYYY"
 DATE_FMT_1 = "%d-%m-%Y"
 # FILES_BASE_DIR='data_files/'
 FILES_BASE_DIR = "/mnt/d/market/NSE/data_files"

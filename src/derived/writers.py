@@ -1,12 +1,13 @@
 import os
 import json
-import time
 
 from loguru import logger
 
 import src.constants as C
+from src.helpers.cross_cutting import benchmark
 
 
+@benchmark
 def industry_to_stock(trading_date: str) -> dict:
     """For a given trading date, this function writes and returns the industry-to-stock
     mapping.
@@ -20,7 +21,6 @@ def industry_to_stock(trading_date: str) -> dict:
 
     """
     logger.debug(f"[{trading_date = }]")
-    start_time = time.perf_counter()
     industry_stock: dict = dict()
 
     files_dir = os.path.join(
@@ -33,8 +33,6 @@ def industry_to_stock(trading_date: str) -> dict:
         files = os.listdir(os.path.join(files_dir, trading_date))
     except FileNotFoundError:
         logger.error(f"[{files_dir = }] does not exist!")
-        end_time = time.perf_counter()
-        logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
         return dict()  # NOTE: Returning blank dict on error condition
     # NOTE: If the derived data already exists, no point re-building it
     if os.path.join(
@@ -44,8 +42,6 @@ def industry_to_stock(trading_date: str) -> dict:
         f"{C.IND_TO_STOCK_FOLDER}-{trading_date}.json",
     ):
         logger.info(f"File already exists!")
-        end_time = time.perf_counter()
-        logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
         return {}
     processed = 0
     ind_key = "industry"
@@ -70,8 +66,6 @@ def industry_to_stock(trading_date: str) -> dict:
             except KeyError:
                 pass
     logger.info(f"Total files {processed = }")
-    end_time = time.perf_counter()
-    logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
     # NOTE: Write the contents to the file now
     write_dir = os.path.join(
         C.FILES_BASE_DIR, C.SUPPORTED_FILE_TYPES["DERIVED"], C.IND_TO_STOCK_FOLDER
@@ -86,6 +80,7 @@ def industry_to_stock(trading_date: str) -> dict:
     return industry_stock
 
 
+@benchmark
 def combine_m_caps(folder: str) -> dict:
     """Combine all the m_cap files data onto a fingle file for efficiency.
     Parameters
@@ -103,7 +98,6 @@ def combine_m_caps(folder: str) -> dict:
     ----
     File name is hard-coded to combined.json
     """
-    start_time = time.perf_counter()
     logger.info(f"Combining market caps for [{folder = }]")
     # NOTE: Check if the folder exists
     mcap_folder = os.path.join(
@@ -114,8 +108,6 @@ def combine_m_caps(folder: str) -> dict:
     )
     if not os.path.isdir(mcap_folder):
         logger.error(f"Invalid [{mcap_folder = }]")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return dict()
     # ERROR: do not combine if the combined file already exists
     if os.path.isfile(os.path.join(mcap_folder, "combined.json")):
@@ -134,30 +126,16 @@ def combine_m_caps(folder: str) -> dict:
                     mcap_dict[m_cap_file[:-5]] = mcap_json
                 except KeyError:
                     logger.error(f"Error reading m_cap for [{m_cap_file = }]")
-                    end_time = time.perf_counter()
-                    logger.info(
-                        f"Execution time: {(end_time - start_time):.6f} seconds"
-                    )
         output_filename = os.path.join(mcap_folder, "combined.json")
         with open(output_filename, "w") as json_file:
             json.dump(mcap_dict, json_file, indent=4)
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return mcap_dict
     except FileNotFoundError:
         logger.error(f"Directory not found at [{mcap_folder = }]")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     except NotADirectoryError:
         logger.error(f"[{mcap_folder = }] is not a directory")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     except PermissionError:
         logger.error(f"Permission denied to access [{mcap_folder = }].")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
-    end_time = time.perf_counter()
-    logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     return dict()
 
 

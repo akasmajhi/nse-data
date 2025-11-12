@@ -1,9 +1,9 @@
-from nicegui import ui
+import datetime
+from nicegui import ui, app
 import pandas as pd
 
 from loguru import logger
 
-from presentation.helpers import common
 from analytics.gainers import daily_gainer
 import src.constants as C
 
@@ -18,10 +18,16 @@ ui.add_head_html(
 )
 
 
+@ui.refreshable
 def stock_grid() -> ui.aggrid:
     logger.info(f"Into stock_grid method")
-    trading_date = common.get_last_trading_date()
-    logger.info(f"[{trading_date = }]")
+    trading_date = datetime.datetime.today().strftime(C.DATE_FMT)
+    try:
+        if app.storage.user["Trading_date"]:
+            trading_date = app.storage.user["Trading_date"]
+            logger.info(f"Trading date found in session: [{trading_date}]")
+    except KeyError:
+        logger.info(f"No Trading_Date in local storage")
     data = daily_gainer(
         file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
         gain_type=C.GAIN_TYPE["PRICE"],
@@ -41,7 +47,7 @@ def stock_grid() -> ui.aggrid:
                 "HghPric",
                 "LwPric",
                 "ClsPric",
-                "LastPric",
+                # "LastPric",
                 "PrvsClsgPric",
                 "TtlTradgVol",
                 "pct_change",
@@ -57,6 +63,7 @@ def stock_grid() -> ui.aggrid:
                     {
                         "headerName": "Date",
                         "field": "TradDt",
+                        # "valueFormatter": '(new Date(value)).toLocaleDateString("en-IN")',
                     },
                     {
                         "headerName": "Series",
@@ -77,28 +84,33 @@ def stock_grid() -> ui.aggrid:
                         "field": "ClsPric",
                         "filter": "agNumberColumnFilter",
                     },
-                    {"headerName": "Last", "field": "LastPric"},
+                    # {"headerName": "Last", "field": "LastPric"},
                     {"headerName": "Prev. Cls.", "field": "PrvsClsgPric"},
-                    {"headerName": "Volume", "field": "TtlTradgVol"},
+                    {
+                        "headerName": "Volume",
+                        "field": "TtlTradgVol",
+                        "valueFormatter": "value.toLocaleString()",
+                    },
                     {
                         "headerName": "% Delta",
                         "field": "pct_change",
                         "valueFormatter": "value.toFixed(2)",
                     },
                     {
-                        "headerName": "market cap",
+                        "headerName": "MCAP",
                         "field": "total_m_cap",
                         "filter": "agNumberColumnFilter",
+                        "valueFormatter": 'value.toLocaleString("en-IN", { style: "currency", currency: "INR" })',
                     },
                 ],
                 # "rowStyle": {"background": "grey"},
                 "rowClassRules": {
                     ":!bg-red-300": "(params) => params.data.pct_change < 0",
                     ":!bg-green-300": "(params) => params.data.pct_change > 0",
-                    # ":!bg-red-300": '(params) => params.data.col1 == "ADVANCE"',
                 },
             },
         ).classes("max-h-1240")
+        stk_grid.on(type="click")
         return stk_grid
     else:
         return ui.aggrid(

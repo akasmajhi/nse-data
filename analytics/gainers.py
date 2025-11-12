@@ -5,6 +5,7 @@ from loguru import logger
 import src.constants as C
 import src.headers as H
 import src.helpers.common as common
+from src.helpers.cross_cutting import benchmark
 from src.derived import readers
 from src.fetchers.common import get_last_fetch_date
 
@@ -14,11 +15,13 @@ from src.fetchers.common import get_last_fetch_date
 # )
 
 
+@benchmark
 def daily_gainer(
+    start_date: str,
     file_type: str = C.SUPPORTED_FILE_TYPES["STOCK"],
     gain_type: str = C.GAIN_TYPE["PRICE"],
     duration: str = C.SUPPORTED_TIME_DURATIONS["DAY"],
-    start_date: str = common.get_last_monday(),
+    # start_date: str = common.get_last_monday(),
     series: str = "EQ",
 ) -> pd.DataFrame:
     """Gets the daily gainers. If you reverse the sequence, you get daily losers.
@@ -45,9 +48,13 @@ def daily_gainer(
     pandas.DataFrame
         Data Frame containing the results OR empty DF in case of any error/exceptions.
     """
+    # NOTE: The incoming date cannot be a future date
     logger.debug(
         f"[{file_type = }], [{gain_type = }], [{duration = }], [{start_date = }], [{series = }]"
     )
+    if common.is_date_in_future(start_date):
+        logger.error(f"Future dates not allowed for daily gainers. [{start_date = }]")
+        return pd.DataFrame()
     file_name = ""
     # NOTE: If you are running this on a weekend then, default this immediate gone by Friday
     if datetime.strptime(start_date, C.DATE_FMT).weekday() > 4:
@@ -92,9 +99,9 @@ def daily_gainer(
                 combined_data: pd.DataFrame = pd.merge(
                     daily_data, m_cap_data_df, on="TckrSymb"
                 )
-                logger.info(
-                    f"[{combined_data.columns = }], [{combined_data.head() = }]"
-                )
+                # logger.info(
+                #     f"[{combined_data.columns = }], [{combined_data.head() = }]"
+                # )
                 combined_data.sort_values(
                     by="pct_change", ascending=False, inplace=True
                 )
@@ -173,3 +180,7 @@ def index_gainers(
         # data.groupby()
         return data
     return data
+
+
+if __name__ == "__main__":
+    daily_gainer("07-Nov-2025")

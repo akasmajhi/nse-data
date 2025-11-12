@@ -1,13 +1,14 @@
 import os
 import json
-import time
 
 from loguru import logger
 
 import src.constants as C
 from src.helpers.file_readers import get_local_stock_info
+from src.helpers.cross_cutting import benchmark
 
 
+@benchmark
 def get_industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -> dict:
     """For a given trading_date, this function returns a map of the
     industry-to-stocks in the form of a dict where the key the is
@@ -31,7 +32,6 @@ def get_industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -
             f"Need to provided at least 1 param. [{i_file_name = }], [{i_trading_date = }]"
         )
         return dict()
-    start_time = time.perf_counter()
     if (
         i_file_name is not None
     ):  # NOTE: i_file_name takes precendence over i_trading_date
@@ -48,8 +48,6 @@ def get_industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -
         try:
             with open(file_name, "r", encoding="utf-8") as file:
                 data: dict = json.load(file)
-            end_time = time.perf_counter()
-            logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
             return data
         except FileNotFoundError:
             logger.error(f"{file_name = } does not exist!")
@@ -63,6 +61,7 @@ def get_industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -
         return dict()
 
 
+@benchmark
 def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
     """For a given trading_date, this function returns a map of the
     industry-to-PE in the form of a dict where the key the is
@@ -80,7 +79,6 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
     dictionary containing the industry-to-stock mapping.
     """
     logger.debug(f"[{i_industry = }], [{i_trading_date = }]")
-    start_time = time.perf_counter()
     # NOTE: If no date is provided then use the latest data
     if i_trading_date is None:
         files_dir = os.path.join(
@@ -91,8 +89,6 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
             files = os.listdir(os.path.join(files_dir))
             if not files:
                 logger.error(f"No data found in [{files_dir}]")
-                end_time = time.perf_counter()
-                logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
                 return dict()
             logger.debug(f"all [{files = }]")
             all_files: list = list()
@@ -105,8 +101,6 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
             # logger.info(f"[{ind_map.keys() = }]")
             if i_industry not in ind_map.keys():
                 logger.error(f"Non-existing [{i_industry = }] passed!")
-                end_time = time.perf_counter()
-                logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
                 return dict()
             stocks = ind_map.get(i_industry)
             logger.info(f"[{stocks = }]")
@@ -120,13 +114,9 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
                         stock=stock, trading_date=trading_date
                     )
                     return_dict[stock] = stock_meta["metadata"]["pdSymbolPe"]
-                end_time = time.perf_counter()
-                logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
                 return return_dict
         except OSError as e:
             logger.error(f"[{files_dir = }] does not exist! {e}")
-            end_time = time.perf_counter()
-            logger.info(f"Elapsed Time: {(end_time - start_time):.6f} seconds")
             logger.info(f"[{files = }]")
             return dict()  # NOTE: Returning blank dict on error condition
 
@@ -140,12 +130,9 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
     )
     if not os.path.exists(file_name):
         logger.error(f"No file [{i_trading_date = }], [{file_name = }]")
-        end_time = time.perf_counter()
-        logger.info(f"Elapsed Time: {(end_time - start_time):.6f} seconds")
         return dict()
     ind_map = get_industry_to_stock(i_file_name=file_name, i_trading_date=None)
     stocks = ind_map.get(i_industry)
-    end_time = time.perf_counter()
     return_dict: dict = dict()
     if stocks:
         try:
@@ -156,21 +143,16 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
                     stock=stock, trading_date=trading_date
                 )
                 return_dict[stock] = stock_meta["metadata"]["pdSymbolPe"]
-            end_time = time.perf_counter()
-            logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
             return return_dict
         except OSError as e:
             logger.error(f"Error Occured! {e}")
-            end_time = time.perf_counter()
-            logger.info(f"Elapsed Time: {(end_time - start_time):.6f} seconds")
             return dict()  # NOTE: Returning blank dict on error condition
 
     logger.error(f"No stocks for [{i_industry = }]")
-    end_time = time.perf_counter()
-    logger.info(f"Elapsed: {(end_time - start_time):.6f} seconds")
     return dict()
 
 
+@benchmark
 def combined_m_caps(folder: str) -> dict:
     """Read combined m_cap file for efficiency.
     Parameters
@@ -188,7 +170,6 @@ def combined_m_caps(folder: str) -> dict:
     ----
     File name is hard-coded to combined.json
     """
-    start_time = time.perf_counter()
     logger.info(f"Combining market caps for [{folder = }]")
     # NOTE: Check if the folder exists
     mcap_folder = os.path.join(
@@ -199,8 +180,6 @@ def combined_m_caps(folder: str) -> dict:
     )
     if not os.path.isdir(mcap_folder):
         logger.error(f"Invalid [{mcap_folder = }]")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return dict()
     # ERROR: if the combined file does not exist then it's an error
     if not os.path.isfile(os.path.join(mcap_folder, "combined.json")):
@@ -220,8 +199,6 @@ def combined_m_caps(folder: str) -> dict:
             ]
         except KeyError:
             logger.error(f"Error reading market cap for [{key = }]")
-    end_time = time.perf_counter()
-    logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     return mcap_dict
 
 

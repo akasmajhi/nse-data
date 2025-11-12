@@ -1,4 +1,7 @@
+from loguru import logger
 from nicegui import ui, app
+
+from presentation.pages.grids import stock_grid
 
 
 def toggle_dark(e):
@@ -12,3 +15,23 @@ def toggle_dark(e):
         dark.disable()
         e.sender.props("icon=img:/icons/icons8-dark-mode-50_bright.png")
         print(f"Dark mode is True. Making it: [{dark.value = }]")
+
+
+def handle_gain_type(e):
+    print(f"Clicked on filter dropdown")
+    print(e)
+
+
+def handle_gain_loss(e):
+    print(f"Into handle_gain_loss_radio: [{e}]")
+
+
+def handle_filter_change(e):
+    print(f"Into handle filter change [{e}]")
+
+
+def handle_date_change_filter_1(e):
+    logger.info(f"Event is: [{e}]")
+    print(f"handle_date_change_filter_1 : [{e.sender.value}]")
+    app.storage.user["Trading_date"] = e.sender.value
+    stock_grid.refresh()

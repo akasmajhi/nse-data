@@ -69,11 +69,21 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
         - [ ✔️ ] Clean data for [revios fetches (using the writers.combine_m_caps
         - [ ✔️ ] Integrate writers.combine_m_caps with m_cap_fetches
 ## 30-Oct-2025
+    - [ TODO ] NiceGUI life-cycle methods
+        - [ TODO ] Identify the sequence of life-cycle methods
+        - [ TODO ] - Why some of my methods are slow?(when rendering the grid)
     - [ TODO ] Style the grid { aggrid }
         - [ TODO ] Format the cell values properly
         - [ TODO ] Expand the grid
     - [ TODO ] Work on Page layout
+## 31-Oct-2025
+    >> Did nothing today!
         
+## 12-Nov-2025
+    - [ TODO ] Finish daily giners summary card
+    - [ TODO ] get_all_industry method
+    - [ TODO ] get_all_industry link with stocks_grid
+    - [ DONE ] Linking the date selector to daily gainers stock grid
 
 # PARKING LOT 
 
@@ -99,4 +109,4 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
     > Reflex - A React site UI library
     > Textual - Another desktop based UI
     > Marimo -  - - | T R Y | - -
-        >> Alternative to Jupiter with ricjer experience.
+        >> Alternative to Jupiter with richer experience.

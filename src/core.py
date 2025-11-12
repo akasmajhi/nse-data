@@ -242,6 +242,8 @@ def daily_fetchers():
         file_type="FNOBHAVCOPY",
         start_date=get_first_day_of_month(),
         end_date=datetime.today().strftime(DATE_FMT),
+        # start_date="31-Oct-2025",
+        # end_date="31-Oct-2025",
     )
 
     get_all_index_constituents()
@@ -288,6 +290,9 @@ def get_stock_info(
 
 
 if __name__ == "__main__":
+    """
+    daily_fetchers()
+    """
     anything_executed: bool = False
     transient_test: bool = False
     # transient_test: bool = True
@@ -308,7 +313,7 @@ if __name__ == "__main__":
     # logger.debug(f'<<{get_index_constituents("NIFTY 50")}>>')
     # fetch_stock_data_since_listing(skip_current_year=True)
     # NOTE:  Run weekly fetchers only on Saturdays
-    if datetime.today().weekday() == 5:
+    if datetime.today().weekday() >= 5:
         weekly_fetchers()
         anything_executed = True
     if not anything_executed:

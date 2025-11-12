@@ -1,4 +1,3 @@
-import time
 import json
 import pandas as pd
 import os
@@ -7,9 +6,14 @@ from loguru import logger
 
 import src.constants as const
 from src.helpers.validators import is_date_valid
-from src.helpers.common import compose_dates_for_duration, compose_local_filename
+from src.helpers.common import (
+    compose_dates_for_duration,
+    compose_local_filename,
+    benchmark,
+)
 
 
+@benchmark
 def m_cap(folder: str) -> pd.DataFrame:
     """
     Reads the market cap JSON files from folder and creates structured data.
@@ -24,7 +28,6 @@ def m_cap(folder: str) -> pd.DataFrame:
         pandas.DataFrame
     DF containing structured data
     """
-    start_time = time.perf_counter()
     logger.debug(f"[{folder = }]")
     mcap_folder = os.path.join(
         const.FILES_BASE_DIR,
@@ -36,8 +39,6 @@ def m_cap(folder: str) -> pd.DataFrame:
     # NOTE: Check if the folder exists
     if not os.path.isdir(mcap_folder):
         logger.error(f"Invalid [{mcap_folder = }]")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return pd.DataFrame()
     # NOTE: Read each file and extract market cap
     try:
@@ -61,27 +62,13 @@ def m_cap(folder: str) -> pd.DataFrame:
                     mcap_dicts.append(mcap_dict)
                 except KeyError:
                     logger.error(f"Error reading m_cap for [{m_cap_file = }]")
-                    end_time = time.perf_counter()
-                    logger.info(
-                        f"Execution time: {(end_time - start_time):.6f} seconds"
-                    )
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
         return pd.DataFrame(mcap_dicts)
     except FileNotFoundError:
         logger.error(f"Directory not found at [{mcap_folder = }]")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     except NotADirectoryError:
         logger.error(f"[{mcap_folder = }] is not a directory")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     except PermissionError:
         logger.error(f"Permission denied to access [{mcap_folder = }].")
-        end_time = time.perf_counter()
-        logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
-    end_time = time.perf_counter()
-    logger.info(f"Execution time: {(end_time - start_time):.6f} seconds")
     return pd.DataFrame()
 
 
