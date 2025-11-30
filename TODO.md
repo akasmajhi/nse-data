@@ -79,15 +79,20 @@ core.get_stock_info(stock, trading_date) -> list[dict] | dict:
 ## 31-Oct-2025
     >> Did nothing today!
         
-## 12-Nov-2025
+## 12-Nov-2025 & 13-Nov-2025 
     - [ TODO ] Finish daily giners summary card
     - [ TODO ] get_all_industry method
     - [ TODO ] get_all_industry link with stocks_grid
     - [ DONE ] Linking the date selector to daily gainers stock grid
+    - [ TODO ] Compute yearly average volume for each stock
+
+## 17-Nov-2025
+    - [ TODO ] Use dataclass for filters in "Daily Gainers" page.
 
 # PARKING LOT 
 
-## SHORT POSITIONS FILE FETCH
+# Disable Fetching of SGB and other instruments
+### SHORT POSITIONS FILE FETCH
 ## CORP. ACTION FILE FETCH
 ## RESULTS CALENDAR FETCH
 ## REVIVE TESTING FRAMEWORK

@@ -1,36 +1,9 @@
 from nicegui import ui, app
 
-# from presentation.handlers.user_actions import toggle_dark
-
 from presentation.pages.grids import stock_grid
 from presentation.pages.filters import stocks_filter
+from presentation.pages.stock_grid_summary import grid_summary
 from presentation.pages import todos
-
-
-# from presentation.handlers import life_cycle as LC
-# @ui.page("/")
-# def main_page():
-#     ui.label("Main Page")
-#
-
-# app.add_static_files("/icons", "presentation/icons")
-
-# dark_btn = ui.button(on_click=toggle_dark).props(
-#     "icon=img:/icons/icons8-dark-mode-50_dark.png"
-# )
-
-#
-# @app.on_startup
-# def handle_startup():
-#     LC.handle_startup
-#
-
-# app.on_shutdown(LC.handle_shutdown)
-# app.on_connect(LC.handle_connect)
-# app.on_disconnect(LC.handle_disconnect)
-# app.on_delete(LC.handle_delete)
-# app.on_exception(LC.handle_exception)
-#
 
 
 def entry():
@@ -47,6 +20,7 @@ def entry():
             with ui.tab_panel(daily_gainers):
                 stocks_filter()
                 stock_grid()
+                grid_summary()
                 todos.daily_gainers()
             with ui.tab_panel(sector_analysis):
                 ui.label("sector Analysis")

@@ -1,6 +1,5 @@
 from loguru import logger
 from nicegui import Client
-from nicegui import ui
 
 
 def handle_startup():

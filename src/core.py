@@ -107,7 +107,7 @@ def get_market_cap(
     # TODO: Case where we fetch m-cap for an index
     if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
         pass
-    return list(dict())  # Unhandled / unimplemented cases gets a blank dictionary
+    return list(dict())  # Unhandled / unimplemented case gets a blank dictionary
 
 
 def get_supported_file_types() -> dict:
@@ -292,6 +292,10 @@ def get_stock_info(
 if __name__ == "__main__":
     """
     daily_fetchers()
+    fetch_stock_data_since_listing(skip_current_year=False)
+    weekly_fetchers()
+    """
+    """
     """
     anything_executed: bool = False
     transient_test: bool = False

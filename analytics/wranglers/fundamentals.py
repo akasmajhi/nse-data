@@ -9,8 +9,8 @@ from src.helpers.validators import is_date_valid
 from src.helpers.common import (
     compose_dates_for_duration,
     compose_local_filename,
-    benchmark,
 )
+from src.helpers.cross_cutting import benchmark
 
 
 @benchmark

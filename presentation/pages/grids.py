@@ -23,8 +23,8 @@ def stock_grid() -> ui.aggrid:
     logger.info(f"Into stock_grid method")
     trading_date = datetime.datetime.today().strftime(C.DATE_FMT)
     try:
-        if app.storage.user["Trading_date"]:
-            trading_date = app.storage.user["Trading_date"]
+        if app.storage.user["trading_date"]:
+            trading_date = app.storage.user["trading_date"]
             logger.info(f"Trading date found in session: [{trading_date}]")
     except KeyError:
         logger.info(f"No Trading_Date in local storage")

@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, date
 import os
 import glob
 
+import pandas as pd
+
 from src.fetchers.common import get_last_fetch_date
 from src.helpers.validators import is_date_valid, is_NSE_holiday, get_latest_file
 from src.constants import (
@@ -486,7 +488,7 @@ def get_first_day_of_month() -> str:
     return datetime.now().replace(day=1).strftime(DATE_FMT)
 
 
-def get_all_stock_names(series: str = "") -> list:
+def get_all_stock_names(series: str = "", series_list: list = []) -> list:
     """Gets all the stock name from the latest bhavcopy.
     Parameter
     ---------
@@ -496,14 +498,15 @@ def get_all_stock_names(series: str = "") -> list:
         list
     Containing all the stock names
     """
+    logger.info(f"[{series = }],[{series_list = }]")
     latest_bhavcopy = get_latest_file(file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"])
-    symbol_col_name = "TckrSymb"
-    if not series:
-        # logger.debug(list(latest_bhavcopy[symbol_col_name].unique()))
-        pass
-    else:
-        # TODO: Filer the series
-        pass
+    symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
+    series_col_name = "SctySrs"
+    if series_list:
+        filtered_data = latest_bhavcopy[
+            latest_bhavcopy[series_col_name].isin(series_list)
+        ]
+        return list(pd.Series(filtered_data[symbol_col_name]).unique())
     # TODO: Insert try-except below
     return list(latest_bhavcopy[symbol_col_name].unique())
 

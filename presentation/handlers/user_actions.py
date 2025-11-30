@@ -33,5 +33,5 @@ def handle_filter_change(e):
 def handle_date_change_filter_1(e):
     logger.info(f"Event is: [{e}]")
     print(f"handle_date_change_filter_1 : [{e.sender.value}]")
-    app.storage.user["Trading_date"] = e.sender.value
+    app.storage.user["trading_date"] = e.sender.value
     stock_grid.refresh()
