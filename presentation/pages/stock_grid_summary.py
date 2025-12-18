@@ -1,11 +1,12 @@
-from nicegui import ui
-import pandas as pd
+from nicegui import ui, app
 
 
 @ui.refreshable
-def grid_summary(data: pd.DataFrame = pd.DataFrame()):
+def grid_summary():
     with ui.card(align_items="center"):
-        if not data.empty:
-            ui.label(f"Total {len(data)} items")
-        else:
-            ui.label(f"No data. The wiring may be incorrect!")
+        try:
+            summary = app.storage.user["grid_summary"]
+        except KeyError:
+            summary = "Loading"
+
+        ui.label(summary)

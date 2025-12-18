@@ -115,9 +115,12 @@ def daily_gainer(
 
 
 def weekly_gainers(
-    file_type: str = C.SUPPORTED_FILE_TYPES["BHAVCOPY"], series: str = "EQ"
+    file_type: str = C.SUPPORTED_FILE_TYPES["BHAVCOPY"],
+    series: str = "EQ",
+    week_num: int = 0,
+    start_date: str = common.get_last_monday(),
 ) -> pd.DataFrame:
-    logger.debug(f"[{file_type = }], [{series = }]")
+    logger.debug(f"[{file_type = }], [{series = }], [{week_num = }], [{start_date = }]")
     return pd.DataFrame()
 
 
