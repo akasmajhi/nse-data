@@ -658,3 +658,4 @@ if __name__ == "__main__":
     logger.debug(get_last_trading_date(i_date=""))
     logger.debug(get_last_trading_date(i_date="  "))
     logger.debug(get_last_trading_date(i_date="19-Oct-2025"))
+    logger.debug(get_last_trading_date())

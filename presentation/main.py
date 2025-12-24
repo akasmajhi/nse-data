@@ -2,7 +2,7 @@
 from nicegui import ui
 
 from presentation.pages.grids import stock_grid
-from presentation.pages.filters import stocks_filter
+from presentation.pages.filters.all_filters import scanner_filter, stocks_filter
 from presentation.pages.stock_grid_summary import grid_summary
 from presentation.pages import todos
 
@@ -21,7 +21,7 @@ with ui.tab_panels(tabs=tabs, value="daily_gainers").classes("w-full"):
         stocks_filter()
         stock_grid()
         grid_summary()
-        todos.daily_gainers()
+        # todos.daily_gainers()
     with ui.tab_panel("sector_analysis"):
         ui.label("sector Analysis")
     with ui.tab_panel("value_scanner"):
@@ -31,9 +31,16 @@ with ui.tab_panels(tabs=tabs, value="daily_gainers").classes("w-full"):
     with ui.tab_panel("derivates"):
         ui.label("OI Analysis")
     with ui.tab_panel("stock_scanner"):
-        ui.label("Scan Stocks")
+        # ui.label("Scan Stocks")
+        scanner_filter()
     with ui.tab_panel("ta"):
         ui.label("Tech Analysis")
 
 
 ui.run(show=False, title="Paisa", storage_secret="NONE")
+
+"""
+    TailwindCSS
+
+
+"""

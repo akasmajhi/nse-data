@@ -1,12 +1,12 @@
-import datetime
-from nicegui import ui, app
+from nicegui import ui
 import pandas as pd
 
 from loguru import logger
 
 from analytics.gainers import daily_gainer
-from presentation.helpers.dc.daily_gainers_filters import DGFilter, PriceDirection
+from presentation.helpers.dc.all import DGFilter
 from presentation.pages.stock_grid_summary import grid_summary
+from presentation.helpers.common import dg_filter_from_storage, set_grid_summary
 import src.constants as C
 
 ui.add_head_html(
@@ -22,16 +22,10 @@ ui.add_head_html(
 
 @ui.refreshable
 def stock_grid() -> ui.aggrid:
-    logger.info(f"Into stock_grid method")
-    trading_date = datetime.datetime.today().strftime(C.DATE_FMT)
-    if app.storage.user:
-        logger.info(f'[~~~~~~~~~~~~~ {app.storage.user["dg_filter"]} = ]')
-    try:
-        if app.storage.user["dg_filter"].trading_date:
-            trading_date = app.storage.user["dg_filter"].trading_date
-            logger.info(f"@@@@@@@@@@@@@@@@ [{app.storage.user['ddg_filter']}]")
-    except KeyError:
-        logger.info(f"No Trading_Date in local storage")
+    logger.info(f"Into stock_grid . . . [{dg_filter_from_storage() = }]")
+    dg_filter: DGFilter = dg_filter_from_storage()
+    # trading_date = datetime.datetime.today().strftime(C.DATE_FMT)
+    trading_date = dg_filter.trading_date
     data = daily_gainer(
         file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
         gain_type=C.GAIN_TYPE["PRICE"],
@@ -58,19 +52,17 @@ def stock_grid() -> ui.aggrid:
                 "total_m_cap",
             ]
         ]
-    try:
-        dg_filter: DGFilter = app.storage.user["dg_filter"]
-        if dg_filter and dg_filter.price_direction == PriceDirection.LOSS:
-            logger.debug(f"Select only the losers")
+    match dg_filter.gl.upper():
+        case "LOSS":
             data_ui = data_ui.loc[data_ui["pct_change"] < 0]
-            app.storage.user["grid_summary"] = f"Total {len(data_ui)} losers!"
-        if dg_filter and dg_filter.price_direction == PriceDirection.GAIN:
+            set_grid_summary(f"Total {len(data_ui)} losers!")
+        case "GAIN":
             data_ui = data_ui.loc[data_ui["pct_change"] >= 0]
-            app.storage.user["grid_summary"] = f"Total {len(data_ui)} gainers!"
-        if dg_filter and dg_filter.price_direction == PriceDirection.ANY:
-            app.storage.user["grid_summary"] = f"Total {len(data_ui)} items!"
-    except KeyError:
-        logger.info(f"app.storage.user may not have been set yet!")
+            set_grid_summary(f"Total {len(data_ui)} gainers!")
+        case "ANY":  # Do nothing
+            set_grid_summary(f"Total {len(data_ui)} items!!")
+        case _:
+            logger.error("Gain type that is unhandled . . .")
     grid_summary.refresh()
     if isinstance(data_ui, pd.DataFrame) and not data.empty:
         stk_grid = ui.aggrid.from_pandas(
