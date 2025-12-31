@@ -1,5 +1,11 @@
+import pickle
+
+# import time
+# import random
 from datetime import datetime
 import os
+import glob
+from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -11,7 +17,7 @@ from src.constants import (
     FILES_BASE_DIR,
     MCAP_FOLDER,
 )
-from src.helpers.cross_cutting import benchmark
+from src.helpers.cross_cutting import benchmark, is_file_old
 from loguru import logger
 
 
@@ -19,9 +25,24 @@ def dummy_request(url: str = NSE_DUMMY_REQ_URL):
     """Creates a dummy request to fetch headers so that
     the headers can be used in subsequent requests to the exchange.
     """
+    # NOTE: Frequent dummy_requests calls are causing ResponseError('too many 503 error responses')
+    # HACK: Try storing the r in the local storage
+
+    try:
+        with open("dummy_res.pickle", "rb") as f:
+            # NOTE: If the file is more than 5 mins old, delete it.
+            if is_file_old("dummy_res.pickle", 30):
+                logger.info(f"Dummy response (local file) is old!")
+                # os._exit(status=0)
+                # NOTE: Delete this file and create again
+                os.remove("dummy_res.pickle")
+                raise Exception("Removed old dummy response file")
+            return pickle.load(f)
+    except Exception as e:
+        logger.info(f"Dummy Response not cached yet or it is old! [{e = }]")
     retries = Retry(
         total=5,  # Total number of retries
-        backoff_factor=0.1,  # Delay between retries
+        backoff_factor=0.5,  # Delay between retries
         status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
         allowed_methods=frozenset({"GET"}),  # Limit retries to GET requests
     )
@@ -29,6 +50,11 @@ def dummy_request(url: str = NSE_DUMMY_REQ_URL):
     session.mount("https://", HTTPAdapter(max_retries=retries))
     # TODO: Incorporate exception handling here!
     r = session.get(url, headers=REQ_HEADER, timeout=3)
+    try:
+        with open("dummy_res.pickle", "wb") as f:
+            pickle.dump(r, f)
+    except Exception as e:
+        logger.error(f"Error writing dummy response to file. [{e = }]")
     return r
 
 
@@ -120,6 +146,38 @@ def get_last_fetch_date(file_type: str) -> str | None:
         case _:
             logger.error(f"[{file_type = }] Not supported for this op.")
             return None
+
+
+@benchmark
+def get_latest_file(i_folder: str, extn: str = "json") -> str:
+    """For the given path, the latest file is returned.
+    Parameters
+    ----------
+        i_folder: str
+    The name of the folder for which latest file is sought.
+        extn: str
+    The extension of the file names. For example, json or csv
+
+    Returns
+    -------
+        str
+    The latest file in the folder.
+    NOTE: Called needs to ensure full path(depending upon file type).
+    """
+    logger.debug(f"Getting latest file for [{i_folder = }] with suffix [{extn = }]")
+    # NOTE: Validation: Is this a folder?
+    folder_path = Path(i_folder)
+    latest_file: str = ""
+    if not folder_path.exists() or not folder_path.is_dir():
+        logger.error(f"The folder '[{folder_path = }]' does not exist or not a folder.")
+        return latest_file
+
+    # files_list = [item for item in folder_path.iterdir() if item.is_file()]
+    latest_file = max(
+        glob.glob(os.path.join(i_folder, f"*.{extn}")), key=os.path.getmtime
+    )
+    logger.info(f"Latest file is [{latest_file = }]")
+    return latest_file
 
 
 if __name__ == "__main__":

@@ -32,6 +32,7 @@ SUPPORTED_TIME_DURATIONS = {
     "WEEK": "WEEK",
     "MONTH": "MONTH",
 }
+WEEKLY_FOLDER = "weekly"
 IND_TO_STOCK_FOLDER = "ind_to_stock"
 MCAP_FOLDER = "market_cap"
 AVG_VOL_FOLDER = "avg_vol"

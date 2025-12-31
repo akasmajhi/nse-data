@@ -125,7 +125,8 @@ def isFileExisting(file_type: str, trading_date: str):
     logger.debug(f"Checking for [{file_type = }] for [{trading_date = }]")
 
 
-def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> list:
+# def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> list:
+def get_local_index_names(i_date: str = get_last_trading_date()) -> list:
     """
         Retunr the list containing all index names for given date.
         For weekends, date is defaulted to the latest Friady.
@@ -153,8 +154,8 @@ def get_local_index_names(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
         index_names = list(data["INDEX"].unique())
         # logger.info(f"Index Names are: [{index_names}]")
         return index_names
-    except:
-        logger.error(f"Error Occured fetching data")
+    except Exception as e:
+        logger.error(f"Error Occured fetching data. [{e = }]")
         return index_names  # Reurn Blank Index names
 
 

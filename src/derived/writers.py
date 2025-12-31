@@ -1,6 +1,7 @@
 import os
 import json
 
+import pandas as pd
 from loguru import logger
 
 import src.constants as C
@@ -23,31 +24,36 @@ def industry_to_stock(trading_date: str) -> dict:
     logger.debug(f"[{trading_date = }]")
     industry_stock: dict = dict()
 
-    files_dir = os.path.join(
+    # NOTE: THis is the META folder for the input files.
+    meta_folder = os.path.join(
         C.FILES_BASE_DIR,
         C.SUPPORTED_FILE_TYPES["STOCK"],
         C.SUPPORTED_FILE_TYPES["META"],
+        f"{trading_date}",
     )
     files: list = list()
     try:
-        files = os.listdir(os.path.join(files_dir, trading_date))
+        files = os.listdir(meta_folder)
     except FileNotFoundError:
-        logger.error(f"[{files_dir = }] does not exist!")
+        logger.error(f"Empty META folder [{meta_folder = }]for [{trading_date = }]")
         return dict()  # NOTE: Returning blank dict on error condition
     # NOTE: If the derived data already exists, no point re-building it
-    if os.path.join(
+    ind_stock_file = os.path.join(
         C.FILES_BASE_DIR,
         C.SUPPORTED_FILE_TYPES["DERIVED"],
         C.IND_TO_STOCK_FOLDER,
         f"{C.IND_TO_STOCK_FOLDER}-{trading_date}.json",
-    ):
-        logger.info(f"File already exists!")
-        return {}
+    )
+    logger.debug(f"[{ind_stock_file = }]")
+    if os.path.exists(ind_stock_file):
+        logger.error(f"File [{ind_stock_file = }] already exists!")
+        return dict()
+    # return dict()
     processed = 0
     ind_key = "industry"
 
     for file in files:
-        with open(os.path.join(files_dir, trading_date, file), "r") as f:
+        with open(os.path.join(meta_folder, file), "r") as f:
             f_dict = json.loads(f.read())
             try:
                 industry = f_dict["metadata"][ind_key]  # TODO: move it to constants
@@ -139,5 +145,30 @@ def combine_m_caps(folder: str) -> dict:
     return dict()
 
 
+def write_weekly_data(start_date: str, file_type: str, data: pd.DataFrame):
+    logger.info(f"Writing weekly file for [{start_date = }], [{file_type = }]")
+    if file_type == C.SUPPORTED_FILE_TYPES["STOCK"]:
+        file_name = os.path.join(
+            C.FILES_BASE_DIR,
+            C.SUPPORTED_FILE_TYPES["DERIVED"],
+            C.WEEKLY_FOLDER,
+            C.SUPPORTED_FILE_TYPES["STOCK"],
+            f"{start_date}.csv",
+        )
+        logger.debug(f"Writing CSV path [{file_name}]")
+        data.to_csv(file_name)
+
+
 if __name__ == "__main__":
-    print(industry_to_stock("18-Oct-2025"))
+    # print(industry_to_stock("10-Oct-2025"))
+    print(industry_to_stock("15-Oct-2025"))
+    print(industry_to_stock("16-Oct-2025"))
+    print(industry_to_stock("25-Oct-2025"))
+    print(industry_to_stock("01-Nov-2025"))
+    print(industry_to_stock("09-Nov-2025"))
+    print(industry_to_stock("17-Nov-2025"))
+    print(industry_to_stock("23-Nov-2025"))
+    print(industry_to_stock("29-Nov-2025"))
+    print(industry_to_stock("14-Dec-2025"))
+    print(industry_to_stock("20-Dec-2025"))
+    # print(industry_to_stock("18-Oct-2025"))

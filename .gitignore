@@ -180,3 +180,4 @@ failed_fetches*.json
 presentation/drills/*
 presentation/storage/*
 .nicegui/
+*.pickle

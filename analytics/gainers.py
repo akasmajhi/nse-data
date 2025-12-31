@@ -2,12 +2,20 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 from loguru import logger
+from analytics.composers import compose_weekly_data
 import src.constants as C
 import src.headers as H
-import src.helpers.common as common
+from src.helpers.common import (
+    is_date_in_future,
+    get_last_monday,
+    compose_dates_from_range,
+    compose_local_index_file_name,
+)
 from src.helpers.cross_cutting import benchmark
 from src.derived import readers
 from src.fetchers.common import get_last_fetch_date
+from src.derived.readers import read_weekly_data
+from src.derived.writers import write_weekly_data
 
 #     get_last_monday,
 #     compose_dates_from_range,
@@ -52,7 +60,7 @@ def daily_gainer(
     logger.debug(
         f"[{file_type = }], [{gain_type = }], [{duration = }], [{start_date = }], [{series = }]"
     )
-    if common.is_date_in_future(start_date):
+    if is_date_in_future(start_date):
         logger.error(f"Future dates not allowed for daily gainers. [{start_date = }]")
         return pd.DataFrame()
     file_name = ""
@@ -114,14 +122,61 @@ def daily_gainer(
     return pd.DataFrame()
 
 
+@benchmark
 def weekly_gainers(
     file_type: str = C.SUPPORTED_FILE_TYPES["BHAVCOPY"],
     series: str = "EQ",
     week_num: int = 0,
-    start_date: str = common.get_last_monday(),
+    start_date: str = get_last_monday(),
 ) -> pd.DataFrame:
     logger.debug(f"[{file_type = }], [{series = }], [{week_num = }], [{start_date = }]")
-    return pd.DataFrame()
+    # NOTE: if the file exists then read and return
+    local_data = read_weekly_data(
+        start_date=start_date, file_type=C.SUPPORTED_FILE_TYPES["STOCK"]
+    )
+    if type(local_data) == pd.DataFrame:
+        logger.info(f"Local Weekly Data Found")
+        return local_data
+    weekly_data = compose_weekly_data(start_date, file_type)
+    weekly_data = weekly_data[
+        [
+            "TradDt",
+            "TckrSymb",
+            "SctySrs",
+            "OpnPric",
+            "HghPric",
+            "LwPric",
+            "ClsPric",
+            "PrvsClsgPric",
+            "TtlTradgVol",
+            "TtlTrfVal",
+        ]
+    ]
+    weekly_data["datetime"] = pd.to_datetime(weekly_data["TradDt"])
+    weekly_data = weekly_data.set_index("datetime")
+    data = (
+        weekly_data.groupby("TckrSymb")
+        .resample("W")
+        .agg(
+            {
+                "SctySrs": "first",
+                "OpnPric": "first",
+                "HghPric": "max",
+                "LwPric": "min",
+                "ClsPric": "last",
+                "PrvsClsgPric": "first",
+                "TtlTradgVol": "sum",
+                "TtlTrfVal": "sum",
+            }
+        )
+    )
+    # NOTE: Write the data to the file and return
+    write_weekly_data(
+        start_date=start_date,
+        file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
+        data=pd.DataFrame(data),
+    )
+    return pd.DataFrame(data)
 
 
 def monthly_gainer(
@@ -133,16 +188,14 @@ def monthly_gainer(
 
 def index_gainers(
     duration: str = C.SUPPORTED_TIME_DURATIONS["WEEK"],
-    start_date: str = common.get_last_monday(),
+    start_date: str = get_last_monday(),
 ) -> pd.DataFrame:
     logger.info(f"[{duration = }], [{start_date = }]")
     data = pd.DataFrame()
     # NOTE: For weekly index data processing
     if duration == C.SUPPORTED_TIME_DURATIONS.get("WEEK"):
         end_date = datetime.strptime(start_date, C.DATE_FMT) + timedelta(days=5)
-        date_range = common.compose_dates_from_range(
-            start_date, end_date.strftime(C.DATE_FMT)
-        )
+        date_range = compose_dates_from_range(start_date, end_date.strftime(C.DATE_FMT))
         # NOTE: You should not get an empty date range
         if not date_range:
             logger.error(
@@ -155,7 +208,7 @@ def index_gainers(
         daily_index_data = pd.DataFrame()
         for dt in date_range:
             # TODO: try using get local file name
-            index_file = common.compose_local_index_file_name(dt)
+            index_file = compose_local_index_file_name(dt)
             try:
                 daily_index_data = pd.read_csv(index_file)
                 daily_index_data["TRADING_DATE"] = datetime.strptime(

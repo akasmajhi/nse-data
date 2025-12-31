@@ -4,15 +4,20 @@ Entry method for the callers to request data from the service.
 """
 from datetime import datetime
 import pandas as pd
-
+import os
 from loguru import logger
 
+from src.derived import readers
+from src.fetchers.common import get_latest_file
 from src.helpers.validators import is_date_valid, is_file_type_valid
 from src.helpers import file_readers
-from src.helpers.common import get_all_stock_names, get_first_day_of_month
-from src.constants import SUPPORTED_FILE_TYPES, DATE_FMT
+from src.helpers.common import (
+    get_all_stock_names,
+    get_first_day_of_month,
+)
+import src.constants as C
 from src.fetchers.stock_fetchers import get_stock_data_since_listing
-from src.derived.writers import combine_m_caps, industry_to_stock
+from src.derived import writers
 
 
 def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
@@ -52,7 +57,7 @@ def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
 def get_market_cap(
     file_type: str | None,
     stock_name: str | None,
-    trading_date: str = datetime.today().strftime(DATE_FMT),
+    trading_date: str = datetime.today().strftime(C.DATE_FMT),
 ) -> list[dict] | dict:
     """Gets the market cap of an index, if file_type=="INDEX",
     or gets the market cap of a stock specified by the second parameter.
@@ -78,7 +83,7 @@ def get_market_cap(
     """
     logger.debug(f"{file_type = }, {stock_name = }")
     # NOTE: Case where we fetch m-cap for all stocks
-    if file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None:
+    if file_type == C.SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None:
         # Get the combined market cap of all the stocks
         all_stocks: list = get_all_stock_names()
         all_stocks.sort(key=None, reverse=False)
@@ -89,23 +94,23 @@ def get_market_cap(
             # For a stock get it's market cap data
             all_market_caps.append(
                 file_readers.get_local_market_cap(
-                    SUPPORTED_FILE_TYPES["STOCK"], stock, trading_date
+                    C.SUPPORTED_FILE_TYPES["STOCK"], stock, trading_date
                 )
             )
             processed_stocks = processed_stocks + 1
             logger.info(f"[{processed_stocks = }] of [{total_stocks = }]")
         # NOTE: Write the combined.json for combined market cap
-        combine_m_caps(folder=trading_date)
+        writers.combine_m_caps(folder=trading_date)
         return all_market_caps
 
     # NOTE: Case where we fetch m-cap for a stock
-    if file_type == SUPPORTED_FILE_TYPES["STOCK"] and stock_name:
+    if file_type == C.SUPPORTED_FILE_TYPES["STOCK"] and stock_name:
         return file_readers.get_local_market_cap(
-            SUPPORTED_FILE_TYPES["STOCK"], stock_name, trading_date
+            C.SUPPORTED_FILE_TYPES["STOCK"], stock_name, trading_date
         )
 
     # TODO: Case where we fetch m-cap for an index
-    if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
+    if file_type == C.SUPPORTED_FILE_TYPES["INDEX"]:
         pass
     return list(dict())  # Unhandled / unimplemented case gets a blank dictionary
 
@@ -121,7 +126,7 @@ def get_supported_file_types() -> dict:
         dict
     Contains the SUPPORTED_FILE_TYPES from src.constants
     """
-    return SUPPORTED_FILE_TYPES
+    return C.SUPPORTED_FILE_TYPES
 
 
 def get_index_names() -> list[str]:
@@ -213,35 +218,35 @@ def daily_fetchers():
     """Group of operations that fetch data on a daily/EOD basis"""
     get_data(
         file_type="PREOPEN",
-        start_date=datetime.today().strftime(DATE_FMT),
-        end_date=datetime.today().strftime(DATE_FMT),
+        start_date=datetime.today().strftime(C.DATE_FMT),
+        end_date=datetime.today().strftime(C.DATE_FMT),
     )
     # TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
 
     get_data(
         file_type="BHAVCOPY",
         start_date=get_first_day_of_month(),
-        end_date=datetime.today().strftime(DATE_FMT),
+        end_date=datetime.today().strftime(C.DATE_FMT),
     )
 
     get_data(
         file_type="PE",
         start_date=get_first_day_of_month(),
-        end_date=datetime.today().strftime(DATE_FMT),
+        end_date=datetime.today().strftime(C.DATE_FMT),
     )
 
     # # TODO: Needs a design change revisit at a later time!
     # # Do not run it before 7 PM
     get_data(
         file_type="INDEX",
-        start_date=datetime.today().strftime(DATE_FMT),
-        end_date=datetime.today().strftime(DATE_FMT),
+        start_date=datetime.today().strftime(C.DATE_FMT),
+        end_date=datetime.today().strftime(C.DATE_FMT),
     )
 
     get_data(
         file_type="FNOBHAVCOPY",
         start_date=get_first_day_of_month(),
-        end_date=datetime.today().strftime(DATE_FMT),
+        end_date=datetime.today().strftime(C.DATE_FMT),
         # start_date="31-Oct-2025",
         # end_date="31-Oct-2025",
     )
@@ -251,14 +256,39 @@ def daily_fetchers():
 
 def weekly_fetchers():
     """Fetchers for weekending dates"""
-    get_market_cap(file_type=SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
+    get_market_cap(file_type=C.SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
     get_stock_info()
-    industry_to_stock(datetime.today().strftime(DATE_FMT))
+    writers.industry_to_stock(datetime.today().strftime(C.DATE_FMT))
+
+
+def industry_stock_map(i_trading_date: str | None) -> dict:
+    """
+    For the last fetch date for META, this returns the industry-to-stocks map.
+
+    Parameters
+    ----------
+        None
+
+    """
+    # TODO: this needs to change based on i_trading_date
+    logger.info(f"[{i_trading_date = }]")
+    # return readers.industry_to_stock(
+    #     get_last_fetch_date(SUPPORTED_FILE_TYPES["META"]), None
+    # )
+    folder_name = os.path.join(
+        C.FILES_BASE_DIR,
+        C.SUPPORTED_FILE_TYPES["DERIVED"],
+        C.IND_TO_STOCK_FOLDER,
+    )
+
+    return readers.industry_to_stock(
+        i_trading_date=None, i_file_name=get_latest_file(folder_name)
+    )
 
 
 def get_stock_info(
     stock_name: str | None = None,
-    trading_date: str = datetime.today().strftime(DATE_FMT),
+    trading_date: str = datetime.today().strftime(C.DATE_FMT),
 ) -> list[dict] | dict:
     """Fetches/reads the meta information associated with a stock(s)
 
@@ -287,6 +317,17 @@ def get_stock_info(
         processed_stocks = processed_stocks + 1
         logger.info(f"[{processed_stocks = }] of [{total_stocks = }]")
     return all_stocks_info
+
+
+# TODO: Run the batch programs to prepare data for efficiency
+def run_batch():
+    """
+    1. For preparing weekly data - End of week
+    2. Industry to stock map - Everyday
+    3. Index to stock map - Everyday
+    4. Stock to Index map - Everyday
+    """
+    pass
 
 
 if __name__ == "__main__":

@@ -7,5 +7,17 @@ class DGFilter:  # --- DAILY GAIN FILTER ---
     what_type: str
     gl: str
     size: str
+    index: str
     industry: str
     reserved: str
+
+
+@dataclass
+class WeeklyFilter:  # Weekly Analysis Filter
+    trading_date: str
+    instrument_type: str
+    kind: str
+    gl: str
+    size: str
+    index: str
+    industry: str

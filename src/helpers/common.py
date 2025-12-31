@@ -312,9 +312,13 @@ def get_last_monday(i_date: str = date.today().strftime(DATE_FMT)) -> str:
     Gets the immediate last Monday in DD-MMM-YYYY format. Useful for analytics.
     If you are in any part of the week, then this function will return the
     Monday of the previous week.
+    Note: If you are running this on a weekend then it returns the first day,
+    which is Monday, of the week.
     """
     logger.debug(f"[{i_date = }]")
     today = date.today()
+    if today.weekday() >= 5:  # NOTE: For weekends
+        return (today - timedelta(days=(today.weekday()))).strftime(DATE_FMT)
     return (today - timedelta(days=(today.weekday() + 7))).strftime(DATE_FMT)
 
 

@@ -1,15 +1,17 @@
 import os
 import json
 
+import pandas as pd
 from loguru import logger
 
 import src.constants as C
+from src.fetchers.common import get_last_fetch_date
 from src.helpers.file_readers import get_local_stock_info
 from src.helpers.cross_cutting import benchmark
 
 
 @benchmark
-def get_industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -> dict:
+def industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -> dict:
     """For a given trading_date, this function returns a map of the
     industry-to-stocks in the form of a dict where the key the is
     the industry and the value is the list of stocks in that industry.
@@ -95,9 +97,7 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
             for f in files:
                 all_files.append(os.path.join(files_dir, f))
             latest_file = max(all_files, key=os.path.getmtime)
-            ind_map = get_industry_to_stock(
-                i_file_name=latest_file, i_trading_date=None
-            )
+            ind_map = industry_to_stock(i_file_name=latest_file, i_trading_date=None)
             # logger.info(f"[{ind_map.keys() = }]")
             if i_industry not in ind_map.keys():
                 logger.error(f"Non-existing [{i_industry = }] passed!")
@@ -131,7 +131,7 @@ def get_pe_for_industry(i_industry: str, i_trading_date: str | None) -> dict:
     if not os.path.exists(file_name):
         logger.error(f"No file [{i_trading_date = }], [{file_name = }]")
         return dict()
-    ind_map = get_industry_to_stock(i_file_name=file_name, i_trading_date=None)
+    ind_map = industry_to_stock(i_file_name=file_name, i_trading_date=None)
     stocks = ind_map.get(i_industry)
     return_dict: dict = dict()
     if stocks:
@@ -202,5 +202,28 @@ def combined_m_caps(folder: str) -> dict:
     return mcap_dict
 
 
+def read_weekly_data(start_date: str, file_type: str) -> pd.DataFrame | None:
+    """
+    Reads the weekly file from local file system.
+    """
+    logger.info(f"Reading weekly file for [{start_date = }]")
+    if file_type == C.SUPPORTED_FILE_TYPES["STOCK"]:
+        file_name = os.path.join(
+            C.FILES_BASE_DIR,
+            C.SUPPORTED_FILE_TYPES["DERIVED"],
+            C.WEEKLY_FOLDER,
+            C.SUPPORTED_FILE_TYPES["STOCK"],
+            f"{start_date}.csv",
+        )
+        logger.debug(f"Reading CSV path [{file_name}]")
+        if os.path.exists(file_name):
+            return pd.read_csv(file_name)
+        else:
+            logger.info(f"Local weekly file does not exist for [{start_date}]")
+            return None
+    return None
+
+
 if __name__ == "__main__":
-    print(get_industry_to_stock(i_trading_date="18-Oct-2025", i_file_name=None))
+    # print(get_industry_to_stock(i_trading_date="18-Oct-2025", i_file_name=None))
+    print(industry_to_stock(get_last_fetch_date("META"), i_file_name=None))

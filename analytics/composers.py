@@ -45,6 +45,8 @@ def compose_weekly_data(
             logger.error(f"[{start_date = }] is not a Monday.")
             return data
     end_date = get_week_ending_date(start_date)
+    logger.debug(f"Week ending date [{end_date = }]")
+    logger.debug(f" [{instr_name = }] [{file_type = }]")
     if not instr_name and file_type == SUPPORTED_FILE_TYPES["STOCK"]:
         return get_local_data(
             file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"],
