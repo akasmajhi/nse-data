@@ -140,6 +140,7 @@ def weekly_gainers(
     weekly_data = compose_weekly_data(start_date, file_type)
     weekly_data = weekly_data[
         [
+            "ISIN",
             "TradDt",
             "TckrSymb",
             "SctySrs",
@@ -152,13 +153,16 @@ def weekly_gainers(
             "TtlTrfVal",
         ]
     ]
+    # TODO: Merge Industry info into the data
     weekly_data["datetime"] = pd.to_datetime(weekly_data["TradDt"])
     weekly_data = weekly_data.set_index("datetime")
     data = (
-        weekly_data.groupby("TckrSymb")
+        # weekly_data.groupby("TckrSymb") #BUG: multiple ISINs can have same symbol
+        weekly_data.groupby("ISIN")
         .resample("W")
         .agg(
             {
+                "TckrSymb": "first",
                 "SctySrs": "first",
                 "OpnPric": "first",
                 "HghPric": "max",

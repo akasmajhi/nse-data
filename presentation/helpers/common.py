@@ -43,6 +43,7 @@ def dg_filter_from_storage() -> DGFilter:
 def default_weekly_filter() -> WeeklyFilter:
     logger.debug(f"Clearing and making Weekly filter afresh.")
     weekly_filter = WeeklyFilter(
+        new_data_required=True,
         trading_date=get_last_monday(),
         instrument_type="STOCK",
         kind="Price",
@@ -50,6 +51,8 @@ def default_weekly_filter() -> WeeklyFilter:
         size="Large Cap",
         index="All",
         industry="All",
+        series=list(["EQ"]),
+        fno=False,
     )
     weekly_filter_dict = json.dumps(asdict(weekly_filter))
     app.storage.general["weekly_filter"] = weekly_filter_dict

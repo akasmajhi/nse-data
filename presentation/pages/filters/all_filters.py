@@ -129,6 +129,18 @@ def weekly_stocks_filter():
             value=weekly_filter_from_storage().industry,
             on_change=(lambda e: UA.weekly_filter_change(e, "INDUSTRY")),
         )
+        ui.input_chips(
+            "Enter Series",
+            value=weekly_filter_from_storage().series,
+            on_change=lambda e: UA.weekly_filter_change(e, "SERIES"),
+            new_value_mode="add-unique",
+            validation=lambda e: UA.weekly_filter_change(e, "SERIES"),
+        )
+        ui.checkbox(
+            "FnO",
+            value=weekly_filter_from_storage().fno,
+            on_change=lambda e: UA.weekly_filter_change(e, "FNO"),
+        )
 
 
 def test(e):

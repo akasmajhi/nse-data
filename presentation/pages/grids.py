@@ -158,6 +158,11 @@ def weekly_grid() -> ui.aggrid:
     weekly_filter: WeeklyFilter = weekly_filter_from_storage()
     trading_date = weekly_filter.trading_date
     data = top_gainers(file_type="STOCK", start_date=trading_date)
+    error_message: str = "Error! No data found."
+    if weekly_filter.series:
+        data = pd.DataFrame(data[data["SctySrs"].isin(weekly_filter.series)])
+        if data.empty:
+            error_message = f"Some shit series you have entered {weekly_filter.series} "
     if data.empty:
         # NOTE: Better approach is to handle the -VE case fist
         return ui.aggrid(
@@ -166,10 +171,71 @@ def weekly_grid() -> ui.aggrid:
                     {"headerName": "Message", "field": "col1"},
                 ],
                 "rowData": [
-                    {"col1": "Error! No data found."},
+                    {"col1": error_message},
                 ],
                 "rowClass": "!bg-red-300",
             }
-        )
-    logger.info(f"[{data = }]")
-    return ui.aggrid.from_pandas(data)
+        ).classes(add="ag-theme-alpine-dark")
+    # logger.info(f"[{data = }]")
+    # logger.info(f"Rendering the grid now . . .")
+    data["name_series"] = data["TckrSymb"] + "-" + data["SctySrs"]
+    data["change"] = (
+        (data["ClsPric"] - data["PrvsClsgPric"]) / data["PrvsClsgPric"]
+    ) * 100
+    return ui.aggrid.from_pandas(
+        data,
+        theme="balham",
+        auto_size_columns=True,
+        options={
+            "columnDefs": [
+                {
+                    "headerName": "Symbol",
+                    "field": "name_series",
+                    "filter": "agTextColumnFilter",
+                },
+                # {
+                #     "headerName": "Symbol",
+                #     "field": "TckrSymb",  # DONE: Concat symbol with series in 1 column
+                # },
+                # {
+                #     "headerName": "Series",
+                #     "field": "SctySrs",
+                # },
+                {
+                    "headerName": "Open",
+                    "field": "OpnPric",
+                },
+                {
+                    "headerName": "High",
+                    "field": "HghPric",
+                },
+                {
+                    "headerName": "Low",
+                    "field": "LwPric",
+                },
+                {
+                    "headerName": "Close",
+                    "field": "ClsPric",
+                },
+                {
+                    "headerName": "Prev. close",
+                    "field": "PrvsClsgPric",
+                },
+                {
+                    "headerName": "Change %",
+                    "field": "change",
+                    "valueFormatter": "value.toFixed(2)",
+                },
+                {
+                    "headerName": "Volume",
+                    "field": "TtlTradgVol",
+                },
+                {
+                    "headerName": "Value",
+                    "field": "TtlTrfVal",
+                },
+            ],
+            "pagination": True,
+            "paginationPageSize": 15,
+        },
+    ).classes(add="ag-theme-alpine-dark h-475/1000")

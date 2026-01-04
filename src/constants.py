@@ -46,6 +46,23 @@ DATE_FMT_1 = "%d-%m-%Y"
 # FILES_BASE_DIR='data_files/'
 FILES_BASE_DIR = "/mnt/d/market/NSE/data_files"
 NSE_HOLIDAYS = {
+    "2026": [
+        "26-Jan-2026",
+        "03-Mar-2026",
+        "26-Mar-2026",
+        "31-Mar-2026",
+        "03-Apr-2026",
+        "14-Apr-2026",
+        "01-May-2026",
+        "28-May-2026",
+        "26-Jun-2026",
+        "14-Sep-2026",
+        "02-Oct-2026",
+        "20-Oct-2026",
+        "10-Nov-2026",
+        "24-Nov-2026",
+        "25-Dec-2026",
+    ],
     "2025": [
         "26-FEB-2025",
         "14-MAR-2025",

@@ -9,16 +9,15 @@ from presentation.helpers.dc.all import DGFilter, WeeklyFilter
 
 
 def toggle_dark(e):
-    dark = ui.dark_mode()  # NOTE: Start with Dark mode
-    logger.debug(f"Before change [{dark.value = }]")
-    if dark.value == False:
-        dark.enable()
-        e.sender.props("icon=img:/icons/icons8-dark-mode-50_dark.png")
-        logger.debug(f"Dark mode is False. Making it: [{dark.value = }]")
-    else:
-        dark.disable()
-        e.sender.props("icon=img:/icons/icons8-dark-mode-50_bright.png")
-        logger.debug(f"Dark mode is True. Making it: [{dark.value = }]")
+    logger.debug(f"[{e = }]")
+    # if dark.value == False:
+    #     dark.enable()
+    #     e.sender.props("icon=img:/icons/icons8-dark-mode-50_dark.png")
+    #     logger.debug(f"Dark mode is False. Making it: [{dark.value = }]")
+    # else:
+    #     dark.disable()
+    #     e.sender.props("icon=img:/icons/icons8-dark-mode-50_bright.png")
+    #     logger.debug(f"Dark mode is True. Making it: [{dark.value = }]")
 
 
 def handle_filter_change(e, control_name=""):
@@ -78,9 +77,12 @@ def weekly_filter_change(e, control_name=""):
         if app.storage.general["weekly_filter"]:  # NOTE: Filter present
             weekly_filter_json = json.loads(app.storage.general["weekly_filter"])
             weekly_filter = WeeklyFilter(**weekly_filter_json)
+            weekly_filter.new_data_required = False
             match control_name:
                 case "DATE":
-                    weekly_filter.trading_date = e.sender.value
+                    if weekly_filter.trading_date != e.sender.value:
+                        weekly_filter.new_data_required = True
+                        weekly_filter.trading_date = e.sender.value
                 case "INSTRUMENT":
                     weekly_filter.instrument_type = e.sender.value
                 case "TYPE":
@@ -93,11 +95,24 @@ def weekly_filter_change(e, control_name=""):
                     weekly_filter.index = e.sender.value
                 case "INDUSTRY":
                     weekly_filter.industry = e.sender.value
+                case "SERIES":
+                    # logger.error(f"TMP: [{e = }]")
+                    if type(e) == list:
+                        weekly_filter.series = e
+                case "FNO":
+                    weekly_filter.fno = e.sender.value
                 case _:
                     logger.error(f"Unknown control . . .")
             weekly_filter_dict = json.dumps(asdict(weekly_filter))
             app.storage.general["weekly_filter"] = weekly_filter_dict
     except KeyError:  # NOTE: Filter NOT present. Strange!!!
         logger.error(f"Weekly not found in local storage!")
-    # stock_grid.refresh()
     weekly_grid.refresh()
+
+
+def handle_series_value_change(new_value: list, old_value: list) -> None:
+    # NOTE: Read the earlier value from storage
+    logger.debug(f"Adjusting series values for [{new_value = }], [{old_value = }]")
+    # NOTE: Compare with new values
+    # NOTE: Find the delta and do the validations
+    # NOTE: Update storage value

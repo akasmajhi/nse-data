@@ -217,15 +217,14 @@ def fetch_stock_data_since_listing(skip_current_year: bool = False):
 def daily_fetchers():
     """Group of operations that fetch data on a daily/EOD basis"""
     get_data(
-        file_type="PREOPEN",
-        start_date=datetime.today().strftime(C.DATE_FMT),
+        file_type="BHAVCOPY",
+        start_date=get_first_day_of_month(),
         end_date=datetime.today().strftime(C.DATE_FMT),
     )
     # TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
-
     get_data(
-        file_type="BHAVCOPY",
-        start_date=get_first_day_of_month(),
+        file_type="PREOPEN",
+        start_date=datetime.today().strftime(C.DATE_FMT),
         end_date=datetime.today().strftime(C.DATE_FMT),
     )
 
@@ -251,7 +250,7 @@ def daily_fetchers():
         # end_date="31-Oct-2025",
     )
 
-    get_all_index_constituents()
+    # get_all_index_constituents() #TODO: Check why it was there in the first place!
 
 
 def weekly_fetchers():

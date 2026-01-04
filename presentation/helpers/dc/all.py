@@ -15,9 +15,12 @@ class DGFilter:  # --- DAILY GAIN FILTER ---
 @dataclass
 class WeeklyFilter:  # Weekly Analysis Filter
     trading_date: str
+    new_data_required: bool
     instrument_type: str
     kind: str
     gl: str
     size: str
     index: str
     industry: str
+    series: list
+    fno: bool
