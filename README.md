@@ -13,8 +13,9 @@ The data format changed for daily bhav copies on NSE w.e.f. Jul-08-2024. So, all
 | FNO BHAVCOPY  | DAILY-EOD | FNOBHAVCOPY| get_data      |file_type='FNOBHAVCOPY'     |
 | Market Cap    | WEEKLY    |            | get_market_cap|file_type='STOCK'           |
 | STOCK INFO    | WEEKLY    |            | get_stock_info|None                        |
-| ind to stock  | WEEKLY    |            | industry_to   |datetime.today()            |
-|               |           |            | stock         |                            |
+| ind to stock  | WEEKLY    |            | industry_to_stock|datetime.today()         |
+|               |           |            | |             |                            |
+---------------------------------------------------------------------------------------
 
 
 - All references are WRT BASE_DIR 
