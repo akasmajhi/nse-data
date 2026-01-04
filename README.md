@@ -1,7 +1,7 @@
-# nse-data
+## nse-data
 The data format changed for daily bhav copies on NSE w.e.f. Jul-08-2024. So, all this repo is to catch up with the changes.
 
-## FETCHERS
+#### FETCHERS
 
 
 | Fetcher       | Frquency  | Location   | Function      | Parameter                  |
@@ -17,13 +17,5 @@ The data format changed for daily bhav copies on NSE w.e.f. Jul-08-2024. So, all
 |               |           |            | stock         |                            |
 
 
-All references are WRT BASE_DIR 
+- All references are WRT BASE_DIR 
 
-There must be at least 3 dashes separating each header cell.
-The outer pipes (|) are optional, and you don't need to make the 
-raw Markdown line up prettily. You can also use inline Markdown.
-
-Markdown | Less | Pretty
---- | --- | ---
-*Still* | `renders` | **nicely**
-1 | 2 | 3
