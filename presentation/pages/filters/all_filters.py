@@ -106,7 +106,7 @@ def weekly_stocks_filter():
             on_change=(lambda e: UA.weekly_filter_change(e, "TYPE")),
         )
         ui.select(
-            options=["Any", "Gain", "Loss"],
+            options=["Any", "Gainers", "Losers"],
             label="G/L",
             value=weekly_filter_from_storage().gl,
             on_change=(lambda e: UA.weekly_filter_change(e, "GL")),
@@ -116,7 +116,9 @@ def weekly_stocks_filter():
             label="Size",
             value=weekly_filter_from_storage().size,
             on_change=(lambda e: UA.weekly_filter_change(e, "SIZE")),
-        )
+        ).classes(
+            "hidden"
+        )  # TODO: Hidden since definition is UNKNOWN
         ui.select(
             options=["All"] + get_index_names(),
             label="Index",

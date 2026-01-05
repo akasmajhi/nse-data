@@ -49,7 +49,17 @@ print(r)
 print("End")
 
 # %% NOTE: converting ind_to_stock to DF
-import pandas as pd
 from src.core import industry_stock_map
 
 ind_stock_dict = industry_stock_map(i_trading_date=None)
+from pandas import json_normalize
+
+industr_name: str = "Industrial Minerals"
+data = json_normalize(data=ind_stock_dict).T.explode(0)
+data = data.reset_index()
+data.rename(columns={"index": "industry"}, inplace=True)
+data.rename(columns={0: "stock"}, inplace=True)
+type(data[data.industry.isin(["Industrial Minerals"])].stock)
+print(f"{data.head()}")
+
+# %%

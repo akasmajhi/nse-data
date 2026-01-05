@@ -84,9 +84,25 @@ def weekly_filter_change(e, control_name=""):
                         weekly_filter.new_data_required = True
                         weekly_filter.trading_date = e.sender.value
                 case "INSTRUMENT":
-                    weekly_filter.instrument_type = e.sender.value
+                    if e.sender.value.upper() in ["INDEX", "OI"]:
+                        ui.notify(
+                            f"Currently [{e.sender.value}] is not implemented",
+                            close_button="Okay",
+                            type="negative",
+                        )
+                        return
+                    else:
+                        weekly_filter.instrument_type = e.sender.value
                 case "TYPE":
-                    weekly_filter.kind = e.sender.value
+                    if e.sender.value.upper() in ["VOLUME", "OI"]:
+                        ui.notify(
+                            f"Currently [{e.sender.value}] is not implemented",
+                            close_button="Okay",
+                            type="negative",
+                        )
+                        return
+                    else:
+                        weekly_filter.kind = e.sender.value
                 case "GL":
                     weekly_filter.gl = e.sender.value
                 case "SIZE":

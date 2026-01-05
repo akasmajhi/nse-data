@@ -136,7 +136,19 @@ def weekly_gainers(
     )
     if type(local_data) == pd.DataFrame:
         logger.info(f"Local Weekly Data Found")
-        return local_data
+        # NOTE: Merge the weekly data with market cap for stocks
+        m_cap_date = get_last_fetch_date(file_type=C.SUPPORTED_FILE_TYPES["MARKET_CAP"])
+        if m_cap_date:
+            m_cap_data = readers.combined_m_caps(folder=m_cap_date)
+            m_cap_data_df = pd.DataFrame(
+                {"TckrSymb": m_cap_data.keys(), "total_m_cap": m_cap_data.values()}
+            )
+            combined_data: pd.DataFrame = pd.merge(
+                local_data, m_cap_data_df, on="TckrSymb"
+            )
+            # combined_data.sort_values(by="pct_change", ascending=False, inplace=True)
+            return combined_data
+        return local_data  # NOTE: If mcap_data is not found!
     weekly_data = compose_weekly_data(start_date, file_type)
     weekly_data = weekly_data[
         [
@@ -174,6 +186,7 @@ def weekly_gainers(
             }
         )
     )
+
     # NOTE: Write the data to the file and return
     write_weekly_data(
         start_date=start_date,

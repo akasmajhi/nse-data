@@ -5,7 +5,12 @@ from loguru import logger
 
 from analytics.gainers import daily_gainer
 from presentation.helpers.dc.all import DGFilter, WeeklyFilter
-from src.core import industry_stock_map
+from src.core import (
+    industry_stock_map,
+    stocks_for_industry,
+    get_index_constituents,
+    get_fno_stocks,
+)
 from presentation.helpers.common import (
     dg_filter_from_storage,
     set_grid_summary,
@@ -133,6 +138,10 @@ def stock_grid() -> ui.aggrid:
                     "headerName": "% Delta",
                     "field": "pct_change",
                     "valueFormatter": "value.toFixed(2)",
+                    "cellClassRules": {
+                        ":text-green font-bold": "(params) => params.data.pct_change >= 0",
+                        ":text-red font-bold": "(params) => params.data.pct_change < 0",
+                    },
                 },
                 {
                     "headerName": "MCAP",
@@ -143,8 +152,10 @@ def stock_grid() -> ui.aggrid:
             ],
             # "rowStyle": {"background": "grey"},
             "rowClassRules": {
-                ":!bg-red-300": "(params) => params.data.pct_change < 0",
-                ":!bg-green-300": "(params) => params.data.pct_change > 0",
+                # ":!bg-red-300": "(params) => params.data.pct_change < 0",
+                # ":text-red": "(params) => params.data.pct_change < 0",
+                # ":!bg-green-300": "(params) => params.data.pct_change > 0",
+                # ":text-green": "(params) => params.data.pct_change > 0",
             },
         },
     ).classes("max-h-1240")
@@ -173,7 +184,7 @@ def weekly_grid() -> ui.aggrid:
                 "rowData": [
                     {"col1": error_message},
                 ],
-                "rowClass": "!bg-red-300",
+                "rowClass": "text-white italic !bg-red-900",
             }
         ).classes(add="ag-theme-alpine-dark")
     # logger.info(f"[{data = }]")
@@ -182,6 +193,39 @@ def weekly_grid() -> ui.aggrid:
     data["change"] = (
         (data["ClsPric"] - data["PrvsClsgPric"]) / data["PrvsClsgPric"]
     ) * 100
+    # NOTE: check if the industry is set in filter
+    if weekly_filter.industry and weekly_filter.industry.upper() != "ALL":
+        logger.debug(f"Industry filter is set [{weekly_filter.industry = }]")
+        # Get all the stock names for the selected industry
+        logger.debug(stocks_for_industry(weekly_filter.industry))
+        data = pd.DataFrame(
+            data[data.TckrSymb.isin(stocks_for_industry(weekly_filter.industry))]
+        )
+
+    # NOTE: check if any index is selected
+    if weekly_filter.index and weekly_filter.index.upper() != "ALL":
+        logger.debug(f"Index filter is set. [{weekly_filter.index = }]")
+        logger.debug(f"[{get_index_constituents(weekly_filter.index)}]")
+        data = pd.DataFrame(
+            data[data.TckrSymb.isin(get_index_constituents(weekly_filter.index))]
+        )
+    # NOTE: check if any Gainer/Loser is selected
+    match (weekly_filter.gl.upper()):
+        case "ANY":
+            pass
+        case "GAINERS":
+            data = pd.DataFrame(data[data.change >= 0])
+        case "LOSERS":
+            data = pd.DataFrame(data[data.change < 0])
+        case _:
+            logger.error(f"Not implemented GL type [{weekly_filter.gl}]")
+    if weekly_filter.fno:
+        data = pd.DataFrame(data[data.TckrSymb.isin(get_fno_stocks())])
+    # TODO: Update Weekly summary in storage
+
+    # data["tmp_val"] = (
+    #     f'<a href="https://google.com" target="_blank">{data["TckrSymb"]}</a>'
+    # )
     return ui.aggrid.from_pandas(
         data,
         theme="balham",
@@ -201,6 +245,12 @@ def weekly_grid() -> ui.aggrid:
                 #     "headerName": "Series",
                 #     "field": "SctySrs",
                 # },
+                {
+                    "headerName": "MCAP",
+                    "field": "total_m_cap",
+                    "filter": "agNumberColumnFilter",
+                    "valueFormatter": 'value.toLocaleString("en-IN", { style: "currency", currency: "INR" })',
+                },
                 {
                     "headerName": "Open",
                     "field": "OpnPric",
@@ -225,17 +275,29 @@ def weekly_grid() -> ui.aggrid:
                     "headerName": "Change %",
                     "field": "change",
                     "valueFormatter": "value.toFixed(2)",
+                    "cellStyle": {
+                        "fontSize": "14px",
+                        "textAlign": "center",
+                    },
+                    "cellClassRules": {
+                        ":text-green font-bold": "(params) => params.data.change >= 0",
+                        ":text-red font-bold": "(params) => params.data.change < 0",
+                    },
                 },
                 {
                     "headerName": "Volume",
                     "field": "TtlTradgVol",
+                    "valueFormatter": "value.toLocaleString()",
                 },
                 {
                     "headerName": "Value",
                     "field": "TtlTrfVal",
+                    "valueFormatter": "Math.floor(value).toLocaleString()",
+                    # "valueFormatter": "value.toLocaleString()",
                 },
             ],
             "pagination": True,
             "paginationPageSize": 15,
         },
+        html_columns=[0],
     ).classes(add="ag-theme-alpine-dark h-475/1000")

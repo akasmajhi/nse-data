@@ -4,6 +4,7 @@ Entry method for the callers to request data from the service.
 """
 from datetime import datetime
 import pandas as pd
+from pandas import json_normalize
 import os
 from loguru import logger
 
@@ -18,6 +19,7 @@ from src.helpers.common import (
 import src.constants as C
 from src.fetchers.stock_fetchers import get_stock_data_since_listing
 from src.derived import writers
+from src.helpers.common import get_last_trading_date
 
 
 def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
@@ -285,6 +287,32 @@ def industry_stock_map(i_trading_date: str | None) -> dict:
     )
 
 
+def stocks_for_industry(industry: str | None) -> pd.Series | pd.DataFrame:
+    """
+    Returns the stocks belonging to the specified industry
+
+    Parameters
+    ----------
+        industry: str
+    The name of the industry (case-sensitive)
+
+    Returns
+    -------
+        pd.Series
+    The stocks (names) belonging to the supplied industry.
+    """
+    # ind_stock_dict = industry_stock_map(i_trading_date=None)
+
+    # industry: str = "Industrial Minerals"
+    data = json_normalize(data=industry_stock_map(i_trading_date=None)).T.explode(0)
+    data = data.reset_index()
+    data.rename(columns={"index": "industry"}, inplace=True)
+    data.rename(columns={0: "stock"}, inplace=True)
+    if industry == None:
+        return data
+    return data[data.industry.isin([industry])].stock
+
+
 def get_stock_info(
     stock_name: str | None = None,
     trading_date: str = datetime.today().strftime(C.DATE_FMT),
@@ -316,6 +344,30 @@ def get_stock_info(
         processed_stocks = processed_stocks + 1
         logger.info(f"[{processed_stocks = }] of [{total_stocks = }]")
     return all_stocks_info
+
+
+def get_fno_stocks() -> list:
+    """Returns the list of stock names that are in FnO.
+    Note: The latest Fno Bhavcopy is read and stock names are returned.
+    Parameters
+    ----------
+        None
+    Returns
+    -------
+        list
+    List containing the names of the FnO Stocks
+
+    """
+    logger.debug(f"Reading latest FnO bhavcopy")
+    trading_date = get_last_trading_date()
+    file_name = os.path.join(
+        C.FILES_BASE_DIR,
+        C.SUPPORTED_FILE_TYPES["FNOBHAVCOPY"],
+        f'{C.SUPPORTED_FILE_TYPES["FNOBHAVCOPY"]}_{trading_date}.csv',
+    )
+    data = pd.read_csv(file_name)
+    logger.debug(f"Total: [{len(data.TckrSymb.unique())}]")
+    return data.TckrSymb.unique()
 
 
 # TODO: Run the batch programs to prepare data for efficiency
