@@ -2,7 +2,7 @@ from dataclasses import asdict
 import json
 from nicegui import app
 
-from presentation.helpers.dc.all import DGFilter, WeeklyFilter
+from presentation.helpers.dc.all import DGFilter, WeeklyAnalysisFilter, WeeklyFilter
 from src.helpers.common import get_last_monday, get_last_trading_date
 from loguru import logger
 
@@ -56,6 +56,9 @@ def default_weekly_filter() -> WeeklyFilter:
     )
     weekly_filter_dict = json.dumps(asdict(weekly_filter))
     app.storage.general["weekly_filter"] = weekly_filter_dict
+    app.storage.general["trading_date"] = (
+        weekly_filter.trading_date
+    )  # For Weekly Analysis Filter
     logger.info(
         f'Default weekly filter stored. [{app.storage.general["weekly_filter"]}]'
     )
@@ -77,6 +80,45 @@ def weekly_filter_from_storage() -> WeeklyFilter:
         logger.error(f"Some Error I did not catch. [{e = }]")
     # DG_Filter ilter
     return default_weekly_filter()
+
+
+def default_weekly_analysis_filter() -> WeeklyAnalysisFilter:
+    logger.debug(f"Clearing and making Weekly Analysis filter afresh.")
+    weekly_analysis_filter = WeeklyAnalysisFilter(
+        trading_date=get_last_trading_date(),
+        duration="1-Wk Engulfer",
+        what_type="Bullish",
+        mcap="All",
+        fno=False,
+        new_data_required=True,
+    )
+    weekly_analysis_filter_dict = json.dumps(asdict(weekly_analysis_filter))
+    app.storage.general["weekly_analysis_filter"] = weekly_analysis_filter_dict
+    logger.info(
+        f'Default weekly analysis_filter stored. [{app.storage.general["weekly_analysis_filter"]}]'
+    )
+    return weekly_analysis_filter
+
+
+def weekly_analysis_filter_from_storage() -> WeeklyAnalysisFilter:
+    try:
+        if app.storage.general["weekly_analysis_filter"]:
+            weekly_analysis_filter_json = json.loads(
+                app.storage.general["weekly_analysis_filter"]
+            )
+            weekly_analysis_filter = WeeklyAnalysisFilter(**weekly_analysis_filter_json)
+            logger.info(
+                f"Weekly analysis Filter found in local storage. [{weekly_analysis_filter = }]"
+            )
+            return weekly_analysis_filter
+    except KeyError:
+        logger.info(f"No weekly analysis filter locally!")
+    except AttributeError as ae:
+        logger.error(f"AttributeError . . . . {ae = }")
+    except Exception as e:
+        logger.error(f"Some Error I did not catch. [{e = }]")
+    # DG_Filter ilter
+    return default_weekly_analysis_filter()
 
 
 # def set_grid_summary(summary: str):

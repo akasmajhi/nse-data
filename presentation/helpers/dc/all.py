@@ -24,3 +24,13 @@ class WeeklyFilter:  # Weekly Analysis Filter
     industry: str
     series: list
     fno: bool
+
+
+@dataclass
+class WeeklyAnalysisFilter:
+    trading_date: str
+    duration: str
+    what_type: str
+    mcap: str
+    fno: bool
+    new_data_required: bool

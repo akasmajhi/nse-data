@@ -5,7 +5,7 @@ from nicegui import ui, app
 
 from presentation.helpers.common import default_dg_filter
 from presentation.pages.grids import stock_grid, weekly_grid
-from presentation.helpers.dc.all import DGFilter, WeeklyFilter
+from presentation.helpers.dc.all import DGFilter, WeeklyFilter, WeeklyAnalysisFilter
 
 
 def toggle_dark(e):
@@ -83,6 +83,9 @@ def weekly_filter_change(e, control_name=""):
                     if weekly_filter.trading_date != e.sender.value:
                         weekly_filter.new_data_required = True
                         weekly_filter.trading_date = e.sender.value
+                        app.storage.general["trading_date"] = (
+                            e.sender.value
+                        )  # For Weekly Analysis Filter
                 case "INSTRUMENT":
                     if e.sender.value.upper() in ["INDEX", "OI"]:
                         ui.notify(
@@ -126,9 +129,28 @@ def weekly_filter_change(e, control_name=""):
     weekly_grid.refresh()
 
 
-def handle_series_value_change(new_value: list, old_value: list) -> None:
-    # NOTE: Read the earlier value from storage
-    logger.debug(f"Adjusting series values for [{new_value = }], [{old_value = }]")
-    # NOTE: Compare with new values
-    # NOTE: Find the delta and do the validations
-    # NOTE: Update storage value
+def weekly_analysis_filter_change(e, control_name=""):
+    # logger.debug(f"Into weekly analysis filter change [{e = }], [{control_name = }]")
+    try:
+        if app.storage.general["weekly_analysis_filter"]:  # NOTE: Filter present
+            weekly_analysis_filter_json = json.loads(
+                app.storage.general["weekly_analysis_filter"]
+            )
+            weekly_analysis_filter = WeeklyAnalysisFilter(**weekly_analysis_filter_json)
+            weekly_analysis_filter.new_data_required = False
+            match control_name:
+                case "DURATION":
+                    weekly_analysis_filter.duration = e.sender.value
+                case "TYPE":
+                    weekly_analysis_filter.what_type = e.sender.value
+                case "MCAP":
+                    weekly_analysis_filter.mcap = e.sender.value
+                case "FNO":
+                    weekly_analysis_filter.fno = e.sender.value
+                case _:
+                    logger.error(f"Unknown control . . .")
+            weekly_analysis_filter_dict = json.dumps(asdict(weekly_analysis_filter))
+            app.storage.general["weekly_analysis_filter"] = weekly_analysis_filter_dict
+    except KeyError:  # NOTE: Filter NOT present. Strange!!!
+        logger.error(f"Weekly not found in local storage!")
+    # weekly_analysis_grid.refresh()

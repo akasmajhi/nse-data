@@ -4,8 +4,8 @@ from nicegui import ui
 from presentation.handlers.user_actions import toggle_dark
 from presentation.pages.grids import stock_grid, weekly_grid
 from presentation.pages.filters.all_filters import (
-    scanner_filter,
     stocks_filter,
+    weekly_analysis_filter,
     weekly_stocks_filter,
 )
 from presentation.pages.stock_grid_summary import grid_summary
@@ -38,7 +38,8 @@ with ui.row().classes("w-full h-screen"):
             with ui.tab_panel("weekly_gainers").classes("w-full"):
                 weekly_stocks_filter()
                 weekly_grid()
-                ui.label("Weekly Analysis")
+                # ui.label("Weekly Analysis")
+                weekly_analysis_filter()
             with ui.tab_panel("sector_analysis"):
                 ui.label("sector Analysis")
             with ui.tab_panel("value_scanner"):
@@ -48,8 +49,7 @@ with ui.row().classes("w-full h-screen"):
             with ui.tab_panel("derivates"):
                 ui.label("OI Analysis")
             with ui.tab_panel("stock_scanner"):
-                # ui.label("Scan Stocks")
-                scanner_filter()
+                ui.label("Scan Stocks")
             with ui.tab_panel("ta"):
                 ui.label("Tech Analysis")
 

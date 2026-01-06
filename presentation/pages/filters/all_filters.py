@@ -1,17 +1,22 @@
-from nicegui import ui
+from loguru import logger
+from nicegui import app, ui
 import presentation.handlers.user_actions as UA
 from src.constants import UI_DATE_FMT
 from src.core import get_index_names, industry_stock_map
-from presentation.pages.filters.common import MarketCap
 from presentation.helpers.common import (
     dg_filter_from_storage,
     weekly_filter_from_storage,
+    weekly_analysis_filter_from_storage,
 )
 
 
+weekly_js_filter_function = "date => new Date(date).getDay() === 1 && \
+    new Date(date) <= new Date()"
+daily_js_filter_function = "date => new Date(date).getDay() > 0 && \
+    new Date(date).getDay() < 6 && new Date(date) <= new Date()"
+
+
 def stocks_filter():
-    js_filter_function = "date => new Date(date).getDay() > 0 && \
-        new Date(date).getDay() < 6 && new Date(date) <= new Date()"
     with ui.row().classes("w-full glossy-rounded"):
         # with ui.card().tight().tooltip("Volume or Value giner"):
         # with ui.card_section():
@@ -59,7 +64,7 @@ def stocks_filter():
         ) as date:
             with ui.menu().props("no-parent-event") as menu:
                 with ui.date(mask=UI_DATE_FMT).props(
-                    f':options="{js_filter_function}"'
+                    f':options="{daily_js_filter_function}"'
                 ).bind_value(date):
                     with ui.row().classes("justify-end"):
                         ui.button("Close", on_click=menu.close).props("flat")
@@ -75,8 +80,6 @@ def stocks_filter():
 
 
 def weekly_stocks_filter():
-    js_filter_function = "date => new Date(date).getDay() === 1 && \
-        new Date(date) <= new Date()"
     with ui.row().classes("w-full glossy-rounded"):
         with ui.input(
             "Week Start",
@@ -85,7 +88,7 @@ def weekly_stocks_filter():
         ) as date:
             with ui.menu().props("no-parent-event") as menu:
                 with ui.date(mask=UI_DATE_FMT).props(
-                    f':options="{js_filter_function}"'
+                    f':options="{weekly_js_filter_function}"'
                 ).bind_value(date):
                     with ui.row().classes("justify-end"):
                         ui.button("Close", on_click=menu.close).props("flat")
@@ -98,12 +101,20 @@ def weekly_stocks_filter():
             label="Instrument",
             value=weekly_filter_from_storage().instrument_type,
             on_change=(lambda e: UA.weekly_filter_change(e, "INSTRUMENT")),
+        ).bind_value_from(
+            target_object=weekly_filter_from_storage(),
+            target_name="instrument_type",
+            strict=False,
         )
         ui.select(
             options=["Price", "Volume", "OI"],
             label="Type",
             value=weekly_filter_from_storage().kind,
             on_change=(lambda e: UA.weekly_filter_change(e, "TYPE")),
+        ).bind_value_from(
+            target_object=weekly_filter_from_storage(),
+            target_name="kind",
+            strict=False,
         )
         ui.select(
             options=["Any", "Gainers", "Losers"],
@@ -145,29 +156,45 @@ def weekly_stocks_filter():
         )
 
 
-def test(e):
-    print(f"Changed . . . [{e}]")
-
-
-def scanner_filter():
-    with ui.row():
-        ui.select(
-            options=[market_cap.name for market_cap in MarketCap],
-            label="Market Cap",
-            # value="Select Mcap",
+def weekly_analysis_filter():
+    logger.info(f"Into Weekly scanners")
+    opts_durations = ["1-Wk Engulfer", "2-Wk Engulfer"]
+    opts_type = ["Bearish", "Bullish"]
+    opts_mcap = [
+        "All",
+        "< 1K Cr.",
+        "1K - 5K Cr.",
+        "5K - 20K Cr.",
+        "20K-50K Cr.",
+        "50K - 1L Cr.",
+        "> 1L Cr.",
+    ]
+    with ui.row().classes("w-full glossy-rounded"):
+        # logger.debug(f"##################[{weekly_filter_from_storage().trading_date}]")
+        ui.input(
+            "Week Start",
+            value=weekly_filter_from_storage().trading_date,
+        ).bind_value(app.storage.general, "trading_date").disable()
+        ui.radio(
+            options=opts_durations,
+            value=weekly_analysis_filter_from_storage().duration,
+            on_change=lambda e: UA.weekly_analysis_filter_change(e, "DURATION"),
         )
-        with ui.card():
-            min_max_mcap_range = (
-                ui.range(min=0.1, max=5, step=0.1, value={"min": 1, "max": 4})
-                .props('label-always snap label-color="tertiary"')
-                .on_value_change(test)
-            )
-
-            ui.label().bind_text_from(
-                min_max_mcap_range,
-                "value",
-                backward=lambda v: f'From: {v["min"]:.2f}, To: {v["max"]:.2f} L Cr.',
-            )
-        ui.button(
-            # value="Select Mcap",
+        ui.radio(
+            options=opts_type,
+            value=weekly_analysis_filter_from_storage().what_type,
+            on_change=lambda e: UA.weekly_analysis_filter_change(e, "TYPE"),
+        )
+        ui.select(
+            options=opts_mcap,
+            label="Market Cap",
+            # value="All",
+            value=weekly_analysis_filter_from_storage().mcap,
+            on_change=lambda e: UA.weekly_analysis_filter_change(e, "MCAP"),
+            # with_input=True,
+        ).style("width: 100px")
+        ui.checkbox(
+            "FnO",
+            value=weekly_analysis_filter_from_storage().fno,
+            on_change=lambda e: UA.weekly_analysis_filter_change(e, "FNO"),
         )
