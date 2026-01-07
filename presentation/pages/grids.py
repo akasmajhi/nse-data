@@ -1,10 +1,11 @@
-from nicegui import ui
+from datetime import datetime, timedelta
+from nicegui import ui, app
 import pandas as pd
 
 from loguru import logger
 
 from analytics.gainers import daily_gainer
-from presentation.helpers.dc.all import DGFilter, WeeklyFilter
+from presentation.helpers.dc.all import DGFilter, WeeklyFilter, WeeklyAnalysisFilter
 from src.core import (
     industry_stock_map,
     stocks_for_industry,
@@ -14,11 +15,13 @@ from src.core import (
 from presentation.helpers.common import (
     dg_filter_from_storage,
     set_grid_summary,
+    weekly_analysis_filter_from_storage,
     weekly_filter_from_storage,
 )
 import src.constants as C
 
 from analytics.core import top_gainers
+from src.fetchers.results import fetch_result_calendar
 
 ui.add_head_html(
     """
@@ -236,6 +239,12 @@ def weekly_grid() -> ui.aggrid:
                     "headerName": "Symbol",
                     "field": "name_series",
                     "filter": "agTextColumnFilter",
+                    "cellStyle": {
+                        # "color": "white",
+                        # "background-color": "black",
+                        "fontWeight": "bold",
+                        # "bold-text": "params.value > 100000",
+                    },
                 },
                 # {
                 #     "headerName": "Symbol",
@@ -250,6 +259,12 @@ def weekly_grid() -> ui.aggrid:
                     "field": "total_m_cap",
                     "filter": "agNumberColumnFilter",
                     "valueFormatter": 'value.toLocaleString("en-IN", { style: "currency", currency: "INR" })',
+                    # "cellStyle": {
+                    #     "background-color": "black",
+                    # },
+                    "cellClassRules": {
+                        "bg-gray-600 italic": "x > 100000",
+                    },
                 },
                 {
                     "headerName": "Open",
@@ -301,3 +316,92 @@ def weekly_grid() -> ui.aggrid:
         },
         html_columns=[0],
     ).classes(add="ag-theme-alpine-dark h-475/1000")
+
+
+@ui.refreshable
+def weekly_analysis_grid() -> ui.aggrid:
+    logger.info(
+        f"Into weekly analysis grid . . . [{weekly_analysis_filter_from_storage()}]"
+    )
+    data: pd.DataFrame = pd.DataFrame()
+    data_current: pd.DataFrame = pd.DataFrame()
+    data_previous: pd.DataFrame = pd.DataFrame()
+    trading_date: str = ""
+    error_message: str = "Error! No data found."
+    try:
+        # DONE: Guard against exceptions
+        trading_date = app.storage.general["trading_date"]
+        previous_date = (
+            datetime.strptime(trading_date, C.DATE_FMT) - timedelta(days=7)
+        ).strftime(C.DATE_FMT)
+        # NOTE: Default duration for top_gainers is WEEK
+        data_current = top_gainers(file_type="STOCK", start_date=trading_date)
+        data_previous = top_gainers(file_type="STOCK", start_date=previous_date)
+        data = pd.DataFrame(
+            data_current[data_current.ClsPric > data_current.PrvsClsgPric]
+        )
+    except Exception as e:
+        logger.error(f"Eception occured! [{e = }]")
+
+    if data.empty:
+        # NOTE: Better approach is to handle the -VE case fist
+        return ui.aggrid(
+            {
+                "columnDefs": [
+                    {"headerName": "Message", "field": "col1"},
+                ],
+                "rowData": [
+                    {"col1": error_message},
+                ],
+                "rowClass": "text-white italic !bg-red-900",
+            }
+        ).classes(add="ag-theme-alpine-dark")
+    weekly_analysis_filter: WeeklyAnalysisFilter = weekly_analysis_filter_from_storage()
+    return ui.aggrid.from_pandas(data)
+
+
+@ui.refreshable
+def corporate_results_grid() -> ui.aggrid:
+    logger.debug(f"Into Results Grid")
+    data = fetch_result_calendar()
+    options = {
+        "columnDefs": [
+            {
+                "headerName": "Stock",
+                "field": "symbol",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "bold",
+                },
+            },
+            {
+                "headerName": "Purpose",
+                "field": "purpose",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "italic",
+                },
+            },
+            {
+                "headerName": "Date",
+                "field": "date",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "italic",
+                },
+            },
+            {
+                "headerName": "Description",
+                "field": "bm_desc",
+                "tooltipField": "bm_desc",
+                "cellStyle": {
+                    "fontWeight": "italic",
+                },
+            },
+        ],
+        "pagination": True,
+        "paginationPageSize": 15,
+    }
+    return ui.aggrid.from_pandas(
+        data, theme="alpine", auto_size_columns=True, options=options
+    ).classes(add="ag-theme-alpine-dark h-610/1000")

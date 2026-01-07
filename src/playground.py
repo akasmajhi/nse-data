@@ -63,3 +63,6 @@ type(data[data.industry.isin(["Industrial Minerals"])].stock)
 print(f"{data.head()}")
 
 # %%
+from src.fetchers.results import fetch_result_calendar
+
+print(fetch_result_calendar())

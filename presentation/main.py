@@ -2,7 +2,12 @@
 from nicegui import ui
 
 from presentation.handlers.user_actions import toggle_dark
-from presentation.pages.grids import stock_grid, weekly_grid
+from presentation.pages.grids import (
+    corporate_results_grid,
+    stock_grid,
+    weekly_grid,
+    weekly_analysis_grid,
+)
 from presentation.pages.filters.all_filters import (
     stocks_filter,
     weekly_analysis_filter,
@@ -27,7 +32,7 @@ with ui.row().classes("w-full h-screen"):
                 dark_mode, "value"
             ).classes("rounded").props("icon=check_circle")
 
-        with ui.tab_panels(tabs=tabs, value="weekly_gainers").classes(
+        with ui.tab_panels(tabs=tabs, value="corp_announcement").classes(
             "w-full h-screen"
         ):
             with ui.tab_panel("daily_gainers"):
@@ -40,12 +45,14 @@ with ui.row().classes("w-full h-screen"):
                 weekly_grid()
                 # ui.label("Weekly Analysis")
                 weekly_analysis_filter()
+                weekly_analysis_grid()
             with ui.tab_panel("sector_analysis"):
                 ui.label("sector Analysis")
             with ui.tab_panel("value_scanner"):
                 ui.label("Value Scanners")
             with ui.tab_panel("corp_announcement"):
-                ui.label("Corp. Announcements")
+                ui.label("Announcements")
+                corporate_results_grid()
             with ui.tab_panel("derivates"):
                 ui.label("OI Analysis")
             with ui.tab_panel("stock_scanner"):

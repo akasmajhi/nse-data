@@ -165,7 +165,7 @@ NSE_LIVE_EQUITY_MARKET = "https://www.nseindia.com/market-data/live-equity-marke
 NSE_STOCK_INDICES = "https://www.nseindia.com/api/equity-stockIndices"
 NSE_STOCK_HISTORY_URL = "https://www.nseindia.com/api/historicalOR/cm/equity"
 NSE_STOCK_QUOTE_URL = "https://www.nseindia.com/api/quote-equity"
-
+NSE_RESULTS_URL = "https://www.nseindia.com/api/event-calendar"
 PREOPEN_SKIPROWS = 12
 
 PAYLOAD_NIFTY = {

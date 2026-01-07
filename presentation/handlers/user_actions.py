@@ -4,7 +4,7 @@ from loguru import logger
 from nicegui import ui, app
 
 from presentation.helpers.common import default_dg_filter
-from presentation.pages.grids import stock_grid, weekly_grid
+from presentation.pages.grids import stock_grid, weekly_grid, weekly_analysis_grid
 from presentation.helpers.dc.all import DGFilter, WeeklyFilter, WeeklyAnalysisFilter
 
 
@@ -86,6 +86,7 @@ def weekly_filter_change(e, control_name=""):
                         app.storage.general["trading_date"] = (
                             e.sender.value
                         )  # For Weekly Analysis Filter
+                        weekly_analysis_grid.refresh()
                 case "INSTRUMENT":
                     if e.sender.value.upper() in ["INDEX", "OI"]:
                         ui.notify(
