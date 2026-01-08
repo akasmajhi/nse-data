@@ -44,3 +44,4 @@ class AnnouncementsFilter:
     selected_industry: str
     size: str
     mcap: float
+    force_refresh: bool

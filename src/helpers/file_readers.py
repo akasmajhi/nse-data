@@ -13,7 +13,10 @@ from src.constants import (
     SUPPORTED_FILE_TYPES,
     DATE_FMT,
 )
-from src.fetchers.historical_data import fetch_data, fetch_index_constituents_data
+from src.fetchers.historical_data import (
+    fetch_data,
+    fetch_index_constituents_data,
+)
 from src.fetchers.stock_fetchers import (
     fetch_stock_info,
     get_stock_data_since_listing,
@@ -21,6 +24,7 @@ from src.fetchers.stock_fetchers import (
     read_market_cap_from_file,
     read_stock_info_from_file,
 )
+from src.fetchers.results import fetch_result_calendar
 
 
 def get_local_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
@@ -290,6 +294,18 @@ def get_local_stock_info(
         return fetch_stock_info(stock=stock)
 
     return data  # NOTE: data exists for today!
+
+
+def get_result_calendar(force_refresh: bool = False) -> pd.DataFrame:
+    logger.info(f"Getting/Fetching results calendar with [{force_refresh = }]")
+    # NOTE: If file exists for today, then read and return
+    file_name = f"result-{datetime.today().strftime(DATE_FMT)}.json"
+    file_path = os.path.join(FILES_BASE_DIR, "RESULTS", file_name)
+    # NOTE: This block called (a) Either file does exist or (b) force refresh
+    if not os.path.exists(file_path) or force_refresh:
+        return fetch_result_calendar(file_path)
+    logger.info(f"Result [{file_name = }] already exists.")
+    return pd.read_json(file_path)
 
 
 if __name__ == "__main__":

@@ -226,3 +226,9 @@ def announcement_filter():
             value=announcement_filter_from_storage().selected_industry,
             on_change=(lambda e: UA.handle_announcement_filter(e, "INDUSTRY")),
         ).classes("w-24")
+        ui.button(
+            "Server Refresh",
+            on_click=lambda x: UA.handle_announcement_filter(x, "REFRESH"),
+            color="primary",
+            icon="refresh",
+        )

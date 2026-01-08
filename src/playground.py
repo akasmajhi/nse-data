@@ -11,6 +11,7 @@ for cookie in r.cookies:
 print(f"Cookies are: [{r.cookies}]")
 """
 
+from loguru import logger
 import requests
 
 url = "https://www.nseindia.com"
@@ -68,14 +69,17 @@ from src.fetchers.results import fetch_result_calendar
 print(fetch_result_calendar())
 # %% NOTE: Get only relevant industries for a stock
 trading_date: str = "29-Dec-2025"
-import src.constants as C
-from analytics.core import daily_gainer
+from src.fetchers.results import fetch_result_calendar
 
-data = daily_gainer(
-    file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
-    gain_type=C.GAIN_TYPE["PRICE"],
-    duration=C.SUPPORTED_TIME_DURATIONS["DAY"],
-    start_date=trading_date,
-    series="",
-)
+data = fetch_result_calendar()
+data.head()
 from src.core import industry_stock_map
+from pandas import json_normalize
+
+ind_stock_dict = industry_stock_map(i_trading_date=None)
+ind_stock_df = json_normalize(data=ind_stock_dict).T.explode(0)
+ind_stock_df = ind_stock_df.reset_index()
+ind_stock_df.rename(columns={"index": "industry"}, inplace=True)
+ind_stock_df.rename(columns={0: "symbol"}, inplace=True)
+ind_stock_df.head()
+list(["All"] + sorted(data.merge(ind_stock_df, on="symbol").industry.unique()))

@@ -10,6 +10,7 @@ from presentation.helpers.dc.all import (
 )
 from src.helpers.common import get_last_monday, get_last_trading_date
 from loguru import logger
+from src.core import get_result_calendar
 
 
 def default_dg_filter() -> DGFilter:
@@ -127,9 +128,7 @@ def weekly_analysis_filter_from_storage() -> WeeklyAnalysisFilter:
 
 
 def default_announcement_filter() -> AnnouncementsFilter:
-    from src.fetchers.results import fetch_result_calendar
-
-    data = fetch_result_calendar()
+    data = get_result_calendar()
     from src.core import industry_stock_map
     from pandas import json_normalize
 
@@ -150,12 +149,13 @@ def default_announcement_filter() -> AnnouncementsFilter:
         selected_industry="All",
         size="All",
         mcap=0,
+        force_refresh=False,
     )
     announcement_filter_dict = json.dumps(asdict(announcement_filter))
     app.storage.general["announcement_filter"] = announcement_filter_dict
-    logger.info(
-        f'Default announcemnt_filter stored. [{app.storage.general["announcement_filter"]}]'
-    )
+    # logger.info(
+    #     f'Default announcemnt_filter stored. [{app.storage.general["announcement_filter"]}]'
+    # )
     return announcement_filter
 
 
@@ -166,9 +166,9 @@ def announcement_filter_from_storage() -> AnnouncementsFilter:
                 app.storage.general["announcement_filter"]
             )
             announcement_filter = AnnouncementsFilter(**announcement_filter_json)
-            logger.info(
-                f"Announcement Filter found in local storage. [{announcement_filter = }]"
-            )
+            # logger.info(
+            #     f"Announcement Filter found in local storage. [{announcement_filter = }]"
+            # )
             return announcement_filter
     except KeyError:
         logger.info(f"No announcement filter locally!")

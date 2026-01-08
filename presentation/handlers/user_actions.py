@@ -186,6 +186,8 @@ def handle_announcement_filter(e, control_name=""):
                     announcement_filter.size = e.sender.value
                 case "INDUSTRY":
                     announcement_filter.selected_industry = e.sender.value
+                case "REFRESH":
+                    announcement_filter.force_refresh = True
                 case _:
                     logger.error(f"Unknown control . . .")
             announcement_filter_dict = json.dumps(asdict(announcement_filter))

@@ -20,6 +20,7 @@ import src.constants as C
 from src.fetchers.stock_fetchers import get_stock_data_since_listing
 from src.derived import writers
 from src.helpers.common import get_last_trading_date
+from src.helpers.file_readers import get_result_calendar
 
 
 def get_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
@@ -379,6 +380,10 @@ def run_batch():
     4. Stock to Index map - Everyday
     """
     pass
+
+
+def corporate_announcements(force_refresh: bool = False):
+    return get_result_calendar(force_refresh)
 
 
 if __name__ == "__main__":

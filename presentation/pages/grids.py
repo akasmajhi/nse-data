@@ -1,3 +1,5 @@
+import json
+from dataclasses import asdict
 from datetime import datetime, timedelta
 from nicegui import ui, app
 import pandas as pd
@@ -27,7 +29,7 @@ from presentation.helpers.common import (
 import src.constants as C
 
 from analytics.core import top_gainers
-from src.fetchers.results import fetch_result_calendar
+from src.core import get_result_calendar
 
 ui.add_head_html(
     """
@@ -369,8 +371,15 @@ def weekly_analysis_grid() -> ui.aggrid:
 
 @ui.refreshable
 def corporate_results_grid() -> ui.aggrid:
-    logger.debug(f"Into Results Grid")
-    data = fetch_result_calendar()
+    logger.debug(f"Into Corporate Results Grid")
+    announcement_filter: AnnouncementsFilter = announcement_filter_from_storage()
+    if announcement_filter.force_refresh:
+        data = get_result_calendar(force_refresh=True)
+        # NOTE: Turn-off the force_refresh after getting new data
+        announcement_filter.force_refresh = False
+        announcement_filter_dict = json.dumps(asdict(announcement_filter))
+        app.storage.general["announcement_filter"] = announcement_filter_dict
+    data = get_result_calendar(force_refresh=False)
     error_message: str = "Some error occured while fetching results/announcements"
     if data.empty:
         # NOTE: Better approach is to handle the -VE case fist
@@ -423,7 +432,6 @@ def corporate_results_grid() -> ui.aggrid:
         "pagination": True,
         "paginationPageSize": 15,
     }
-    announcement_filter: AnnouncementsFilter = announcement_filter_from_storage()
     if announcement_filter.company:
         data = data[data.symbol.str.contains(announcement_filter.company.upper())]
     if announcement_filter.purpose:
@@ -431,12 +439,10 @@ def corporate_results_grid() -> ui.aggrid:
             data.purpose.str.upper().str.contains(announcement_filter.purpose.upper())
         ]
     if announcement_filter.selected_industry.upper() != "ALL":
-        data = data[
-            data.symbol.isin(
-                industry_stock_map(i_trading_date=None)[
-                    announcement_filter.selected_industry
-                ]
-            )
+        # data_ui = data_ui.loc[data_ui["TckrSymb"].isin(industry_to_stocks)]
+        ind_to_stk = industry_stock_map(i_trading_date=None)
+        data = data.loc[data["symbol"].isin(ind_to_stk)][
+            announcement_filter.selected_industry
         ]
     # TODO: Get only relevant industries
     # data_combined:pd.DataFrame =
