@@ -5,7 +5,12 @@ import pandas as pd
 from loguru import logger
 
 from analytics.gainers import daily_gainer
-from presentation.helpers.dc.all import DGFilter, WeeklyFilter, WeeklyAnalysisFilter
+from presentation.helpers.dc.all import (
+    DGFilter,
+    WeeklyFilter,
+    WeeklyAnalysisFilter,
+    AnnouncementsFilter,
+)
 from src.core import (
     industry_stock_map,
     stocks_for_industry,
@@ -17,6 +22,7 @@ from presentation.helpers.common import (
     set_grid_summary,
     weekly_analysis_filter_from_storage,
     weekly_filter_from_storage,
+    announcement_filter_from_storage,
 )
 import src.constants as C
 
@@ -357,6 +363,7 @@ def weekly_analysis_grid() -> ui.aggrid:
             }
         ).classes(add="ag-theme-alpine-dark")
     weekly_analysis_filter: WeeklyAnalysisFilter = weekly_analysis_filter_from_storage()
+    # TODO: Use the weekly_analysis_filter to slice data
     return ui.aggrid.from_pandas(data)
 
 
@@ -364,6 +371,20 @@ def weekly_analysis_grid() -> ui.aggrid:
 def corporate_results_grid() -> ui.aggrid:
     logger.debug(f"Into Results Grid")
     data = fetch_result_calendar()
+    error_message: str = "Some error occured while fetching results/announcements"
+    if data.empty:
+        # NOTE: Better approach is to handle the -VE case fist
+        return ui.aggrid(
+            {
+                "columnDefs": [
+                    {"headerName": "Message", "field": "col1"},
+                ],
+                "rowData": [
+                    {"col1": error_message},
+                ],
+                "rowClass": "text-white italic !bg-red-900",
+            }
+        ).classes(add="ag-theme-alpine-dark")
     options = {
         "columnDefs": [
             {
@@ -402,6 +423,23 @@ def corporate_results_grid() -> ui.aggrid:
         "pagination": True,
         "paginationPageSize": 15,
     }
+    announcement_filter: AnnouncementsFilter = announcement_filter_from_storage()
+    if announcement_filter.company:
+        data = data[data.symbol.str.contains(announcement_filter.company.upper())]
+    if announcement_filter.purpose:
+        data = data[
+            data.purpose.str.upper().str.contains(announcement_filter.purpose.upper())
+        ]
+    if announcement_filter.selected_industry.upper() != "ALL":
+        data = data[
+            data.symbol.isin(
+                industry_stock_map(i_trading_date=None)[
+                    announcement_filter.selected_industry
+                ]
+            )
+        ]
+    # TODO: Get only relevant industries
+    # data_combined:pd.DataFrame =
     return ui.aggrid.from_pandas(
         data, theme="alpine", auto_size_columns=True, options=options
     ).classes(add="ag-theme-alpine-dark h-610/1000")

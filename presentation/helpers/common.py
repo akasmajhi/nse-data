@@ -2,7 +2,12 @@ from dataclasses import asdict
 import json
 from nicegui import app
 
-from presentation.helpers.dc.all import DGFilter, WeeklyAnalysisFilter, WeeklyFilter
+from presentation.helpers.dc.all import (
+    AnnouncementsFilter,
+    DGFilter,
+    WeeklyAnalysisFilter,
+    WeeklyFilter,
+)
 from src.helpers.common import get_last_monday, get_last_trading_date
 from loguru import logger
 
@@ -119,6 +124,60 @@ def weekly_analysis_filter_from_storage() -> WeeklyAnalysisFilter:
         logger.error(f"Some Error I did not catch. [{e = }]")
     # DG_Filter ilter
     return default_weekly_analysis_filter()
+
+
+def default_announcement_filter() -> AnnouncementsFilter:
+    from src.fetchers.results import fetch_result_calendar
+
+    data = fetch_result_calendar()
+    from src.core import industry_stock_map
+    from pandas import json_normalize
+
+    ind_stock_dict = industry_stock_map(i_trading_date=None)
+    ind_stock_df = json_normalize(data=ind_stock_dict).T.explode(0)
+    ind_stock_df = ind_stock_df.reset_index()
+    ind_stock_df.rename(columns={"index": "industry"}, inplace=True)
+    ind_stock_df.rename(columns={0: "symbol"}, inplace=True)
+    ind_stock_df.head()
+    all_ind = list(
+        ["All"] + sorted(data.merge(ind_stock_df, on="symbol").industry.unique())
+    )
+
+    announcement_filter = AnnouncementsFilter(
+        company="",
+        purpose="RESULT",
+        all_industry=all_ind,
+        selected_industry="All",
+        size="All",
+        mcap=0,
+    )
+    announcement_filter_dict = json.dumps(asdict(announcement_filter))
+    app.storage.general["announcement_filter"] = announcement_filter_dict
+    logger.info(
+        f'Default announcemnt_filter stored. [{app.storage.general["announcement_filter"]}]'
+    )
+    return announcement_filter
+
+
+def announcement_filter_from_storage() -> AnnouncementsFilter:
+    try:
+        if app.storage.general["announcement_filter"]:
+            announcement_filter_json = json.loads(
+                app.storage.general["announcement_filter"]
+            )
+            announcement_filter = AnnouncementsFilter(**announcement_filter_json)
+            logger.info(
+                f"Announcement Filter found in local storage. [{announcement_filter = }]"
+            )
+            return announcement_filter
+    except KeyError:
+        logger.info(f"No announcement filter locally!")
+    except AttributeError as ae:
+        logger.error(f"AttributeError . . . . {ae = }")
+    except Exception as e:
+        logger.error(f"Some Error I did not catch. [{e = }]")
+    # DG_Filter ilter
+    return default_announcement_filter()
 
 
 # def set_grid_summary(summary: str):

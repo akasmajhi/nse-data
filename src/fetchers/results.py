@@ -29,7 +29,7 @@ def fetch_result_calendar() -> pd.DataFrame:
     Returns
     -------
         pandas.DataFrame
-    Containing the data that is read from remote.
+    Containing the data that is read from remote. Start date of fecth is today.
     """
     file_name = f"result-{datetime.today().strftime(DATE_FMT)}.json"
     # NOTE: If file exists for today, then don't fetch
@@ -38,11 +38,23 @@ def fetch_result_calendar() -> pd.DataFrame:
         return pd.read_json(os.path.join(FILES_BASE_DIR, "RESULTS", file_name))
 
     data = pd.DataFrame()
+    from_date: str = datetime.today().strftime("%d-%m-%Y")
+    logger.info(f"{from_date = }")
     try:
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
+        """
+            https://www.nseindia.com/api/event-calendar?index=equities&from_date=08-01-2026&to_date=08-03-2026
+        """
+        payload = {
+            "index": "equities",
+            "from_date": from_date,
+            # "from_date": "08-01-2026",
+            "to_date": "08-03-2026",
+        }
         result_res = requests.get(
             url=NSE_RESULTS_URL,
             headers=REQ_HEADER,
+            params=payload,
             cookies=dummy_res.cookies,
             timeout=8,
         )

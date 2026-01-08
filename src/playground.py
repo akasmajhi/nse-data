@@ -66,3 +66,16 @@ print(f"{data.head()}")
 from src.fetchers.results import fetch_result_calendar
 
 print(fetch_result_calendar())
+# %% NOTE: Get only relevant industries for a stock
+trading_date: str = "29-Dec-2025"
+import src.constants as C
+from analytics.core import daily_gainer
+
+data = daily_gainer(
+    file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
+    gain_type=C.GAIN_TYPE["PRICE"],
+    duration=C.SUPPORTED_TIME_DURATIONS["DAY"],
+    start_date=trading_date,
+    series="",
+)
+from src.core import industry_stock_map

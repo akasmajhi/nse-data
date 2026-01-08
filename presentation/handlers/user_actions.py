@@ -4,8 +4,19 @@ from loguru import logger
 from nicegui import ui, app
 
 from presentation.helpers.common import default_dg_filter
-from presentation.pages.grids import stock_grid, weekly_grid, weekly_analysis_grid
-from presentation.helpers.dc.all import DGFilter, WeeklyFilter, WeeklyAnalysisFilter
+from presentation.pages.filters.all_filters import announcement_filter
+from presentation.pages.grids import (
+    corporate_results_grid,
+    stock_grid,
+    weekly_grid,
+    weekly_analysis_grid,
+)
+from presentation.helpers.dc.all import (
+    AnnouncementsFilter,
+    DGFilter,
+    WeeklyFilter,
+    WeeklyAnalysisFilter,
+)
 
 
 def toggle_dark(e):
@@ -155,3 +166,30 @@ def weekly_analysis_filter_change(e, control_name=""):
     except KeyError:  # NOTE: Filter NOT present. Strange!!!
         logger.error(f"Weekly not found in local storage!")
     # weekly_analysis_grid.refresh()
+
+
+def handle_announcement_filter(e, control_name=""):
+    try:
+        if app.storage.general["announcement_filter"]:  # NOTE: Filter present
+            announcement_filter_json = json.loads(
+                app.storage.general["announcement_filter"]
+            )
+            announcement_filter = AnnouncementsFilter(**announcement_filter_json)
+            match control_name:
+                case "COMPANY":
+                    announcement_filter.company = e.sender.value
+                case "PURPOSE":
+                    announcement_filter.purpose = e.sender.value
+                case "MCAP":
+                    announcement_filter.mcap = e.sender.value
+                case "SIZE":
+                    announcement_filter.size = e.sender.value
+                case "INDUSTRY":
+                    announcement_filter.selected_industry = e.sender.value
+                case _:
+                    logger.error(f"Unknown control . . .")
+            announcement_filter_dict = json.dumps(asdict(announcement_filter))
+            app.storage.general["announcement_filter"] = announcement_filter_dict
+    except KeyError:  # NOTE: Filter NOT present. Strange!!!
+        logger.error(f"Announcements Filter not found in local storage!")
+    corporate_results_grid.refresh()

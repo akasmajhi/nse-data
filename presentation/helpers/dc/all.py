@@ -34,3 +34,13 @@ class WeeklyAnalysisFilter:
     mcap: str
     fno: bool
     new_data_required: bool
+
+
+@dataclass
+class AnnouncementsFilter:
+    company: str
+    purpose: str
+    all_industry: list
+    selected_industry: str
+    size: str
+    mcap: float

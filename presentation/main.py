@@ -12,6 +12,7 @@ from presentation.pages.filters.all_filters import (
     stocks_filter,
     weekly_analysis_filter,
     weekly_stocks_filter,
+    announcement_filter,
 )
 from presentation.pages.stock_grid_summary import grid_summary
 
@@ -51,7 +52,8 @@ with ui.row().classes("w-full h-screen"):
             with ui.tab_panel("value_scanner"):
                 ui.label("Value Scanners")
             with ui.tab_panel("corp_announcement"):
-                ui.label("Announcements")
+                # ui.label("Announcements")
+                announcement_filter()
                 corporate_results_grid()
             with ui.tab_panel("derivates"):
                 ui.label("OI Analysis")

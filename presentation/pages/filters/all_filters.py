@@ -7,6 +7,7 @@ from presentation.helpers.common import (
     dg_filter_from_storage,
     weekly_filter_from_storage,
     weekly_analysis_filter_from_storage,
+    announcement_filter_from_storage,
 )
 
 
@@ -198,3 +199,30 @@ def weekly_analysis_filter():
             value=weekly_analysis_filter_from_storage().fno,
             on_change=lambda e: UA.weekly_analysis_filter_change(e, "FNO"),
         )
+
+
+def announcement_filter():
+    logger.debug(f"Into announcemnt filter")
+    with ui.row().classes("w-full glossy-rounded"):
+        ui.input(
+            label="Company",
+            placeholder="Company Name",
+            on_change=lambda x: UA.handle_announcement_filter(x, "COMPANY"),
+            autocomplete=None,
+            validation=None,
+            value=announcement_filter_from_storage().company,
+        )
+        ui.input(
+            label="Purpose",
+            placeholder="Result, Fund, Dividend, etc.",
+            on_change=lambda x: UA.handle_announcement_filter(x, "PURPOSE"),
+            autocomplete=None,
+            validation=None,
+            value=announcement_filter_from_storage().purpose,
+        )
+        ui.select(
+            options=announcement_filter_from_storage().all_industry,
+            label="Industry",
+            value=announcement_filter_from_storage().selected_industry,
+            on_change=(lambda e: UA.handle_announcement_filter(e, "INDUSTRY")),
+        ).classes("w-24")
