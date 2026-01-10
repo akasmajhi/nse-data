@@ -83,3 +83,34 @@ ind_stock_df.rename(columns={"index": "industry"}, inplace=True)
 ind_stock_df.rename(columns={0: "symbol"}, inplace=True)
 ind_stock_df.head()
 list(["All"] + sorted(data.merge(ind_stock_df, on="symbol").industry.unique()))
+# %% NOTE: For manual fetch of daily BHAVCOPY
+from src.core import get_data
+
+data = get_data(file_type="BHAVCOPY", start_date="09-Jan-2026", end_date="09-Jan-2026")
+# %% NOTE: DEBUG: get_last_trading_date
+from src.helpers.common import get_last_trading_date
+from loguru import logger
+from datetime import datetime
+from src.constants import DATE_FMT
+
+logger.debug(
+    f"[{get_last_trading_date(i_date=datetime.today().strftime(DATE_FMT)) = }]"
+)
+
+# SECTION: TA_LIB practice
+
+# %% NOTE: Learning
+import numpy as np
+import talib
+
+close = np.random.random(100)
+
+output = talib.SMA(close, 50)
+print(output[-5:])
+
+# dict of functions by group
+for group, names in talib.get_function_groups().items():
+    # print(group)
+    for name in names:
+        if "gulf".upper() in name:
+            print(f"{group}\t  {name}")

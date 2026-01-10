@@ -3,13 +3,14 @@ Top level wrapper for all analytics related queries.
 """
 
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from loguru import logger
 from analytics.composers import compose_weekly_data
 from analytics.gainers import daily_gainer, index_gainers, weekly_gainers
 import src.constants as C
 from src.helpers.validators import is_date_valid
+from analytics.validators.params import validate_engulfers
 
 
 def top_gainers(
@@ -94,13 +95,53 @@ def top_gainers(
             return data
 
 
+def engulfers(start_date: str, instrument: str, duration: str) -> pd.DataFrame:
+    """
+    Returns the rngulfers for the given instrument type and duration.
+
+    Parameters
+    ----------
+        start_date: str
+    The starting date of analysis in DATE_FMT
+        instrument : str
+    Could be either STOCK or INDEX
+        duration: str
+    This could be one of DAILY or WEEKLY or MONTHLY
+
+    Returns
+    -------
+    pandas.DataFrame
+        Data Frame containing the results OR empty DF in case of any error/exceptions.
+    """
+
+    logger.debug(f"[{start_date = }], [{instrument = }], [{duration = }]")
+    validate_engulfers(start_date, instrument, duration)
+    past_week_start_date = (
+        datetime.strptime(start_date, C.DATE_FMT) - timedelta(days=7)
+    ).strftime(C.DATE_FMT)
+    logger.debug(f"{past_week_start_date = }")
+    if instrument == C.SUPPORTED_FILE_TYPES["STOCK"]:
+        current_week_data: pd.DataFrame = top_gainers(
+            file_type="STOCK", start_date=start_date
+        )
+        past_week_data: pd.DataFrame = top_gainers(
+            file_type="STOCK", start_date=past_week_start_date
+        )
+        logger.debug(f"[{len(current_week_data) = }], [{len(past_week_data) = }]")
+        logger.debug(f"[{current_week_data.columns = }], [{past_week_data.columns = }]")
+    return pd.DataFrame()
+
+
 if __name__ == "__main__":
-    logger.info(f"Main Called.")
-    data = top_gainers(
-        file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
-        gain_type="PRICE",
-        duration=C.SUPPORTED_TIME_DURATIONS["DAY"],
-        start_date=datetime.today().strftime(C.DATE_FMT),
-        series="BE",
-    )
-    logger.debug(f"The size of data is: [{len(pd.DataFrame(data))}]")
+    # logger.info(f"Main Called.")
+    # data = top_gainers(
+    #     file_type=C.SUPPORTED_FILE_TYPES["STOCK"],
+    #     gain_type="PRICE",
+    #     duration=C.SUPPORTED_TIME_DURATIONS["DAY"],
+    #     start_date=datetime.today().strftime(C.DATE_FMT),
+    #     series="BE",
+    # )
+    # logger.debug(f"The size of data is: [{len(pd.DataFrame(data))}]")
+    # print(engulfers(start_date="XX", instrument="STOCaK", duration="YY"))
+    print(engulfers(start_date="05-Jan-2026", instrument="STOCK", duration="DAY"))
+    # print(engulfers(start_date="29-Dec-2025", instrument="INDEX", duration="MONTH"))

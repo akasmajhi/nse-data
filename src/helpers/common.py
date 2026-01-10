@@ -444,9 +444,9 @@ def get_last_trading_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> 
         trading_date = prev_week_day
     # NOTE: If i_date is weekend then calculate the immediate last weekday
     if datetime.strptime(trading_date, DATE_FMT).weekday() > 4 and (
-        i_date == today.strftime(DATE_FMT) and today.hour < 19
+        i_date == today.strftime(DATE_FMT)  # BUG: Why this check? `and today.hour < 19`
     ):
-        excess_days = (7 + datetime.strptime(trading_date, DATE_FMT).weekday() + 1) % 5
+        excess_days = datetime.strptime(trading_date, DATE_FMT).weekday() - 4
         logger.error(f"[{excess_days = }]")
         prev_week_day = (
             datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)
@@ -659,7 +659,7 @@ if __name__ == "__main__":
     #                        i_trading_date="",
     #                        i_stock_name="ICICIBANK",
     #                        i_year="2025"))
-    logger.debug(get_last_trading_date(i_date=""))
-    logger.debug(get_last_trading_date(i_date="  "))
-    logger.debug(get_last_trading_date(i_date="19-Oct-2025"))
-    logger.debug(get_last_trading_date())
+    # logger.debug(get_last_trading_date(i_date=""))
+    # logger.debug(get_last_trading_date(i_date="  "))
+    # logger.debug(get_last_trading_date(i_date="19-Oct-2025"))
+    logger.debug(get_last_trading_date(datetime.today().strftime(DATE_FMT)))

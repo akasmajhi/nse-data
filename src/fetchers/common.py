@@ -53,6 +53,7 @@ def dummy_request(url: str = NSE_DUMMY_REQ_URL):
     try:
         with open("dummy_res.pickle", "wb") as f:
             pickle.dump(r, f)
+            logger.info(f"Fresh response saved to pickle!")
     except Exception as e:
         logger.error(f"Error writing dummy response to file. [{e = }]")
     return r
