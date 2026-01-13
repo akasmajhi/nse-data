@@ -5,6 +5,7 @@ from nicegui import ui, app
 import pandas as pd
 
 from loguru import logger
+import presentation.handlers.user_actions as UA
 
 from analytics.gainers import daily_gainer
 from presentation.helpers.dc.all import (
@@ -446,6 +447,108 @@ def corporate_results_grid() -> ui.aggrid:
         ]
     # TODO: Get only relevant industries
     # data_combined:pd.DataFrame =
-    return ui.aggrid.from_pandas(
-        data, theme="alpine", auto_size_columns=True, options=options
-    ).classes(add="ag-theme-alpine-dark h-610/1000")
+    return (
+        ui.aggrid.from_pandas(
+            data, theme="alpine", auto_size_columns=True, options=options
+        )
+        .classes(add="ag-theme-alpine-dark h-610/1000")
+        .on(
+            "cellClicked",
+            lambda event: UA.show_dialog(f'{event.args["value"]}'),
+        )
+    )
+
+
+@ui.refreshable
+def company_results_grid() -> ui.aggrid:
+    company = ""
+    try:
+        if app.storage.general["company_results_filter.company_name"]:
+            company = app.storage.general["company_results_filter.company_name"]
+    except KeyError:
+        logger.info(f"Company name not set")
+    force_refresh = False
+    try:
+        if app.storage.general["company_results_filter.force_refresh"]:
+            force_refresh = app.storage.general["company_results_filter.force_refresh"]
+    except KeyError:
+        logger.info(f"Force Refresh name not set")
+    if not company:
+        return error_grid("No company name provided")
+    # NOTE: Fetch the results for the company
+    logger.debug(f"Calling fetcher for {company = }, {force_refresh = }")
+    data = get_result_calendar(force_refresh, company)
+    if data.empty:
+        return error_grid(f"Company << {company} >>not found")
+    data = data.sort_values(by="date", ascending=False)
+    options = {
+        "columnDefs": [
+            # {
+            #     "headerName": "Stock",
+            #     "field": "symbol",
+            #     "filter": "agTextColumnFilter",
+            #     "cellStyle": {
+            #         "fontWeight": "bold",
+            #     },
+            # },
+            # {
+            #     "headerName": "Full Name",
+            #     "field": "company",
+            #     "filter": "agTextColumnFilter",
+            #     "cellStyle": {
+            #         "fontWeight": "italic",
+            #     },
+            # },
+            {
+                "headerName": "Purpose",
+                "field": "purpose",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "italic",
+                },
+            },
+            {
+                "headerName": "Date",
+                "field": "date",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "italic",
+                },
+            },
+            {
+                "headerName": "Description",
+                "field": "bm_desc",
+                "tooltipField": "bm_desc",
+                "cellStyle": {
+                    "fontWeight": "italic",
+                },
+            },
+        ],
+        "pagination": True,
+        "paginationPageSize": 15,
+    }
+    return (
+        ui.aggrid.from_pandas(
+            data, theme="alpine", auto_size_columns=True, options=options
+        )
+        .on(
+            "cellClicked",
+            lambda event: UA.show_dialog(f'{event.args["value"]}'),
+        )
+        .classes(add="ag-theme-alpine-dark h-610/1000")
+    )
+
+
+def error_grid(msg: str) -> ui.aggrid:
+
+    return ui.aggrid(
+        {
+            "columnDefs": [
+                {"headerName": "Message", "field": "col1"},
+            ],
+            "rowData": [
+                {"col1": msg},
+            ],
+            "rowClass": "text-white italic !bg-red-900",
+        }
+    ).classes(add="ag-theme-alpine-dark")

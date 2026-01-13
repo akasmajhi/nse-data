@@ -97,6 +97,14 @@ logger.debug(
     f"[{get_last_trading_date(i_date=datetime.today().strftime(DATE_FMT)) = }]"
 )
 
+# %% SUB_SECTION: Test Reslts Calendar
+from src.core import get_result_calendar
+from loguru import logger
+
+logger.info(get_result_calendar())  # NOTE: For all results gist
+logger.info(
+    f'BAJFINANCE: [{get_result_calendar(force_refresh=False, stock_name="BAJFINANCE")}]'
+)
 # SECTION: TA_LIB practice
 
 # %% NOTE: Learning
@@ -114,3 +122,15 @@ for group, names in talib.get_function_groups().items():
     for name in names:
         if "gulf".upper() in name:
             print(f"{group}\t  {name}")
+# %% SECTION: For individual get_data
+from src import constants as C
+from src.core import get_data
+from datetime import datetime
+
+get_data(
+    file_type="FNOBHAVCOPY",
+    start_date="01-Jan-2026",
+    end_date=datetime.today().strftime(C.DATE_FMT),
+    # start_date="31-Oct-2025",
+    # end_date="31-Oct-2025",
+)

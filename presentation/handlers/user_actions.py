@@ -4,12 +4,14 @@ from loguru import logger
 from nicegui import ui, app
 
 from presentation.helpers.common import default_dg_filter
-from presentation.pages.filters.all_filters import announcement_filter
+
+# from presentation.pages.filters.all_filters import announcement_filter
 from presentation.pages.grids import (
     corporate_results_grid,
     stock_grid,
     weekly_grid,
     weekly_analysis_grid,
+    company_results_grid,
 )
 from presentation.helpers.dc.all import (
     AnnouncementsFilter,
@@ -195,3 +197,28 @@ def handle_announcement_filter(e, control_name=""):
     except KeyError:  # NOTE: Filter NOT present. Strange!!!
         logger.error(f"Announcements Filter not found in local storage!")
     corporate_results_grid.refresh()
+
+
+def handle_company_results_filter(e, control_name=""):
+    match control_name:
+        case "COMPANY":
+            app.storage.general["company_results_filter.company_name"] = (
+                e.sender.value.upper()
+            )
+        case "FETCH":
+            company_results_grid.refresh()
+        case "FORCE_REFRESH":
+            app.storage.general["company_results_filter.force_refresh"] = e.sender.value
+        case _:
+            logger.error(f"Unknown control!")
+
+
+def show_dialog(msg: str):
+    logger.info(f"[{msg = }]")
+    with ui.dialog() as dialog, ui.card():
+        ui.label("Row Data")
+        data_label = ui.label().classes("font-mono")
+        # ui.button("Close", on_click=dialog.close())
+    clicked_data = msg
+    data_label.set_text(f"{clicked_data}")
+    dialog.open()

@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from loguru import logger
 import requests
 from http import HTTPStatus
@@ -18,7 +19,7 @@ from src.helpers.cross_cutting import benchmark
 
 
 @benchmark
-def fetch_result_calendar(file_path: str) -> pd.DataFrame:
+def fetch_result_calendar(file_path: str, stock_name: str = "") -> pd.DataFrame:
     """
         Fetches the data results calendar from remote.
 
@@ -34,18 +35,25 @@ def fetch_result_calendar(file_path: str) -> pd.DataFrame:
 
     data = pd.DataFrame()
     from_date: str = datetime.today().strftime("%d-%m-%Y")
-    # logger.info(f"{from_date = }")
+    logger.debug(f"{from_date = }, {file_path = }, {stock_name = }")
     try:
         dummy_res = dummy_request(NSE_DUMMY_REQ_URL)
         """
             https://www.nseindia.com/api/event-calendar?index=equities&from_date=08-01-2026&to_date=08-03-2026
         """
-        payload = {
-            "index": "equities",
-            "from_date": from_date,
-            # "from_date": "08-01-2026",
-            "to_date": "08-03-2026",
-        }
+        if not stock_name:
+            payload = {
+                "index": "equities",
+                "from_date": from_date,
+                # "from_date": "08-01-2026",
+                "to_date": "08-03-2026",
+            }
+        else:
+            payload = {
+                "index": "equities",
+                "symbol": stock_name,
+            }
+
         result_res = requests.get(
             url=NSE_RESULTS_URL,
             headers=REQ_HEADER,
@@ -53,7 +61,9 @@ def fetch_result_calendar(file_path: str) -> pd.DataFrame:
             cookies=dummy_res.cookies,
             timeout=8,
         )
-        if result_res.status_code == HTTPStatus.OK:
+        # logger.info(f"[{result_res.status_code = }]")
+        # logger.info(f"[{result_res.text = }]")
+        if result_res.status_code == HTTPStatus.OK and json.loads(result_res.text):
             with open(file_path, "w") as file:
                 file.write(result_res.text)
                 return pd.read_json(file_path)

@@ -232,3 +232,41 @@ def announcement_filter():
             color="primary",
             icon="refresh",
         )
+
+
+def company_results_filter():
+    company = ""
+    force_refresh = False
+    try:
+        if app.storage.general["company_results_filter.company_name"]:
+            company = app.storage.general["company_results_filter.company_name"]
+        if app.storage.general["company_results_filter.force_refresh"]:
+            force_refresh = app.storage.general["company_results_filter.force_refresh"]
+            logger.info(f"[{force_refresh = }]")
+    except KeyError:
+        company = ""
+
+    with ui.row().classes("w-full glossy-rounded"):
+        ui.input(
+            label="Company",
+            placeholder="Company Name",
+            on_change=lambda x: UA.handle_company_results_filter(x, "COMPANY"),
+            autocomplete=None,
+            validation=None,
+            value=company,
+        ).on(
+            "keydown.enter", lambda x: UA.handle_company_results_filter(x, "FETCH")
+        ).props(
+            'input-class="text-uppercase"'
+        )
+        ui.checkbox(
+            "Server Refresh",
+            value=force_refresh,
+            on_change=lambda x: UA.handle_company_results_filter(x, "FORCE_REFRESH"),
+        )
+        ui.button(
+            "Get",
+            on_click=lambda x: UA.handle_company_results_filter(x, "FETCH"),
+            color="primary",
+            icon="refresh",
+        )

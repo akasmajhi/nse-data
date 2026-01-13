@@ -296,19 +296,31 @@ def get_local_stock_info(
     return data  # NOTE: data exists for today!
 
 
-def get_result_calendar(force_refresh: bool = False) -> pd.DataFrame:
-    logger.info(f"Getting/Fetching results calendar with [{force_refresh = }]")
+def get_result_calendar(
+    force_refresh: bool = False, stock_name: str = ""
+) -> pd.DataFrame:
+    logger.info(f"Get/Fetch calendar with [{force_refresh = }], [{stock_name = }]")
     # NOTE: If file exists for today, then read and return
-    file_name = f"result-{datetime.today().strftime(DATE_FMT)}.json"
-    file_path = os.path.join(FILES_BASE_DIR, "RESULTS", file_name)
-    # NOTE: This block called (a) Either file does exist or (b) force refresh
-    if not os.path.exists(file_path) or force_refresh:
-        return fetch_result_calendar(file_path)
-    logger.info(f"Result [{file_name = }] already exists.")
-    return pd.read_json(file_path)
+    if not stock_name:
+        file_name = f"result-{datetime.today().strftime(DATE_FMT)}.json"
+        file_path = os.path.join(FILES_BASE_DIR, "RESULTS", file_name)
+        # NOTE: This block called (a) Either file does exist or (b) force refresh
+        if not os.path.exists(file_path) or force_refresh:
+            return fetch_result_calendar(file_path)
+        logger.info(f"Result [{file_name = }] already exists.")
+        return pd.read_json(file_path)
+    else:
+        file_name = f"result-{stock_name}.json"
+        file_path = os.path.join(FILES_BASE_DIR, "RESULTS", file_name)
+        # NOTE: This block called (a) Either file does exist or (b) force refresh
+        if not os.path.exists(file_path) or force_refresh:
+            return fetch_result_calendar(file_path, stock_name)
+        logger.info(f"Result [{file_name = }] already exists.")
+        return pd.read_json(file_path)
 
 
 if __name__ == "__main__":
     # get_local_index_names("30-AUG-2025")
-    logger.info(f'[{get_local_market_cap("STOCK", "TCS") = }]')
+    # logger.info(f'[{get_local_market_cap("STOCK", "TCS") = }]')
+    logger.info(f'{get_result_calendar(force_refresh=True, stock_name="NESTLEIND")}')
     # logger.info(f'{get_local_market_cap("STOCK", "ICICIBANK") = }')

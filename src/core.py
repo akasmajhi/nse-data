@@ -382,8 +382,8 @@ def run_batch():
     pass
 
 
-def corporate_announcements(force_refresh: bool = False):
-    return get_result_calendar(force_refresh)
+def corporate_announcements(force_refresh: bool = False, stock_name: str = ""):
+    return get_result_calendar(force_refresh, stock_name)
 
 
 if __name__ == "__main__":
