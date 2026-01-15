@@ -96,6 +96,8 @@ from src.constants import DATE_FMT
 logger.debug(
     f"[{get_last_trading_date(i_date=datetime.today().strftime(DATE_FMT)) = }]"
 )
+working_day: str = datetime.strptime("13-Jan-2026", DATE_FMT).strftime(DATE_FMT)
+logger.debug(f"{get_last_trading_date(working_day)}")
 
 # %% SUB_SECTION: Test Reslts Calendar
 from src.core import get_result_calendar

@@ -182,8 +182,9 @@ def combined_m_caps(folder: str) -> dict:
         logger.error(f"Invalid [{mcap_folder = }]")
         return dict()
     # ERROR: if the combined file does not exist then it's an error
-    if not os.path.isfile(os.path.join(mcap_folder, "combined.json")):
-        logger.error(f"Combined file DOES NOT exists!")
+    combined_m_cap_file_name: str = os.path.join(mcap_folder, "combined.json")
+    if not os.path.isfile(combined_m_cap_file_name):
+        logger.error(f"Combined file [{combined_m_cap_file_name = }]DOES NOT exists!")
         logger.info(f"Use the writers.combine_m_caps for writing content")
         return {}
     output_filename = os.path.join(mcap_folder, "combined.json")
