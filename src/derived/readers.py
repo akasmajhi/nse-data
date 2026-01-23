@@ -28,7 +28,7 @@ def industry_to_stock(i_trading_date: str | None, i_file_name: str | None) -> di
         dict
     dictionary containing the industry-to-stock mapping.
     """
-    logger.debug(f"[{i_file_name = }], [{i_trading_date = }]")
+    logger.info(f"[{i_file_name = }], [{i_trading_date = }]")
     if i_file_name is None and i_trading_date is None:
         logger.error(
             f"Need to provided at least 1 param. [{i_file_name = }], [{i_trading_date = }]"

@@ -53,7 +53,7 @@ def default_weekly_filter() -> WeeklyFilter:
         trading_date=get_last_monday(),
         instrument_type="STOCK",
         kind="Price",
-        gl="Gain",
+        gl="Gainers",
         size="Large Cap",
         index="All",
         industry="All",

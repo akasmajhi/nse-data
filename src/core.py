@@ -364,7 +364,7 @@ def get_fno_stocks() -> list:
     file_name = os.path.join(
         C.FILES_BASE_DIR,
         C.SUPPORTED_FILE_TYPES["FNOBHAVCOPY"],
-        f'{C.SUPPORTED_FILE_TYPES["FNOBHAVCOPY"]}_{trading_date}.csv',
+        f'{C.SUPPORTED_FILE_TYPES["FNOBHAVCOPY"].lower()}_{trading_date}.csv',
     )
     data = pd.read_csv(file_name)
     logger.debug(f"Total: [{len(data.TckrSymb.unique())}]")

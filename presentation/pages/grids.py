@@ -6,7 +6,7 @@ import pandas as pd
 
 from loguru import logger
 import presentation.handlers.user_actions as UA
-
+import presentation.constants as PC
 from analytics.gainers import daily_gainer
 from presentation.helpers.dc.all import (
     DGFilter,
@@ -420,6 +420,7 @@ def corporate_results_grid() -> ui.aggrid:
                 "cellStyle": {
                     "fontWeight": "italic",
                 },
+                "valueFormatter": f'new Date(value).toLocaleString("en-IN", { PC.date_fmt_opts })',
             },
             {
                 "headerName": "Description",
@@ -508,12 +509,15 @@ def company_results_grid() -> ui.aggrid:
                 },
             },
             {
-                "headerName": "Date",
+                "headerName": "Event Date",
                 "field": "date",
                 "filter": "agTextColumnFilter",
                 "cellStyle": {
                     "fontWeight": "italic",
                 },
+                "valueFormatter": f'new Date(value).toLocaleString("en-IN", { PC.date_fmt_opts })',
+                # "valueFormatter": """new Date(value).toLocaleString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })""",
+                # "valueFormatter": 'data.toLocaleString("en-IN", "month": "long")', #TODO: Fix this
             },
             {
                 "headerName": "Description",

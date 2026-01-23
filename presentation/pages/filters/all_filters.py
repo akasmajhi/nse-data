@@ -211,6 +211,8 @@ def announcement_filter():
             autocomplete=None,
             validation=None,
             value=announcement_filter_from_storage().company,
+        ).props(
+            'input-class="text-uppercase"'
         )
         ui.input(
             label="Purpose",
