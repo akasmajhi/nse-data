@@ -4,12 +4,15 @@ from dataclasses import dataclass
 @dataclass
 class DGFilter:  # --- DAILY GAIN FILTER ---
     trading_date: str
+    instrument: str
+    timeframe: str
     what_type: str
     gl: str
     size: str
     index: str
     industry: str
-    reserved: str
+    fno: bool
+    series: list
 
 
 @dataclass
@@ -24,6 +27,7 @@ class WeeklyFilter:  # Weekly Analysis Filter
     industry: str
     series: list
     fno: bool
+    unique_series: list
 
 
 @dataclass

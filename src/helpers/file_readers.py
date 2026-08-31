@@ -9,10 +9,11 @@ from src.helpers.common import compose_dates_from_range, get_last_trading_date
 from src.constants import (
     FILES_BASE_DIR,
     PREOPEN_SKIPROWS,
-    PREOPEN_PAYLOADS,
     SUPPORTED_FILE_TYPES,
     DATE_FMT,
+    SERIES_FOR_MCAP,
 )
+from src.fetchers.payloads import PREOPEN_PAYLOADS
 from src.fetchers.historical_data import (
     fetch_data,
     fetch_index_constituents_data,
@@ -235,38 +236,42 @@ def get_local_stock_data(stock_name: str) -> pd.DataFrame:
 
 
 def get_local_market_cap(
-    file_type: str,
-    instr_name: str,
+    symbol: str,
+    series: str,
     trading_date: str = datetime.today().strftime(DATE_FMT),
 ) -> dict:
-    """Method for getting market cap for a stock or INDEX. In case of INDEX,
-    the aggregate market cap of the constituents is used.
+    """Method for getting market cap for a stock
 
     Parameters
     ----------
-        file_type: str
-    This is valid type based on constants.SUPPORTED_FILE_TYPES
-        instr_name: str
-    Could be stock name or INDEX name
+        symbol: str
+    The name of the stock.
+        series: str
+    Series name (for exmape, 'EQ' is mandatory for the fetch
+        trading_date: str
+    Defaulted to current/fetch date
     """
-    logger.debug(f"{file_type = }, {instr_name = }, [{trading_date = }]")
+    logger.debug(f"{symbol = }, {series = }, [{trading_date = }]")
 
-    if file_type == SUPPORTED_FILE_TYPES["STOCK"] and instr_name:
+    if series in SERIES_FOR_MCAP and symbol:
         # NOTE: For individual stocks. First try reading the local file
-        m_cap = read_market_cap_from_file(instr_name, trading_date)
+        # TODO:
+        m_cap = read_market_cap_from_file(symbol, trading_date)
         # TODO: If such file is not present then fetch and store in the file
         if not m_cap:
-            return fetch_market_cap(instr_name, trading_date)
+            return fetch_market_cap(symbol, series)
         else:
             return m_cap
-    if file_type == SUPPORTED_FILE_TYPES["INDEX"]:
+    if series == SUPPORTED_FILE_TYPES["INDEX"]:
         # NOTE: For INDEX. Aggregate the constituents' market caps.
         pass
     return dict()  # Return empty dict for any invalid file type(s)
 
 
 def get_local_stock_info(
-    stock: str, trading_date: str = datetime.today().strftime(DATE_FMT)
+    stock: str,
+    stock_df: pd.DataFrame,
+    trading_date: str = datetime.today().strftime(DATE_FMT),
 ) -> dict:
     """Reads the meta info from local file system. If not found,
     It issues a remote fetch request.
@@ -283,8 +288,12 @@ def get_local_stock_info(
     DataFrame containing dict-representation of the stock info
     """
 
-    logger.debug(f"[{stock = }], [{trading_date}]")
+    logger.debug(f"[{stock = }], [{trading_date = }]")
+    logger.debug(f"[{stock_df = }], [{len(stock_df) = }]")
     today = datetime.today().strftime(DATE_FMT)
+    # if not stock_df.empty:
+    #     symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
+    #     series_col_name = "SctySrs"
     data = read_stock_info_from_file(stock=stock, trading_date=trading_date)
 
     if trading_date != today:

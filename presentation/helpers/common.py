@@ -17,12 +17,15 @@ def default_dg_filter() -> DGFilter:
     logger.info(f"Creating fresh DG_Filter.")
     DG_Filter = DGFilter(
         trading_date=get_last_trading_date(),
+        instrument="STOCK",
+        timeframe="DAILY",
         what_type="Value",
         gl="Gain",
         size="Large Cap",
         index="All",
         industry="All",
-        reserved="B",
+        fno=False,
+        series=list(["EQ"]),
     )
     DG_Filter_Dict = json.dumps(asdict(DG_Filter))
     app.storage.general["DG_Filter"] = DG_Filter_Dict
@@ -59,6 +62,7 @@ def default_weekly_filter() -> WeeklyFilter:
         industry="All",
         series=list(["EQ"]),
         fno=False,
+        unique_series=list(),
     )
     weekly_filter_dict = json.dumps(asdict(weekly_filter))
     app.storage.general["weekly_filter"] = weekly_filter_dict
@@ -137,7 +141,7 @@ def default_announcement_filter() -> AnnouncementsFilter:
     ind_stock_df = ind_stock_df.reset_index()
     ind_stock_df.rename(columns={"index": "industry"}, inplace=True)
     ind_stock_df.rename(columns={0: "symbol"}, inplace=True)
-    ind_stock_df.head()
+    # ind_stock_df.head()
     all_ind = list(
         ["All"] + sorted(data.merge(ind_stock_df, on="symbol").industry.unique())
     )
@@ -182,7 +186,14 @@ def announcement_filter_from_storage() -> AnnouncementsFilter:
 
 # def set_grid_summary(summary: str):
 #     app.storage.general["grid_summary"] = summary
-def set_grid_summary(total: int, gainers: int, losers: int):
-    app.storage.general["grid_summary_total"] = total
-    app.storage.general["grid_summary_gainers"] = gainers
-    app.storage.general["grid_summary_losers"] = losers
+def set_adv_dec(total: int, gainers: int, losers: int, unchanged: int):
+    app.storage.general["total_stocks"] = total
+    app.storage.general["gainer_stocks"] = gainers
+    app.storage.general["loser_stocks"] = losers
+    app.storage.general["unchanged_stocks"] = unchanged
+
+
+def set_filtered_grid_summary(total: int, gainers: int, losers: int):
+    app.storage.general["filtered_grid_summary_total"] = total
+    app.storage.general["filtered_grid_summary_gainers"] = gainers
+    app.storage.general["filtered_grid_summary_losers"] = losers

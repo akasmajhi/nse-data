@@ -19,14 +19,18 @@ from src.core import (
     stocks_for_industry,
     get_index_constituents,
     get_fno_stocks,
+    get_data,
 )
 from presentation.helpers.common import (
     dg_filter_from_storage,
-    set_grid_summary,
+    set_adv_dec,
+    set_filtered_grid_summary,
     weekly_analysis_filter_from_storage,
     weekly_filter_from_storage,
     announcement_filter_from_storage,
 )
+from presentation.pages.stock_grid_summary import grid_summary
+
 import src.constants as C
 
 from analytics.core import top_gainers
@@ -56,6 +60,7 @@ def stock_grid() -> ui.aggrid:
         start_date=trading_date,
         series="",
     )
+    error_message = "Error! No data found."
     if data.empty:
         # NOTE: Better approach is to handle the -VE case fist
         return ui.aggrid(
@@ -64,7 +69,7 @@ def stock_grid() -> ui.aggrid:
                     {"headerName": "Message", "field": "col1"},
                 ],
                 "rowData": [
-                    {"col1": "Error! No data found."},
+                    {"col1": error_message},
                 ],
                 "rowClass": "!bg-red-300",
             }
@@ -88,11 +93,13 @@ def stock_grid() -> ui.aggrid:
                 "total_m_cap",
             ]
         ]
-    set_grid_summary(
+    set_adv_dec(
         len(data_ui),
-        len(data_ui.loc[data_ui["pct_change"] >= 0]),
+        len(data_ui.loc[data_ui["pct_change"] > 0]),
         len(data_ui.loc[data_ui["pct_change"] < 0]),
+        len(data_ui.loc[data_ui["pct_change"] == 0]),
     )
+    # NOTE: Gainer / Loser Filter
     match dg_filter.gl.upper():
         case "LOSS":
             data_ui = data_ui.loc[data_ui["pct_change"] < 0]
@@ -103,31 +110,55 @@ def stock_grid() -> ui.aggrid:
         case _:
             logger.error("Gain type that is unhandled . . .")
 
+    # NOTE: check if any index is selected
+    if dg_filter.index and dg_filter.index.upper() != "ALL":
+        data_ui = pd.DataFrame(
+            data_ui[data_ui.TckrSymb.isin(get_index_constituents(dg_filter.index))]
+        )
+    # NOTE: Industry filter
     if dg_filter.industry.upper() != "ALL":
         logger.debug(f"Applying industry filter! [{dg_filter.industry.upper()} = ]")
         industry_to_stocks = industry_stock_map(i_trading_date=None)[dg_filter.industry]
         logger.info(f"Stocks in industry: [{industry_to_stocks  = }]")
         data_ui = data_ui.loc[data_ui["TckrSymb"].isin(industry_to_stocks)]
 
-    # if isinstance(data_ui, pd.DataFrame) and not data.empty:
+    # NOTE: For FnO Filter
+    if dg_filter.fno:
+        data_ui = pd.DataFrame(data_ui[data_ui.TckrSymb.isin(get_fno_stocks())])
+    # NOTE: Check to see if there is a series in the filter
+    if dg_filter.series:
+        data_ui = pd.DataFrame(data_ui[data_ui["SctySrs"].isin(dg_filter.series)])
+        if data_ui.empty:
+            error_message = f"Some shit series you have entered {dg_filter.series} "
+            return error_grid(error_message)
+    # NOTE: Stock name concatenated with series name for readability
+    data_ui["name_series"] = data_ui["TckrSymb"] + "-" + data_ui["SctySrs"]
+    grid_summary.refresh()
+    # NOTE: The following may be deprecated!
+    set_filtered_grid_summary(
+        len(data_ui),
+        len(data_ui.loc[data_ui["pct_change"] >= 0]),
+        len(data_ui.loc[data_ui["pct_change"] < 0]),
+    )
     stk_grid = ui.aggrid.from_pandas(
         data_ui,
         theme="balham",
         options={
             "columnDefs": [
-                {
-                    "headerName": "Date",
-                    "field": "TradDt",
-                    # "valueFormatter": '(new Date(value)).toLocaleDateString("en-IN")',
-                },
-                {
-                    "headerName": "Series",
-                    "field": "SctySrs",
-                    "filter": "agTextColumnFilter",
-                },
+                # {
+                #     "headerName": "Date",
+                #     "field": "TradDt",
+                #     "valueFormatter": f'new Date(value).toLocaleString("en-IN", { PC.date_fmt_opts })',
+                # }, #NOTE: Date is moved as a part of stocks_filter
+                # {
+                #     "headerName": "Series",
+                #     "field": "SctySrs",
+                #     "filter": "agTextColumnFilter",
+                # },
                 {
                     "headerName": "Symbol",
-                    "field": "TckrSymb",
+                    "field": "name_series",
+                    # "field": "TckrSymb",
                     "filter": "agTextColumnFilter",
                     # "floatingFilter": True,
                 },
@@ -169,10 +200,110 @@ def stock_grid() -> ui.aggrid:
                 # ":!bg-green-300": "(params) => params.data.pct_change > 0",
                 # ":text-green": "(params) => params.data.pct_change > 0",
             },
+            "pagination": True,
+            "paginationPageSize": 20,
         },
-    ).classes("max-h-1240")
+        html_columns=[0],
+    ).classes(add="ag-theme-alpine-dark h-550/1000")
+    # ).classes("max-h-1240")
     stk_grid.on(type="click")
     return stk_grid
+
+
+@ui.refreshable
+def daily_index_grid() -> ui.aggrid:
+    logger.info(f"Into daily_index_grid . . . [{dg_filter_from_storage() = }]")
+    dg_filter: DGFilter = dg_filter_from_storage()
+    # trading_date = datetime.datetime.today().strftime(C.DATE_FMT)
+    trading_date = dg_filter.trading_date
+    data = get_data(file_type="INDEX", start_date=trading_date, end_date=trading_date)
+    error_message = "Error! No data found."
+    if data.empty:
+        # NOTE: Better approach is to handle the -VE case fist
+        return ui.aggrid(
+            {
+                "columnDefs": [
+                    {"headerName": "Message", "field": "col1"},
+                ],
+                "rowData": [
+                    {"col1": error_message},
+                ],
+                "rowClass": "!bg-red-300",
+            }
+        )
+    data.rename(
+        columns={
+            "30_DAY_PCT_CHANGE": "PCT_CHANGE_30_D",
+            "365_D_PCT_CHANGE": "PCT_CHANGE_365_D",
+        },
+        inplace=True,
+    )
+    data["PCT_CHANGE"] = pd.to_numeric(data["PCT_CHANGE"], errors="coerce")
+    data = data.dropna(subset=["PCT_CHANGE"])
+    app.storage.general["daily.index.total"] = len(data)
+    app.storage.general["daily.index.gainers"] = len(data[data["PCT_CHANGE"] > 0])
+    app.storage.general["daily.index.losers"] = len(data[data["PCT_CHANGE"] < 0])
+    return ui.aggrid.from_pandas(
+        data,
+        theme="balham",
+        auto_size_columns=True,
+        options={
+            "columnDefs": [
+                {
+                    "headerName": "Index",
+                    "field": "INDEX",
+                    "filter": "agTextColumnFilter",
+                },
+                {
+                    "headerName": "Current",
+                    "field": "CURRENT",
+                },
+                {
+                    "headerName": "1 DAY %",
+                    "field": "PCT_CHANGE",
+                    "filter": "agNumberColumnFilter",
+                    "cellClassRules": {
+                        ":text-green font-bold": "(params) => params.data.PCT_CHANGE >= 0",
+                        ":text-red font-bold": "(params) => params.data.PCT_CHANGE < 0",
+                    },
+                },
+                {
+                    "headerName": "1 MON %",
+                    "field": "PCT_CHANGE_30_D",
+                    "filter": "agNumberColumnFilter",
+                    "cellClassRules": {
+                        ":text-green font-bold": "(params) => params.data.PCT_CHANGE_30_D>= 0",
+                        ":text-red font-bold": "(params) => params.data.PCT_CHANGE_30_D < 0",
+                    },
+                },
+                {
+                    "headerName": "1 YR. %",
+                    "field": "PCT_CHANGE_365_D",
+                    "filter": "agNumberColumnFilter",
+                    "cellClassRules": {
+                        ":text-green font-bold": "(params) => params.data.PCT_CHANGE_365_D>= 0",
+                        ":text-red font-bold": "(params) => params.data.PCT_CHANGE_365_D < 0",
+                    },
+                },
+                # NOTE: OHLC Data does not seem significant here!
+                # {"headerName": "Open", "field": "OPEN"},
+                # {"headerName": "High", "field": "HIGH"},
+                # {"headerName": "Low", "field": "LOW"},
+                # {
+                #     "headerName": "Prev. Close",
+                #     "field": "PREV_CLOSE",
+                # },
+                {"headerName": "1 WK", "field": "1_WEEK_AGO"},
+                {"headerName": "1 MON", "field": "1_MONTH_AGO"},
+                {"headerName": "1 YR.", "field": "1_YEAR_AGO"},
+                {"headerName": "52_WK_LOW", "field": "52_WK_LOW"},
+                {"headerName": "52_WK_HIGH", "field": "52_WK_HIGH"},
+            ],
+            "pagination": True,
+            "paginationPageSize": 20,
+        },
+        html_columns=[0],
+    ).classes(add="ag-theme-alpine-dark h-550/1000")
 
 
 @ui.refreshable
@@ -182,10 +313,6 @@ def weekly_grid() -> ui.aggrid:
     trading_date = weekly_filter.trading_date
     data = top_gainers(file_type="STOCK", start_date=trading_date)
     error_message: str = "Error! No data found."
-    if weekly_filter.series:
-        data = pd.DataFrame(data[data["SctySrs"].isin(weekly_filter.series)])
-        if data.empty:
-            error_message = f"Some shit series you have entered {weekly_filter.series} "
     if data.empty:
         # NOTE: Better approach is to handle the -VE case fist
         return ui.aggrid(
@@ -201,6 +328,10 @@ def weekly_grid() -> ui.aggrid:
         ).classes(add="ag-theme-alpine-dark")
     # logger.info(f"[{data = }]")
     # logger.info(f"Rendering the grid now . . .")
+    if weekly_filter.series:
+        data = pd.DataFrame(data[data["SctySrs"].isin(weekly_filter.series)])
+        if data.empty:
+            error_message = f"Some shit series you have entered {weekly_filter.series} "
     data["name_series"] = data["TckrSymb"] + "-" + data["SctySrs"]
     data["change"] = (
         (data["ClsPric"] - data["PrvsClsgPric"]) / data["PrvsClsgPric"]

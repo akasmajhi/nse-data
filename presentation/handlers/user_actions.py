@@ -8,7 +8,7 @@ from presentation.helpers.common import default_dg_filter
 # from presentation.pages.filters.all_filters import announcement_filter
 from presentation.pages.grids import (
     corporate_results_grid,
-    stock_grid,
+    # stock_grid,
     weekly_grid,
     weekly_analysis_grid,
     company_results_grid,
@@ -19,6 +19,14 @@ from presentation.helpers.dc.all import (
     WeeklyFilter,
     WeeklyAnalysisFilter,
 )
+
+from presentation.pages.filters.all_filters import (
+    daily_filter_container,
+    daily_grid_container,
+    daily_summary_container,
+)
+
+from presentation.pages.filters.all_filters import stocks_filter
 
 
 def toggle_dark(e):
@@ -35,10 +43,11 @@ def toggle_dark(e):
 
 def handle_filter_change(e, control_name=""):
     logger.debug(f"Into handle filter change [{e = }], [{control_name = }]")
-    logger.debug(f"[{e.value = }], [{e.previous_value=}]")
-    if e.sender.value is None and e.previous_value is not None:
-        logger.debug(f"Same date is clicked twice. Ignore this event")
-        return
+    if control_name != "SERIES":
+        logger.debug(f"[{e.value = }], [{e.previous_value=}]")
+        if e.sender.value is None and e.previous_value is not None:
+            logger.debug(f"Same date is clicked twice. Ignore this event")
+            return
 
     # TODO: If the date clicked is same as what you have in session
     # - - - - - Do not refresh the page  - - - - -
@@ -50,7 +59,11 @@ def handle_filter_change(e, control_name=""):
         if app.storage.general["DG_Filter"]:  # NOTE: Filter present
             DG_Filter_json = json.loads(app.storage.general["DG_Filter"])
             DG_Filter = DGFilter(**DG_Filter_json)
+            instrument_changed: bool = False
             match control_name:
+                case "INSTRUMENT":
+                    DG_Filter.instrument = e.sender.value
+                    instrument_changed = True
                 case "WHAT":
                     DG_Filter.what_type = e.sender.value
                 case "GL":
@@ -61,10 +74,16 @@ def handle_filter_change(e, control_name=""):
                     DG_Filter.index = e.sender.value
                 case "INDUSTRY":
                     DG_Filter.industry = e.sender.value
-                case "RESERVED":
-                    DG_Filter.reserved = e.sender.value
+                case "FNO":
+                    DG_Filter.fno = e.sender.value
                 case "DATE":
                     DG_Filter.trading_date = e.sender.value
+                case "SERIES":
+                    # logger.error(f"TMP: [{e = }]")
+                    if type(e.value) == list:
+                        DG_Filter.series = e.value
+                    # if type(e) == list:
+                    #     DG_Filter.series = e
                 case "CLEAR":
                     DG_Filter = default_dg_filter()
                     ui.notify(
@@ -79,9 +98,16 @@ def handle_filter_change(e, control_name=""):
 
             DG_Filter_Dict = json.dumps(asdict(DG_Filter))
             app.storage.general["DG_Filter"] = DG_Filter_Dict
+            if instrument_changed:
+                daily_filter_container.refresh()
     except KeyError:  # NOTE: Filter NOT present. Strange!!!
         logger.error(f"DG_Filter not found in local storage!")
-    stock_grid.refresh()
+    daily_grid_container.refresh()
+    daily_summary_container.refresh()
+    stocks_filter.refresh()
+
+
+# stock_grid.refresh()
 
 
 def weekly_filter_change(e, control_name=""):
@@ -130,8 +156,9 @@ def weekly_filter_change(e, control_name=""):
                     weekly_filter.industry = e.sender.value
                 case "SERIES":
                     # logger.error(f"TMP: [{e = }]")
-                    if type(e) == list:
-                        weekly_filter.series = e
+                    # logger.error(f"[{e = }]")
+                    if type(e.value) == list:
+                        weekly_filter.series = e.value
                 case "FNO":
                     weekly_filter.fno = e.sender.value
                 case _:

@@ -150,6 +150,9 @@ def weekly_gainers(
             return combined_data
         return local_data  # NOTE: If mcap_data is not found!
     weekly_data = compose_weekly_data(start_date, file_type)
+    # DONE: Handle if data is empty
+    if weekly_data.empty:
+        return pd.DataFrame()
     weekly_data = weekly_data[
         [
             "ISIN",

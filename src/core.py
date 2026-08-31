@@ -4,12 +4,12 @@ Entry method for the callers to request data from the service.
 """
 from datetime import datetime
 import pandas as pd
-from pandas import json_normalize
+from pandas import DataFrame, json_normalize
 import os
 from loguru import logger
 
 from src.derived import readers
-from src.fetchers.common import get_latest_file
+from src.helpers.validators import get_latest_file
 from src.helpers.validators import is_date_valid, is_file_type_valid
 from src.helpers import file_readers
 from src.helpers.common import (
@@ -87,17 +87,22 @@ def get_market_cap(
     logger.debug(f"{file_type = }, {stock_name = }")
     # NOTE: Case where we fetch m-cap for all stocks
     if file_type == C.SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None:
-        # Get the combined market cap of all the stocks
-        all_stocks: list = get_all_stock_names()
-        all_stocks.sort(key=None, reverse=False)
+        # NOTE:Get the combined market cap of all the required stocks
+        # Use only stocks _Not Bonds etc._ for m_cap
+        all_stocks_df: pd.DataFrame = get_all_stock_names(series_list=C.SERIES_FOR_MCAP)
+        # all_stocks_df.sort(key=None, reverse=False)
         all_market_caps: list[dict] = list()
-        total_stocks = len(all_stocks)
+        total_stocks = len(all_stocks_df)
         processed_stocks = 0
-        for stock in all_stocks:
+        series_col_name = "SctySrs"
+        for stock_df in all_stocks_df.itertuples():
             # For a stock get it's market cap data
+            # logger.info(
+            #     f'{stock_df.TckrSymb}, {stock_df.SctySrs}, {trading_date}'
+            # )
             all_market_caps.append(
                 file_readers.get_local_market_cap(
-                    C.SUPPORTED_FILE_TYPES["STOCK"], stock, trading_date
+                    stock_df.TckrSymb, f"{stock_df.SctySrs}", trading_date
                 )
             )
             processed_stocks = processed_stocks + 1
@@ -194,7 +199,7 @@ def get_index_constituents(index_name: str) -> list:
     return file_readers.get_local_index_constituents(index_name)
 
 
-def fetch_stock_data_since_listing(skip_current_year: bool = False):
+def stock_data_since_listing(skip_current_year: bool = False):
     """Fetches the price information for all stocks since listing
     Parameters
     ----------
@@ -219,21 +224,27 @@ def fetch_stock_data_since_listing(skip_current_year: bool = False):
 
 def daily_fetchers():
     """Group of operations that fetch data on a daily/EOD basis"""
+    # start_date = "01-MAY-2026"
     get_data(
         file_type="BHAVCOPY",
+        # start_date=get_first_day_of_month(),
         start_date=get_first_day_of_month(),
+        # start_date=start_date,
         end_date=datetime.today().strftime(C.DATE_FMT),
     )
+    logger.info(f"Deprecated for PREOPEN fetch")
     # TODO: Run the Preopen if the day is a weekday and time is > 9:08 AM
-    get_data(
-        file_type="PREOPEN",
-        start_date=datetime.today().strftime(C.DATE_FMT),
-        end_date=datetime.today().strftime(C.DATE_FMT),
-    )
+    # @Deprecated
+    # get_data(
+    #     file_type="PREOPEN",
+    #     start_date=datetime.today().strftime(C.DATE_FMT),
+    #     end_date=datetime.today().strftime(C.DATE_FMT),
+    # )
 
     get_data(
         file_type="PE",
         start_date=get_first_day_of_month(),
+        # start_date=start_date,
         end_date=datetime.today().strftime(C.DATE_FMT),
     )
 
@@ -242,12 +253,14 @@ def daily_fetchers():
     get_data(
         file_type="INDEX",
         start_date=datetime.today().strftime(C.DATE_FMT),
+        # start_date=start_date,
         end_date=datetime.today().strftime(C.DATE_FMT),
     )
 
     get_data(
         file_type="FNOBHAVCOPY",
         start_date=get_first_day_of_month(),
+        # start_date=start_date,
         end_date=datetime.today().strftime(C.DATE_FMT),
         # start_date="31-Oct-2025",
         # end_date="31-Oct-2025",
@@ -258,8 +271,8 @@ def daily_fetchers():
 
 def weekly_fetchers():
     """Fetchers for weekending dates"""
-    get_market_cap(file_type=C.SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
-    get_stock_info()
+    # get_market_cap(file_type=C.SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
+    # get_stock_info()
     writers.industry_to_stock(datetime.today().strftime(C.DATE_FMT))
 
 
@@ -283,9 +296,11 @@ def industry_stock_map(i_trading_date: str | None) -> dict:
         C.IND_TO_STOCK_FOLDER,
     )
 
-    return readers.industry_to_stock(
-        i_trading_date=None, i_file_name=get_latest_file(folder_name)
-    )
+    logger.debug(f"[{folder_name = }]")
+    i_file_name = get_latest_file(folder_name)
+    logger.debug(f"[{i_file_name = }]")
+
+    return readers.industry_to_stock(i_trading_date=None, i_file_name=i_file_name)
 
 
 def stocks_for_industry(industry: str | None) -> pd.Series | pd.DataFrame:
@@ -333,17 +348,39 @@ def get_stock_info(
     """
     logger.debug(f"[{stock_name = }], [{trading_date = }]")
     if stock_name:  # NOTE: Meta info for single stock
-        return file_readers.get_local_stock_info(stock_name, trading_date)
+        return file_readers.get_local_stock_info(
+            stock_name, pd.DataFrame(), trading_date
+        )
     # NOTE: Meta info for all stock
-    all_stocks: list = get_all_stock_names()
-    all_stocks.sort(key=None, reverse=False)
+    # all_stocks: list = get_all_stock_names()
+    # logger.info(f"Getting stock in for {len(all_stocks)} stocks")
+    # all_stocks.sort(key=None, reverse=False)
+    # all_stocks_info: list[dict] = list()
+    # total_stocks = len(all_stocks)
+    processed_stocks = 0
+    series_col_name = "SctySrs"
+    symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
+    all_stocks: DataFrame = get_latest_file(C.SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    all_stocks.sort_values(by=series_col_name)
+    logger.info(f"{len(all_stocks) = }")
+
+    filtered_stocks = all_stocks[all_stocks[series_col_name].isin(C.SERIES_FOR_MCAP)]
+    logger.info(f"{type(filtered_stocks) = }")
+    logger.info(f"Getting stock in for {len(filtered_stocks) = }")
+
     all_stocks_info: list[dict] = list()
     total_stocks = len(all_stocks)
-    processed_stocks = 0
-    for stock in all_stocks:
-        all_stocks_info.append(file_readers.get_local_stock_info(stock, trading_date))
+    # NOTE: This is a design change due to change in NSE API for stock info
+    # We need both stock name and series name for getting stock info
+    for stock_df in filtered_stocks.itertuples(index=True):
+        logger.debug(f"[{stock_df = }]")
+        all_stocks_info.append(
+            file_readers.get_local_stock_info(
+                stock=stock_df.TckrSymb, stock_df=stock_df, trading_date=trading_date
+            )
+        )
         processed_stocks = processed_stocks + 1
-        logger.info(f"[{processed_stocks = }] of [{total_stocks = }]")
+        logger.info(f"{processed_stocks = } of {total_stocks = }")
     return all_stocks_info
 
 
@@ -386,12 +423,16 @@ def corporate_announcements(force_refresh: bool = False, stock_name: str = ""):
     return get_result_calendar(force_refresh, stock_name)
 
 
+def get_unique_series(trading_date: str) -> list:
+    logger.debug(f"Debugging unique series [{trading_date = }]")
+    return readers.read_unique_series(trading_date)
+
+
 if __name__ == "__main__":
     """
     daily_fetchers()
     fetch_stock_data_since_listing(skip_current_year=False)
     weekly_fetchers()
-    """
     """
     """
     anything_executed: bool = False
@@ -419,3 +460,5 @@ if __name__ == "__main__":
         anything_executed = True
     if not anything_executed:
         print("Nothing Executed . . . ")
+    """
+    weekly_fetchers()

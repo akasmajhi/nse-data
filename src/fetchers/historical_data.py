@@ -16,12 +16,12 @@ from src.constants import (
     DATE_FMT,
     NSE_PREOPEN_URL,
     PREOPEN_SKIPROWS,
-    PREOPEN_PAYLOADS,
     NSE_DUMMY_REQ_URL,
     SUPPORTED_FILE_TYPES,
     NSE_STOCK_INDICES,
 )
 
+from src.fetchers.payloads import PREOPEN_PAYLOADS
 from src.fetchers.common import dummy_request
 from src.fetchers import idx_fetchers
 
@@ -206,7 +206,7 @@ def fetch_data(file_type: str, trading_date: str) -> pd.DataFrame:
             )
             return df
         else:
-            logger.info(f"BHAVCOPY Response code: [{fno_bhavcopy_res.status_code}]")
+            logger.error(f"BHAVCOPY Response code: [{fno_bhavcopy_res.status_code}]")
             logger.error(
                 f"Error getting response for [{trading_date = }], [{file_type = }]"
             )

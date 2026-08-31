@@ -3,6 +3,7 @@ import json
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy import null
 
 import src.constants as C
 from src.helpers.cross_cutting import benchmark
@@ -31,13 +32,13 @@ def industry_to_stock(trading_date: str) -> dict:
         C.SUPPORTED_FILE_TYPES["META"],
         f"{trading_date}",
     )
+    logger.debug(f"[{meta_folder = }] for [{trading_date = }]")
     files: list = list()
     try:
         files = os.listdir(meta_folder)
     except FileNotFoundError:
         logger.error(f"Empty META folder [{meta_folder = }]for [{trading_date = }]")
         return dict()  # NOTE: Returning blank dict on error condition
-    # NOTE: If the derived data already exists, no point re-building it
     ind_stock_file = os.path.join(
         C.FILES_BASE_DIR,
         C.SUPPORTED_FILE_TYPES["DERIVED"],
@@ -45,19 +46,21 @@ def industry_to_stock(trading_date: str) -> dict:
         f"{C.IND_TO_STOCK_FOLDER}-{trading_date}.json",
     )
     logger.debug(f"[{ind_stock_file = }]")
+    # NOTE: If the derived data already exists, no point re-building it
     if os.path.exists(ind_stock_file):
         logger.error(f"File [{ind_stock_file = }] already exists!")
         return dict()
     # return dict()
     processed = 0
-    ind_key = "industry"
 
     for file in files:
         with open(os.path.join(meta_folder, file), "r") as f:
             f_dict = json.loads(f.read())
+            logger.debug(f"{file = }")
+            # logger.debug(f"{f_dict = }")
             try:
-                industry = f_dict["metadata"][ind_key]  # TODO: move it to constants
-                if "NA" in industry.upper():
+                industry = f_dict["equityResponse"][0]["secInfo"]["industryInfo"]
+                if industry is None or "NA" in industry.upper():
                     pass
                 else:
                     try:
@@ -69,9 +72,12 @@ def industry_to_stock(trading_date: str) -> dict:
                         industry_stock[industry] = [file[:-10]]
 
                 processed = processed + 1
-            except KeyError:
-                pass
-    logger.info(f"Total files {processed = }")
+                logger.debug(f"Procesed files [{processed} of {len(files)}]")
+            except KeyError as ke:
+                logger.error(f"KeyError {ke = } for {file = }")
+            except TypeError as te:
+                logger.error(f"TypeError while processing {file = }")
+    logger.info(f"Completed processing [ total files = {processed}]. Going to write!")
     # NOTE: Write the contents to the file now
     write_dir = os.path.join(
         C.FILES_BASE_DIR, C.SUPPORTED_FILE_TYPES["DERIVED"], C.IND_TO_STOCK_FOLDER

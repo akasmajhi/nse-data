@@ -6,7 +6,8 @@ from loguru import logger
 
 import src.constants as C
 from src.fetchers.common import get_last_fetch_date
-from src.helpers.file_readers import get_local_stock_info
+from src.helpers.common import get_last_trading_date
+from src.helpers.file_readers import get_local_data, get_local_stock_info
 from src.helpers.cross_cutting import benchmark
 
 
@@ -193,11 +194,15 @@ def combined_m_caps(folder: str) -> dict:
     with open(output_filename, "r") as json_file:
         data = json.load(json_file)
 
+    key_1 = "equityResponse"
+    key_2 = "tradeInfo"
+    key_3 = "totalMarketCap"
     for key in data.keys():
         try:
-            mcap_dict[key] = data[key]["marketDeptOrderBook"]["tradeInfo"][
-                "totalMarketCap"
-            ]
+            if data[key][key_1][0][key_2][key_3]:
+                mcap_dict[key] = data[key][key_1][0][key_2][key_3]
+        except TypeError:
+            logger.error(f"Error reading market cap for [{key = }]")
         except KeyError:
             logger.error(f"Error reading market cap for [{key = }]")
     return mcap_dict
@@ -223,6 +228,32 @@ def read_weekly_data(start_date: str, file_type: str) -> pd.DataFrame | None:
             logger.info(f"Local weekly file does not exist for [{start_date}]")
             return None
     return None
+
+
+def read_unique_series(trading_date: str) -> list:
+    logger.debug(f"Debugging unique series [{trading_date = }]")
+    data: pd.DataFrame = get_local_data(
+        file_type="BHAVCOPY", start_date=trading_date, end_date=trading_date
+    )
+    if data.empty:
+        logger.error(f"No data found for [{trading_date = }]")
+        logger.info(
+            f"The data for supplied trading date is empty. \nTrying last working day"
+        )
+        retry_trading_date = get_last_trading_date(trading_date)
+        logger.info(f"Retrying with [{retry_trading_date = }]")
+        data: pd.DataFrame = get_local_data(
+            file_type="BHAVCOPY",
+            start_date=retry_trading_date,
+            end_date=retry_trading_date,
+        )
+        # NOTE: If the data is still empty then it is a serious data-related issue
+        if data.empty:
+            logger.error(f"Empty data even with new [{retry_trading_date = }]")
+            logger.error(f"Please check data!")
+            return list()
+    logger.info(f'Debugging unique series [{list(data["SctySrs"].unique()) = }]')
+    return list(data["SctySrs"].dropna().unique())
 
 
 if __name__ == "__main__":

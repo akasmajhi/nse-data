@@ -1,3 +1,4 @@
+# pyright: reportAssignmentType=false
 import json
 from loguru import logger
 
@@ -15,6 +16,7 @@ from src.constants import (
     SUPPORTED_FILE_TYPES,
     FILES_BASE_DIR,
     SUPPORTED_TIME_DURATIONS,
+    SERIES_FOR_MCAP,
 )
 
 
@@ -492,27 +494,48 @@ def get_first_day_of_month() -> str:
     return datetime.now().replace(day=1).strftime(DATE_FMT)
 
 
-def get_all_stock_names(series: str = "", series_list: list = []) -> list:
+def get_all_stock_names(series_list: list = []) -> pd.DataFrame:
+    # TODO: Rename this function. Currently, lsp is not allowing rename on 04-June-2026.
     """Gets all the stock name from the latest bhavcopy.
     Parameter
     ---------
-        None
+        series_list: list
+    If the data required is for a series of stocks. If you want data for a single series,
+    put that series name in a list! (How awkward!!!)
     Returns
     -------
         list
     Containing all the stock names
+    Change log
+    ----------
+    Date: 04-June-2026
+    Since the series, associated with a stock, is required for getting the stock info,
+    it is now returning a DF (in place of a list).
     """
-    logger.info(f"[{series = }],[{series_list = }]")
-    latest_bhavcopy = get_latest_file(file_type=SUPPORTED_FILE_TYPES["BHAVCOPY"])
-    symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
+    logger.info(f"[{series_list = }]")
+    latest_bhavcopy = get_latest_file(
+        file_type_or_path=SUPPORTED_FILE_TYPES["BHAVCOPY"]
+    )
     series_col_name = "SctySrs"
+    # pd.set_option("display.max_rows", None)
+    # logger.error(
+    #     f"{latest_bhavcopy.groupby(series_col_name)[series_col_name].count().sort_values(ascending=False)}"
+    # )
     if series_list:
-        filtered_data = latest_bhavcopy[
+        # Filter out only the required series
+        logger.info(f"Getting stock names for a given {series_list = }")
+        filtered_data: pd.DataFrame = latest_bhavcopy[
             latest_bhavcopy[series_col_name].isin(series_list)
         ]
-        return list(pd.Series(filtered_data[symbol_col_name]).unique())
-    # TODO: Insert try-except below
-    return list(latest_bhavcopy[symbol_col_name].unique())
+        # logger.debug(f"{filtered_data.columns = }")
+        # logger.debug(f"{filtered_data = }")
+        # return list(pd.Series(filtered_data[symbol_col_name]).unique())
+        logger.debug(f"Total rows: [{len(filtered_data)}]")
+        if not filtered_data.empty:
+            return filtered_data
+        else:
+            return pd.DataFrame()  # Empty DF
+    return latest_bhavcopy
 
 
 def get_stock_fetch_history(stock_name: str) -> list:
@@ -662,4 +685,6 @@ if __name__ == "__main__":
     # logger.debug(get_last_trading_date(i_date=""))
     # logger.debug(get_last_trading_date(i_date="  "))
     # logger.debug(get_last_trading_date(i_date="19-Oct-2025"))
-    logger.debug(get_last_trading_date(datetime.today().strftime(DATE_FMT)))
+    # logger.debug(f"{(get_all_stock_names(series='TB'))}")
+    logger.debug(f"{(len(get_all_stock_names(series_list=SERIES_FOR_MCAP)))}")
+    # logger.debug(get_last_trading_date(datetime.today().strftime(DATE_FMT)))

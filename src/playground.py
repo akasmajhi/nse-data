@@ -130,11 +130,132 @@ for group, names in talib.get_function_groups().items():
 from src.core import get_data
 from datetime import datetime
 
+# from src.core import daily_fetchers
+
+# daily_fetchers()
 get_data(
     file_type="FNOBHAVCOPY",
-    start_date="21-Jan-2026",
-    end_date="21-Jan-2026",
+    start_date="27-Mar-2026",
+    end_date="27-Mar-2026",
     # end_date=datetime.today().strftime(C.DATE_FMT),
-    # start_date="31-Oct-2025",
-    # end_date="31-Oct-2025",
 )
+# %% NOTE: DICT play
+RESULT_CAL_NO_STOCK_NAME = {
+    "index": "equities",
+    "from_date": "replace",
+    # "from_date": "08-01-2026",
+    "to_date": "08-03-2026",
+}
+from_date = "01-Jan-2026"
+payload = RESULT_CAL_NO_STOCK_NAME
+payload["from_date"] = from_date
+logger.debug(payload)
+# %% SUB_SECTION: Sorting unique series names
+from src.core import get_unique_series
+
+get_unique_series("19-Jan-2026")
+sorted_series = sorted(get_unique_series("26-Jan-2026"))
+print(sorted_series)
+# %% NOTE: For index gainers
+from src.core import get_data
+from loguru import logger
+import pandas as pd
+
+trading_date = "13-Feb-2026"
+
+data = get_data(file_type="INDEX", start_date=trading_date, end_date=trading_date)
+data["PCT_CHANGE"] = pd.to_numeric(data["PCT_CHANGE"], errors="coerce")
+logger.debug(f"Total: {len(data)}")
+data = data.dropna(subset=["PCT_CHANGE"])
+gainers = data[data["PCT_CHANGE"] > 0]
+losers = data[data["PCT_CHANGE"] < 0]
+logger.debug(f"Total: {len(data)}, Gainers: [{len(gainers)}, Losers: {len(losers)}]")
+
+# %% SECTION: Methods
+
+# %% SUB_SECTION: get_t-1_date
+
+
+def get_t_minus_1_date(t_date: str | None) -> str:
+    from src.helpers.common import get_last_trading_date
+    from datetime import datetime, timedelta
+    from src.constants import DATE_FMT
+
+    # NOTE:if t_date is blank or None, default it to last trading date
+    if not t_date:
+        t_date = get_last_trading_date()
+    else:
+        t_date = get_last_trading_date(t_date)
+    logger.info(f"T-Date is: [{t_date}]")
+    t_date_dt = datetime.strptime(t_date, DATE_FMT)
+    t_minus_1 = t_date_dt - timedelta(days=1)
+    logger.info(
+        f"t: {t_date_dt.strftime(DATE_FMT)}, t-minus-1: [{t_minus_1.strftime(DATE_FMT)}]"
+    )
+    return ""
+
+
+get_t_minus_1_date("14-Feb-2026")
+# get_t_minus_1_date(None)
+# %% SUB_SECTION: get_last_t_date
+from src.constants import DATE_FMT
+from loguru import logger
+from datetime import datetime, timedelta
+from src.helpers.common import is_date_in_future, is_NSE_holiday
+
+
+def get_last_t_date(i_date: str = datetime.today().strftime(DATE_FMT)) -> str:
+    logger.debug(f"Incoming date is: [{i_date = }]")
+    today = datetime.today()
+    trading_date = ""
+    # NOTE: If a trading date is passed then it must be a valid date
+    if i_date and i_date.strip():
+        try:
+            datetime.strptime(i_date, DATE_FMT)
+        except ValueError:
+            logger.error(f"Bad [{i_date = }] passed")
+            return trading_date
+
+    # NOTE: Is the date in future?
+    if i_date and is_date_in_future(i_date):
+        trading_date = today.strftime(DATE_FMT)
+    else:
+        trading_date = i_date
+
+    # NOTE: If the i_date is today and time is before 7 AM, then use previous day
+    if i_date == today.strftime(DATE_FMT) and today.hour < 19 and today.weekday() < 5:
+        excess_days = 1
+        logger.error(
+            f"It is'a Weekday and befoer 7 PM. Use previous day. [{excess_days = }]"
+        )
+        prev_week_day = (
+            datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)
+        ).strftime(DATE_FMT)
+        trading_date = prev_week_day
+    # NOTE: If i_date is weekend then calculate the immediate last weekday
+    if datetime.strptime(trading_date, DATE_FMT).weekday() > 4 and (
+        i_date == today.strftime(DATE_FMT)  # BUG: Why this check? `and today.hour < 19`
+    ):
+        excess_days = datetime.strptime(trading_date, DATE_FMT).weekday() - 4
+        logger.error(f"[{excess_days = }]")
+        prev_week_day = (
+            datetime.strptime(trading_date, DATE_FMT) - timedelta(days=excess_days)
+        ).strftime(DATE_FMT)
+        trading_date = prev_week_day
+    # NOTE: If the last weekday was a exchange holiday then try previous day
+    if is_NSE_holiday(trading_date):
+        prev_working_day = (
+            datetime.strptime(trading_date, DATE_FMT) - timedelta(days=1)
+        ).strftime(DATE_FMT)
+        trading_date = prev_working_day
+    return trading_date
+
+
+logger.info(f"__Blank Date__ Last T Date : [{get_last_t_date()}]")  # TEST: Blank date
+logger.info(
+    f'__Bad Date__ Last T Date : [{get_last_t_date("010120261")}]'
+)  # TEST: Blank date
+# logger.info(f'__None Date__ Last T Date : [{get_last_t_date(None)}] ') #TEST: None date
+logger.info(
+    f"__Today Date__ Last T Date : [{get_last_t_date(datetime.today().strftime(DATE_FMT))}] "
+)  # TEST: None date

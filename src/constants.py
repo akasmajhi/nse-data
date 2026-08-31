@@ -35,6 +35,16 @@ SUPPORTED_TIME_DURATIONS = {
 WEEKLY_FOLDER = "weekly"
 IND_TO_STOCK_FOLDER = "ind_to_stock"
 MCAP_FOLDER = "market_cap"
+SERIES_FOR_MCAP = [
+    "EQ",
+    "SM",
+    "ST",
+    "BE",
+    "BL",
+    "BZ",
+    "E1",
+    "RR",
+]
 AVG_VOL_FOLDER = "avg_vol"
 MCAP_SOURCE = {"LAST_FETCHED": "LAST_FETCHED", "LATEST": "LATEST"}
 MCAP_BLACKL_ISTED = ["9MMFSML", "MOS", "WONDERLA"]
@@ -44,8 +54,8 @@ DATE_FMT = "%d-%b-%Y"
 UI_DATE_FMT = "DD-MMM-YYYY"
 DATE_FMT_1 = "%d-%m-%Y"
 # FILES_BASE_DIR='data_files/'
-# FILES_BASE_DIR = "/mnt/d/market/NSE/data_files"
-FILES_BASE_DIR = "/home/akasmajhi/data/15-01-2025/market/NSE/data_files"
+FILES_BASE_DIR = "/mnt/d/market/NSE/data_files"
+# FILES_BASE_DIR = "/home/akasmajhi/data/15-01-2025/market/NSE/data_files"
 NSE_HOLIDAYS = {
     "2026": [
         "15-JAN-2026",
@@ -166,42 +176,11 @@ NSE_PREOPEN_URL = "https://www.nseindia.com/api/market-data-pre-open"
 NSE_LIVE_EQUITY_MARKET = "https://www.nseindia.com/market-data/live-equity-market"
 NSE_STOCK_INDICES = "https://www.nseindia.com/api/equity-stockIndices"
 NSE_STOCK_HISTORY_URL = "https://www.nseindia.com/api/historicalOR/cm/equity"
-NSE_STOCK_QUOTE_URL = "https://www.nseindia.com/api/quote-equity"
+# NSE_STOCK_QUOTE_URL = "https://www.nseindia.com/api/quote-equity"
+NSE_STOCK_QUOTE_URL = "https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi"
 NSE_RESULTS_URL = "https://www.nseindia.com/api/event-calendar"
 PREOPEN_SKIPROWS = 12
 
-PAYLOAD_NIFTY = {
-    "key": "NIFTY",
-    "csv": "true",
-    "selectValFormat": "crores",
-}
-PAYLOAD_NIFTYBANK = {
-    "key": "BANKNIFTY",
-    "csv": "true",
-    "selectValFormat": "crores",
-}
-PAYLOAD_SME = {
-    "key": "SME",
-    "csv": "true",
-    "selectValFormat": "crores",
-}
-PAYLOAD_FO = {
-    "key": "FO",
-    "csv": "true",
-    "selectValFormat": "crores",
-}
-PAYLOAD_ALL = {
-    "key": "ALL",
-    "csv": "true",
-    "selectValFormat": "crores",
-}
-PREOPEN_PAYLOADS = {
-    "nifty": PAYLOAD_NIFTY,
-    "niftybank": PAYLOAD_NIFTYBANK,
-    "sme": PAYLOAD_SME,
-    "fo": PAYLOAD_FO,
-    "all": PAYLOAD_ALL,
-}
 PREOPEN_HEADER = {
     0: "SYMBOL",
     1: "PREV_CLOSE",
