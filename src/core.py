@@ -271,8 +271,8 @@ def daily_fetchers():
 
 def weekly_fetchers():
     """Fetchers for weekending dates"""
-    # get_market_cap(file_type=C.SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
-    # get_stock_info()
+    get_market_cap(file_type=C.SUPPORTED_FILE_TYPES["STOCK"], stock_name=None)
+    get_stock_info()
     writers.industry_to_stock(datetime.today().strftime(C.DATE_FMT))
 
 
@@ -435,6 +435,7 @@ if __name__ == "__main__":
     weekly_fetchers()
     """
     """
+    """
     anything_executed: bool = False
     transient_test: bool = False
     # transient_test: bool = True
@@ -460,5 +461,4 @@ if __name__ == "__main__":
         anything_executed = True
     if not anything_executed:
         print("Nothing Executed . . . ")
-    """
-    weekly_fetchers()
+    # weekly_fetchers()
