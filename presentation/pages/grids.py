@@ -140,6 +140,9 @@ def stock_grid() -> ui.aggrid:
         len(data_ui.loc[data_ui["pct_change"] >= 0]),
         len(data_ui.loc[data_ui["pct_change"] < 0]),
     )
+    data_ui["total_m_cap"] = (
+        data_ui["total_m_cap"] / 10000000
+    )  # NOTE: Total mcap in Cr.
     stk_grid = ui.aggrid.from_pandas(
         data_ui,
         theme="balham",
@@ -180,17 +183,33 @@ def stock_grid() -> ui.aggrid:
                 {
                     "headerName": "% Delta",
                     "field": "pct_change",
-                    "valueFormatter": "value.toFixed(2)",
+                    "valueFormatter": "Math.abs(value.toFixed(2))",
                     "cellClassRules": {
                         ":text-green font-bold": "(params) => params.data.pct_change >= 0",
                         ":text-red font-bold": "(params) => params.data.pct_change < 0",
                     },
                 },
                 {
-                    "headerName": "MCAP",
+                    "headerName": "MCAP Cr.",
                     "field": "total_m_cap",
                     "filter": "agNumberColumnFilter",
-                    "valueFormatter": 'value.toLocaleString("en-IN", { style: "currency", currency: "INR" })',
+                    ":valueFormatter": """
+                        params => {
+                            let val = params.value;
+                            if ( val > 100000) {
+                                return (val/100000).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) +' L' ;
+                            }
+                            return val.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                            // return 'Low';
+
+                    }""",
+                    # TODO: Sorting is not working (after formatting) in market cap column
+                    ":comparator": """
+                        (valueA, valueB, isDescending) => {
+                            if (valueA >= valueB) return valueA;
+                        }
+                    """,
+                    "headerTooltip": "Total Market Cap (not FF) ",
                 },
             ],
             # "rowStyle": {"background": "grey"},
@@ -201,10 +220,12 @@ def stock_grid() -> ui.aggrid:
                 # ":text-green": "(params) => params.data.pct_change > 0",
             },
             "pagination": True,
-            "paginationPageSize": 20,
+            "paginationPageSize": 25,
+            "paginationPageSizeSelector": [25, 50, 100, 200],
+            "tooltipShowDelay": 0,
         },
         html_columns=[0],
-    ).classes(add="ag-theme-alpine-dark h-550/1000")
+    ).classes(add="ag-theme-alpine-dark h-750/1000")
     # ).classes("max-h-1240")
     stk_grid.on(type="click")
     return stk_grid

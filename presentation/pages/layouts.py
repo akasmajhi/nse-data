@@ -1,5 +1,5 @@
 from nicegui import ui
-from presentation.pages.dashboards import index_analysis
+from presentation.pages.dashboards import daily_dashboard, index_analysis
 from presentation.pages.filters.all_filters import (
     daily_filter_container,
     daily_grid_container,
@@ -49,3 +49,7 @@ def index_layout():
     idx_analysis_filter()
     # idx_analysis_chart()
     # idx_analysis_insights()
+
+
+def daily_dashboard_layout():
+    daily_dashboard()
