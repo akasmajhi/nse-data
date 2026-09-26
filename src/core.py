@@ -3,8 +3,9 @@
 Entry method for the callers to request data from the service.
 """
 from datetime import datetime
+import sys
 import pandas as pd
-from pandas import DataFrame, json_normalize
+from pandas import json_normalize
 import os
 from loguru import logger
 
@@ -346,23 +347,43 @@ def get_stock_info(
     Meta info(s) associated with stock(s)
 
     """
-    logger.debug(f"[{stock_name = }], [{trading_date = }]")
-    if stock_name:  # NOTE: Meta info for single stock
-        return file_readers.get_local_stock_info(
-            stock_name, pd.DataFrame(), trading_date
-        )
     # NOTE: Meta info for all stock
     # all_stocks: list = get_all_stock_names()
     # logger.info(f"Getting stock in for {len(all_stocks)} stocks")
     # all_stocks.sort(key=None, reverse=False)
     # all_stocks_info: list[dict] = list()
     # total_stocks = len(all_stocks)
+    logger.debug(f"[{stock_name = }], [{trading_date = }]")
     processed_stocks = 0
     series_col_name = "SctySrs"
     symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
-    all_stocks: DataFrame = get_latest_file(C.SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    all_stocks: pd.DataFrame = get_latest_file(C.SUPPORTED_FILE_TYPES["BHAVCOPY"])
     all_stocks.sort_values(by=series_col_name)
-    logger.info(f"{len(all_stocks) = }")
+    logger.debug(
+        f"stock names[series]: {all_stocks[f'TckrSymb'].values} [{all_stocks[f'SctySrs'].values}]"
+    )
+    all_stocks_tmp = all_stocks.sort_values(by=symbol_col_name)
+    logger.info(f"{len(all_stocks_tmp) = }, {stock_name = }")
+    logger.info(f"{list(all_stocks_tmp[symbol_col_name].values)}")
+
+    if stock_name in list(all_stocks_tmp[symbol_col_name]):
+        logger.debug(f"{stock_name} symbol name is in the list!")
+    else:
+        logger.debug(f"{stock_name} NOT IN symbol names")
+    if stock_name and stock_name in list(
+        all_stocks[symbol_col_name].values
+    ):  # NOTE: Meta info for single stock
+        # NOTE: Check that the stock is valid
+        logger.info(type(all_stocks[symbol_col_name]))
+        logger.info((all_stocks[symbol_col_name]).values)
+        stock_df: pd.DataFrame = all_stocks[all_stocks[symbol_col_name] == stock_name]
+        logger.debug(stock_df)
+        logger.info(f"[{stock_name = }] is valid!")
+        return file_readers.get_local_stock_info(stock_name, stock_df, trading_date)
+    sys.exit()
+    # else:
+    #     logger.error(f"[{stock_name = }] is invalid!")
+    #     return list()
 
     filtered_stocks = all_stocks[all_stocks[series_col_name].isin(C.SERIES_FOR_MCAP)]
     logger.info(f"{type(filtered_stocks) = }")

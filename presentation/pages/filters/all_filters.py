@@ -2,7 +2,7 @@ from loguru import logger
 from nicegui import app, ui
 import presentation.handlers.user_actions as UA
 from presentation.pages.charts import adv_dec, adv_dec_filtered
-from src.constants import UI_DATE_FMT
+from src.constants import UI_DATE_FMT, SCANNERS
 from src.core import get_index_names, industry_stock_map, get_unique_series
 from presentation.helpers.common import (
     dg_filter_from_storage,
@@ -389,3 +389,15 @@ def idx_analysis_filter():
             value="NIFTY 50",
             multiple=False,
         )
+
+
+def stock_scanner_filter():
+    with ui.row(align_items="stretch"):
+        with ui.column(align_items="stretch"):
+            ui.select(
+                SCANNERS,
+                value="Select",
+                multiple=False,
+            )
+        with ui.column(align_items="stretch"):
+            ui.slider(min=2000, max=100_000_0, value=5_000)

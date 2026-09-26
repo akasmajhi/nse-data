@@ -8,6 +8,7 @@ from presentation.pages.layouts import (
     daily_layout,
     weekly_layout,
     index_layout,
+    stock_scanner_layout,
 )
 
 dark_mode = ui.dark_mode(value=True)
@@ -28,9 +29,7 @@ with ui.row().classes("w-full h-screen"):
                 dark_mode, "value"
             ).classes("rounded").props("icon=check_circle")
 
-        with ui.tab_panels(tabs=tabs, value="daily_dashboard").classes(
-            "w-full h-screen"
-        ):
+        with ui.tab_panels(tabs=tabs, value="stock_scanner").classes("w-full h-screen"):
             with ui.tab_panel("daily_dashboard"):
                 daily_dashboard_layout()
             with ui.tab_panel("daily_gainers"):
@@ -47,6 +46,7 @@ with ui.row().classes("w-full h-screen"):
                 ui.label("OI Analysis")
             with ui.tab_panel("stock_scanner"):
                 ui.label("Scan Stocks")
+                stock_scanner_layout()
             with ui.tab_panel("ta"):
                 ui.label("Tech Analysis")
 

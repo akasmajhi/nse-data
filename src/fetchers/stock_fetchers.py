@@ -322,7 +322,7 @@ def fetch_stock_info(stock: str, series: str = "EQ") -> dict:
     now it requires the series name.
     """
     # NOTE: Assume that the stock name is valid, make a URL fetch
-    logger.debug(f"Fetching META for [{stock = }]")
+    logger.debug(f"Fetching META for [{stock = }], [{series = }]")
     dummy_res = dummy_request()
 
     payload = {

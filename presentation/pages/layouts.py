@@ -7,6 +7,7 @@ from presentation.pages.filters.all_filters import (
     company_results_filter,
     announcement_filter,
     idx_analysis_filter,
+    stock_scanner_filter,
 )
 from presentation.pages.filters.all_filters import (
     weekly_analysis_filter,
@@ -53,3 +54,8 @@ def index_layout():
 
 def daily_dashboard_layout():
     daily_dashboard()
+
+
+def stock_scanner_layout():
+    stock_scanner_filter()
+    # TODO: stock_scanner_result()

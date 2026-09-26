@@ -300,7 +300,8 @@ def get_local_stock_info(
         return data
 
     if trading_date == today and not data:
-        return fetch_stock_info(stock=stock)
+        # logger.debug(f"Series Name [{stock_df['SctySrs'].values[0] = }]")
+        return fetch_stock_info(stock=stock, series=stock_df["SctySrs"].values[0])
 
     return data  # NOTE: data exists for today!
 

@@ -51,5 +51,5 @@
 
 # def get_unique_series(trading_date: str) -> list:
 
-
+# def scanner(name: str, )
 * Top level calls are from core.py file.

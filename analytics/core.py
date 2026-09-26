@@ -12,6 +12,8 @@ import src.constants as C
 from src.helpers.validators import is_date_valid
 from analytics.validators.params import validate_engulfers
 
+from analytics.scanner import Scanner, inverted_hammer
+
 
 def top_gainers(
     start_date: str,
@@ -130,6 +132,11 @@ def engulfers(start_date: str, instrument: str, duration: str) -> pd.DataFrame:
         logger.debug(f"[{len(current_week_data) = }], [{len(past_week_data) = }]")
         logger.debug(f"[{current_week_data.columns = }], [{past_week_data.columns = }]")
     return pd.DataFrame()
+
+
+def scan(name, *args, **kwargs):
+    scanner = Scanner(name, *args, **kwargs)
+    return scanner.run()
 
 
 if __name__ == "__main__":

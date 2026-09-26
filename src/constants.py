@@ -221,3 +221,4 @@ INDEX_LIST_COLUMNS = [
     "30_DAY_PCT_CHANGE",
 ]
 INDEX_LIST_SKIPROWS = 1
+SCANNERS = list(["Select", "Inverted Hammer", "3-DAYS Green", "3-DAYS Red"])

@@ -181,3 +181,4 @@ presentation/drills/*
 presentation/storage/*
 .nicegui/
 *.pickle
+*.csv
