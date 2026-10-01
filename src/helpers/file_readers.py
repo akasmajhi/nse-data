@@ -28,6 +28,24 @@ from src.fetchers.stock_fetchers import (
 from src.fetchers.results import fetch_result_calendar
 
 
+def get_stock_info(df: pd.DataFrame) -> dict:
+    """
+    This is the vectorized form of the method get_local_data that's useful for
+    efficient usage of callee.
+    Parameters
+    ----------
+       df: dataframe
+    containing the basic stock info from BHAVCOPY
+
+    Returns
+    -------
+        dict
+    dictionary containg the stock's info.
+    """
+    logger.debug(f"Incoming {df = }")
+    return dict()
+
+
 def get_local_data(file_type: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
         Gets the data from the local store. If data is valid and not found

@@ -149,7 +149,7 @@ def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def latest_file_in_folder(folder_name: str):
+def latest_file_in_folder(folder_name: str) -> pd.DataFrame:
     files_list = glob.glob(os.path.join(folder_name, "*"))
     # Filter out directories; Keep only files
     only_files = [f for f in files_list if os.path.isfile(f)]
@@ -169,7 +169,8 @@ def latest_file_in_folder(folder_name: str):
                 data = json.load(f)
                 # df = pd.json_normalize(data)
                 # logger.debug(f"[{df.keys() = }]")
-                return latest_file
+                # return latest_file #NOTE: Not sure why I was returning the latest_file
+                return data
             logger.error(f"Unknown File Type for file: [{f = }]")
             return pd.DataFrame()
     except IOError:

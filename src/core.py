@@ -359,41 +359,57 @@ def get_stock_info(
     symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
     all_stocks: pd.DataFrame = get_latest_file(C.SUPPORTED_FILE_TYPES["BHAVCOPY"])
     all_stocks.sort_values(by=series_col_name)
-    logger.debug(
-        f"stock names[series]: {all_stocks[f'TckrSymb'].values} [{all_stocks[f'SctySrs'].values}]"
-    )
-    all_stocks_tmp = all_stocks.sort_values(by=symbol_col_name)
-    logger.info(f"{len(all_stocks_tmp) = }, {stock_name = }")
-    logger.info(f"{list(all_stocks_tmp[symbol_col_name].values)}")
+    # logger.debug(
+    #     f"stock names[series]: {all_stocks[f'TckrSymb'].values} [{all_stocks[f'SctySrs'].values}]"
+    # )
+    all_stocks.sort_values(by=symbol_col_name, inplace=True)
+    logger.info(f"Total stocks present =  [{len(all_stocks)}]")
+    # logger.info(f"{list(all_stocks_tmp[symbol_col_name].values)}")
 
-    if stock_name in list(all_stocks_tmp[symbol_col_name]):
-        logger.debug(f"{stock_name} symbol name is in the list!")
-    else:
-        logger.debug(f"{stock_name} NOT IN symbol names")
+    if stock_name:
+        if stock_name in list(all_stocks[symbol_col_name]):
+            logger.debug(f"{stock_name} symbol name is in the list!")
+        else:
+            logger.error(f"{stock_name = } NOT IN valid list of stocks")
+            return list(dict())  # NOTE: An empty list if stock name is invalid
     if stock_name and stock_name in list(
         all_stocks[symbol_col_name].values
     ):  # NOTE: Meta info for single stock
         # NOTE: Check that the stock is valid
-        logger.info(type(all_stocks[symbol_col_name]))
-        logger.info((all_stocks[symbol_col_name]).values)
-        stock_df: pd.DataFrame = all_stocks[all_stocks[symbol_col_name] == stock_name]
+        # logger.info(type(all_stocks[symbol_col_name]))
+        # logger.info((all_stocks[symbol_col_name]).values)
+        stock_df: pd.DataFrame = pd.DataFrame(
+            all_stocks[all_stocks[symbol_col_name] == stock_name]
+        )
         logger.debug(stock_df)
         logger.info(f"[{stock_name = }] is valid!")
         return file_readers.get_local_stock_info(stock_name, stock_df, trading_date)
-    sys.exit()
-    # else:
-    #     logger.error(f"[{stock_name = }] is invalid!")
-    #     return list()
 
     filtered_stocks = all_stocks[all_stocks[series_col_name].isin(C.SERIES_FOR_MCAP)]
     logger.info(f"{type(filtered_stocks) = }")
-    logger.info(f"Getting stock in for {len(filtered_stocks) = }")
+    logger.info(f"Getting stock info for {len(filtered_stocks) = }")
 
     all_stocks_info: list[dict] = list()
     total_stocks = len(all_stocks)
     # NOTE: This is a design change due to change in NSE API for stock info
     # We need both stock name and series name for getting stock info
-    for stock_df in filtered_stocks.itertuples(index=True):
+    # for stock_df in pd.DataFrame(filtered_stocks.itertuples(index=True)):
+    logger.debug(f"{type(filtered_stocks) = }, {len(filtered_stocks) = }")
+    filtered_stocks["stock_info"] = filtered_stocks.apply(
+        file_readers.get_stock_info, axis=1
+    )
+    # logger.debug(filtered_stocks.itertuples())
+    # filtered_stocks["info_col"] = filtered_stocks.apply(
+    #     lambda row: logger.debug(f"{row}")
+    # )
+    # lambda row: f"{file_readers.get_local_data(row['TckrSymb'], row, row['TradDt'])}",
+    #     axis=1,
+    # )
+    filtered_stocks.to_csv("filtered_stocks.csv")
+    """
+    for idx, stock_df in pd.DataFrame(filtered_stocks.iterrows()):
+        logger.debug(f"[{type(stock_df) = }]")
+        logger.debug(f"[{stock_df.columns = }]")
         logger.debug(f"[{stock_df = }]")
         all_stocks_info.append(
             file_readers.get_local_stock_info(
@@ -402,6 +418,7 @@ def get_stock_info(
         )
         processed_stocks = processed_stocks + 1
         logger.info(f"{processed_stocks = } of {total_stocks = }")
+    """
     return all_stocks_info
 
 

@@ -44,6 +44,9 @@ SERIES_FOR_MCAP = [
     "BZ",
     "E1",
     "RR",
+    # "N0",   #NOTE: Not required since it is bond series
+    # "IV",   #NOTE: Not required since it is volatility series
+    # "TB",   #NOTE: Not required since it is T-bills series
 ]
 AVG_VOL_FOLDER = "avg_vol"
 MCAP_SOURCE = {"LAST_FETCHED": "LAST_FETCHED", "LATEST": "LATEST"}
