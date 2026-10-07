@@ -125,7 +125,7 @@ def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
         return pd.DataFrame()
     # NOTE: Valid File type handling
     files_path = os.path.join(FILES_BASE_DIR, file_type_or_path, "*")
-    logger.info(f"Files path: [{files_path = }]")
+    logger.debug(f"Files path: [{files_path = }]")
     files_list = glob.glob(files_path)
     # Filter out directories; Keep only files
     only_files = [f for f in files_list if os.path.isfile(f)]
@@ -133,7 +133,7 @@ def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
         logger.error(f"No files found for file_type: [{file_type_or_path = }]")
         return pd.DataFrame()
     latest_file = max(only_files, key=os.path.getmtime)
-    # logger.info(f"The latest file is: [{latest_file = }]")
+    logger.info(f"The latest file is: [{latest_file = }]")
     # Now read the content and return the DF
     try:
         with open(latest_file, "r") as f:

@@ -4,6 +4,7 @@ from loguru import logger
 
 from datetime import datetime, timedelta, date
 
+import functools
 import os
 import glob
 
@@ -645,6 +646,19 @@ def register_failed_fetch(stock_name: str, from_date: str, to_date: str, err: st
             json.dump(failure_dict, file, indent=4)
     except:
         logger.error(f"Error writing fetch failure! [{stock_name = }]")
+
+
+@functools.cache
+def get_series(stock_name: str) -> str:
+    # get the latest BHAVCOPY
+    bhavcopy: pd.DataFrame = get_latest_file(SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    # the map and return the series for the given stock!
+    symbol_to_series = dict(zip(bhavcopy["TckrSymb"], bhavcopy["SctySrs"]))
+    try:
+        return symbol_to_series[stock_name]
+    except KeyError:
+        logger.error(f"Invalid {stock_name = }")
+        return ""
 
 
 if __name__ == "__main__":

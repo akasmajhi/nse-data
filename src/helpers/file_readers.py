@@ -288,7 +288,6 @@ def get_local_market_cap(
 
 def get_local_stock_info(
     stock: str,
-    stock_df: pd.DataFrame,
     trading_date: str = datetime.today().strftime(DATE_FMT),
 ) -> dict:
     """Reads the meta info from local file system. If not found,
@@ -307,7 +306,6 @@ def get_local_stock_info(
     """
 
     logger.debug(f"[{stock = }], [{trading_date = }]")
-    logger.debug(f"[{stock_df = }], [{len(stock_df) = }]")
     today = datetime.today().strftime(DATE_FMT)
     # if not stock_df.empty:
     #     symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
@@ -319,7 +317,7 @@ def get_local_stock_info(
 
     if trading_date == today and not data:
         # logger.debug(f"Series Name [{stock_df['SctySrs'].values[0] = }]")
-        return fetch_stock_info(stock=stock, series=stock_df["SctySrs"].values[0])
+        return fetch_stock_info(stock=stock)
 
     return data  # NOTE: data exists for today!
 

@@ -41,7 +41,20 @@
 # def get_stock_info(
     stock_name: str | None = None,
     trading_date: str = datetime.today().strftime(C.DATE_FMT),
-    ) -> list[dict] | dict:
+    ) -> pd.DataFrame :
+## helpers.validators.get_latest_file(file_type_or_path: str) -> pd.DataFrame: `For latest bhavcopy`
+- Returns the latest bhavcopy in a pd.DataFrame
+## file_readers.get_local_stock_info(
+        stock: str,  
+        trading_date: str = datetime.today().strftime(DATE_FMT)
+        ) -> dict:
+### src.fetchers.stock_fetchers.read_stock_info_from_file ( 
+        stock: str, 
+        trading_date: str = datetime.today().strftime(DATE_FMT)
+        ) -> dict:
+### src.fetchers.stock_fetchers.fetch_stock_info() -> dict
+    - 
+) -> pd.DataFrame:
 
 # def get_fno_stocks() -> list:
 

@@ -19,6 +19,7 @@ from src.constants import (
     DATE_FMT,
 )
 from src.helpers.common import (
+    get_series,
     get_stock_fetch_history,
     get_latest_history,
     register_failed_fetch,
@@ -267,7 +268,8 @@ def process_failed_fetches(file_name: str = ""):
 
 
 def read_stock_info_from_file(
-    stock: str, trading_date: str = datetime.today().strftime(DATE_FMT)
+    stock: str,
+    trading_date: str = datetime.today().strftime(DATE_FMT),
 ) -> dict:
     """Reads the meta info about the stock from the local file.
 
@@ -303,7 +305,7 @@ def read_stock_info_from_file(
     return dict()
 
 
-def fetch_stock_info(stock: str, series: str = "EQ") -> dict:
+def fetch_stock_info(stock: str) -> dict:
     """Fetches the META info for a given stock.
 
     Parameters
@@ -322,6 +324,8 @@ def fetch_stock_info(stock: str, series: str = "EQ") -> dict:
     now it requires the series name.
     """
     # NOTE: Assume that the stock name is valid, make a URL fetch
+    # DONE: Need to implement a cache for stock-series combo!
+    series = get_series(stock)
     logger.debug(f"Fetching META for [{stock = }], [{series = }]")
     dummy_res = dummy_request()
 
