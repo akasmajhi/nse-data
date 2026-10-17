@@ -9,6 +9,7 @@ from presentation.helpers.common import (
     weekly_filter_from_storage,
     weekly_analysis_filter_from_storage,
     announcement_filter_from_storage,
+    idx_analysis_filter_from_storgae,
 )
 from presentation.pages.grids import daily_index_grid, stock_grid
 
@@ -285,6 +286,8 @@ def weekly_analysis_filter():
         ui.input(
             "Week Start",
             value=weekly_filter_from_storage().trading_date,
+        ).props(
+            'outlined style="; dense; max-width: 15ch;"'
         ).bind_value(app.storage.general, "trading_date").disable()
         ui.radio(
             options=opts_durations,
@@ -383,12 +386,34 @@ def company_results_filter():
 
 
 def idx_analysis_filter():
-    with ui.row(align_items="stretch"):
-        ui.select(
-            get_index_names(),
-            value="NIFTY 50",
-            multiple=False,
-        )
+    with (
+        ui.card().tight().props("flat bordered").classes("border-red-400 border-[3px]")
+    ):
+        with ui.row().classes("w-full glossy-rounded"):
+            with ui.input(
+                "Trading Date",
+                value=idx_analysis_filter_from_storgae().trading_date,
+                on_change=(lambda e: UA.idx_filter_change(e, "DATE")),
+            ).classes("w-32") as date:
+                with ui.menu().props("no-parent-event") as menu:
+                    with (
+                        ui.date(mask=UI_DATE_FMT)
+                        .props(f':options="{daily_js_filter_function}"')
+                        .bind_value(date)
+                    ):
+                        with ui.row().classes("justify-end"):
+                            ui.button("Close", on_click=menu.close).props("flat")
+                with date.add_slot("append"):
+                    ui.icon("edit_calendar").on("click", menu.open).classes(
+                        "cursor-pointer"
+                    ).classes("w-8")
+
+            with ui.row(align_items="stretch"):
+                ui.select(
+                    get_index_names(),
+                    value="NIFTY 50",
+                    multiple=False,
+                )
 
 
 def stock_scanner_filter():

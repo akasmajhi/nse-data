@@ -110,6 +110,67 @@ def handle_filter_change(e, control_name=""):
 # stock_grid.refresh()
 
 
+def idx_filter_change(e, control_name=""):
+    logger.debug(f"Into idx filter change [{e = }], [{control_name = }]")
+    try:
+        if app.storage.general["weekly_filter"]:  # NOTE: Filter present
+            weekly_filter_json = json.loads(app.storage.general["weekly_filter"])
+            weekly_filter = WeeklyFilter(**weekly_filter_json)
+            weekly_filter.new_data_required = False
+            match control_name:
+                case "DATE":
+                    if weekly_filter.trading_date != e.sender.value:
+                        weekly_filter.new_data_required = True
+                        weekly_filter.trading_date = e.sender.value
+                        app.storage.general["trading_date"] = (
+                            e.sender.value
+                        )  # For Weekly Analysis Filter
+                        weekly_analysis_grid.refresh()
+                case "INSTRUMENT":
+                    if e.sender.value.upper() in ["INDEX", "OI"]:
+                        ui.notify(
+                            f"Currently [{e.sender.value}] is not implemented",
+                            close_button="Okay",
+                            type="negative",
+                        )
+                        return
+                    else:
+                        weekly_filter.instrument_type = e.sender.value
+                case "TYPE":
+                    if e.sender.value.upper() in ["VOLUME", "OI"]:
+                        ui.notify(
+                            f"Currently [{e.sender.value}] is not implemented",
+                            close_button="Okay",
+                            type="negative",
+                        )
+                        return
+                    else:
+                        weekly_filter.kind = e.sender.value
+                case "GL":
+                    weekly_filter.gl = e.sender.value
+                case "SIZE":
+                    weekly_filter.size = e.sender.value
+                case "INDEX":
+                    weekly_filter.index = e.sender.value
+                case "INDUSTRY":
+                    weekly_filter.industry = e.sender.value
+                case "SERIES":
+                    # logger.error(f"TMP: [{e = }]")
+                    # logger.error(f"[{e = }]")
+                    if type(e.value) == list:
+                        weekly_filter.series = e.value
+                case "FNO":
+                    weekly_filter.fno = e.sender.value
+                case _:
+                    logger.error(f"Unknown control . . .")
+            weekly_filter_dict = json.dumps(asdict(weekly_filter))
+            app.storage.general["weekly_filter"] = weekly_filter_dict
+    except KeyError:  # NOTE: Filter NOT present. Strange!!!
+        logger.error(f"Weekly not found in local storage!")
+    weekly_grid.refresh()
+    pass
+
+
 def weekly_filter_change(e, control_name=""):
     logger.debug(f"Into weekly filter change [{e = }], [{control_name = }]")
     try:

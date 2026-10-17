@@ -5,7 +5,7 @@ from loguru import logger
 import src.constants as C
 
 from src.helpers.cross_cutting import benchmark
-from src.helpers.common import get_all_stock_names
+from src.helpers.common import get_all_stock_names_df
 
 
 @benchmark
@@ -42,7 +42,7 @@ def avg_volume(trading_date: str) -> DataFrame:
         return DataFrame()
     # NOTE: Get all stock names
     required_series = ["EQ", "BE"]
-    stocks = get_all_stock_names(series_list=required_series)
+    stocks = get_all_stock_names_df(series_list=required_series)
     # logger.debug(f"All stocks: [{stocks}]")
     # NOTE: For each stock read the past 1-year price data (BHAVCOPY)
 

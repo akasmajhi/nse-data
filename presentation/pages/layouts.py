@@ -14,6 +14,7 @@ from presentation.pages.filters.all_filters import (
     weekly_stocks_filter,
 )
 from presentation.pages.grids import (
+    index_grid,
     weekly_grid,
     weekly_analysis_grid,
     corporate_results_grid,
@@ -47,8 +48,26 @@ def corp_announcement_layout():
 
 def index_layout():
     index_analysis()
-    idx_analysis_filter()
-    # idx_analysis_chart()
+    # idx_analysis_filter()
+    with ui.row().classes("w-full items-stretch gap-0"):
+        with (
+            ui.card()
+            # .tight()
+            .props("flat bordered").classes(
+                "w-3/4  p-0 rounded-1g border-blue-400 border-1 gap-0"
+            )
+            # .classes("w-3/4 h-[70]")
+        ):
+            with ui.row().classes("w-full bg-black-500 p-1 text-white justify-center"):
+                ui.label(f"Index data as on Show Date Picker Here").classes(
+                    "w-full flex justify-center items-center bg-blue-600 p-0 text-md text-bold rounded gap-0"
+                )
+                # with ui.row().classes("w-full flex-grow item-stretch gap-0"):
+                #     with ui.element("div").classes("flex-1 flex flex-col h-full"):
+                #         ui.label(f"Gainers").classes(
+                #             "w-full flex justify-center items-center bg-green-700 font-bold text-md "
+                #         )
+                index_grid()
     # idx_analysis_insights()
 
 

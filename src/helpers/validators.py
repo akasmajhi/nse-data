@@ -101,7 +101,7 @@ def is_NSE_holiday(trading_dt: str):
     return False
 
 
-def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
+def get_latest_file_str(file_type_or_path: str) -> str:
     """Reads the latest file type from the file system and returns the DF
 
     Parameters
@@ -111,8 +111,8 @@ def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
 
     Return
     ------
-        pd.DataFrame
-    Pandas DataFrame containing the contents of the file, if found. Else empty DF.
+        str
+    Path of the latest file
     """
 
     # NOTE Is this a folder?
@@ -122,7 +122,7 @@ def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
     if file_type_or_path not in SUPPORTED_FILE_TYPES.values():
         # NOTE: Invalid file type provided.
         logger.error(f"Invalid file type: [{file_type_or_path = }]")
-        return pd.DataFrame()
+        return str()
     # NOTE: Valid File type handling
     files_path = os.path.join(FILES_BASE_DIR, file_type_or_path, "*")
     logger.debug(f"Files path: [{files_path = }]")
@@ -131,35 +131,53 @@ def get_latest_file(file_type_or_path: str) -> pd.DataFrame:
     only_files = [f for f in files_list if os.path.isfile(f)]
     if not only_files:
         logger.error(f"No files found for file_type: [{file_type_or_path = }]")
-        return pd.DataFrame()
+        return str()
     latest_file = max(only_files, key=os.path.getmtime)
     logger.info(f"The latest file is: [{latest_file = }]")
+    return latest_file
+
+
+def get_latest_file_df(file_path: str) -> pd.DataFrame:
+    """Reads the param file from the file system and returns the DF
+
+    Parameters
+    ----------
+        file_path: str
+    Full path of the file.
+
+    Return
+    ------
+        pd.DataFrame
+    DF representation of the file
+    """
     # Now read the content and return the DF
     try:
-        with open(latest_file, "r") as f:
+        with open(file_path, "r") as f:
             # NOTE: This file may not always be CSV. Handles JSON as well.
-            if "csv" in latest_file:
+            if "csv" in file_path:
                 return pd.read_csv(f)
-            if "json" in latest_file:
+            if "json" in file_path:
                 return pd.read_json(f)
-            logger.error(f"Unknown File Type for file: [{f = }]")
+            logger.error(f"Unknown/Unsupported File Type for file: [{f = }]")
             return pd.DataFrame()
     except IOError:
-        logger.error(f"Error reading file: [{latest_file = }]")
+        logger.error(f"Error reading file: [{file_path = }]")
         return pd.DataFrame()
 
 
-def latest_file_in_folder(folder_name: str) -> pd.DataFrame:
+def latest_file_in_folder(folder_name: str) -> str:
     files_list = glob.glob(os.path.join(folder_name, "*"))
     # Filter out directories; Keep only files
     only_files = [f for f in files_list if os.path.isfile(f)]
     if not only_files:
         logger.error(f"No files found in folder: [{folder_name = }]")
-        return pd.DataFrame()
+        return str()
     latest_file = max(only_files, key=os.path.getmtime)
     logger.debug(f"The [{latest_file = }]")
-    # logger.info(f"The latest file is: [{latest_file = }]")
+    return latest_file
     # Now read the content and return the DF
+    # BUG: You should not read the content. Just return the file name
+    """
     try:
         with open(latest_file, "r") as f:
             # NOTE: This file may not always be CSV. Handles JSON as well.
@@ -176,6 +194,7 @@ def latest_file_in_folder(folder_name: str) -> pd.DataFrame:
     except IOError:
         logger.error(f"Error reading file: [{latest_file = }]")
         return pd.DataFrame()
+    """
 
 
 def is_stock_valid(stock_name: str) -> bool:
@@ -187,7 +206,7 @@ def is_stock_valid(stock_name: str) -> bool:
         logger.error(f"Invalid stock name: [{stock_name = }]")
         return False
     # NOTE: Get the latest BHAVCOPY
-    latest_bhavcopy = get_latest_file(SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    latest_bhavcopy = get_latest_file_str(SUPPORTED_FILE_TYPES["BHAVCOPY"])
     if latest_bhavcopy.empty:
         logger.error(f"Problem getting the bhavopy while looking for [{stock_name = }]")
         return False

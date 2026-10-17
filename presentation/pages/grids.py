@@ -5,6 +5,7 @@ from nicegui import ui, app
 import pandas as pd
 
 from loguru import logger
+from sqlalchemy.sql.operators import op
 import presentation.handlers.user_actions as UA
 import presentation.constants as PC
 from analytics.gainers import daily_gainer
@@ -33,7 +34,7 @@ from presentation.pages.stock_grid_summary import grid_summary
 
 import src.constants as C
 
-from analytics.core import top_gainers
+from analytics.core import index_data, top_gainers
 from src.core import get_result_calendar
 
 ui.add_head_html(
@@ -45,6 +46,7 @@ ui.add_head_html(
     </style>
 """
 )
+from analytics.core import index_dashboard
 
 
 @ui.refreshable
@@ -693,6 +695,207 @@ def company_results_grid() -> ui.aggrid:
         )
         .classes(add="ag-theme-alpine-dark h-610/1000")
     )
+
+
+def index_analysis_summary_grid(
+    summary_data: pd.DataFrame, is_top_data: bool = True
+) -> ui.aggrid:
+    """Composes AGGRID from the data supplied.
+    Note / Assumption
+    -----------------
+    Caller to ensure/handle empty data.
+    """
+    options = {
+        "columnDefs": [
+            {
+                "headerName": "Name",
+                "field": "INDEX",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    # "color": "white",
+                    # "background-color": "black",
+                    "fontWeight": "bold",
+                    # "bold-text": "params.value > 100000",
+                },
+            },
+            {
+                "headerName": "% Chng.",
+                "field": "PCT_CHANGE",
+                "filter": "agNumberColumnFilter",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.PCT_CHANGE >= 0",
+                    ":text-red font-bold": "(params) => params.data.PCT_CHANGE < 0",
+                },
+            },
+            {
+                "headerName": "1 WK CHNG",
+                "field": "ONE_WK_PCT_CHANGE",
+                "filter": "agNumberColumnFilter",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.ONE_WK_PCT_CHANGE >= 0",
+                    ":text-red font-bold": "(params) => params.data.ONE_WK_PCT_CHANGE < 0",
+                },
+            },
+            {
+                "headerName": "1 MON CHNG",
+                "field": "ONE_MON_PCT_CHANGE",
+                "filter": "agNumberColumnFilter",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.ONE_MON_PCT_CHANGE >= 0",
+                    ":text-red font-bold": "(params) => params.data.ONE_MON_PCT_CHANGE < 0",
+                },
+            },
+            {
+                "headerName": "1 YR % CHNG",
+                "field": "ONE_YR_PCT_CHANGE",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.ONE_YR_PCT_CHANGE >= 0",
+                    ":text-red font-bold": "(params) => params.data.ONE_YR_PCT_CHANGE < 0",
+                },
+            },
+        ],
+        "pagination": False,
+        "suppressHorizontalScroll": True,
+        "domLayout": "autoHeight",
+    }
+    summary_grid = (
+        ui.aggrid.from_pandas(
+            df=summary_data, theme="balham", auto_size_columns=True, options=options
+        )
+        # .classes(add="ag-theme-alpine-dark")
+        .style("width: 100%;")
+        # .style("height: 100%; width: 100%; margin-top: 0px;")
+    )
+    # b_5_grid = ui.aggrid.from_pandas(
+    #     df=b_5_data, theme="balham", auto_size_columns=True, options=options
+    # ).classes(add="ag-theme-alpine-dark h-475/1000")
+    return summary_grid
+
+
+def index_grid() -> ui.aggrid:
+    options = {
+        "columnDefs": [
+            {
+                "headerName": "Name",
+                "field": "INDEX",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "bold",
+                },
+            },
+            {
+                "headerName": "Current",
+                "field": "CURRENT",
+                "filter": "agTextColumnFilter",
+                "cellStyle": {
+                    "fontWeight": "bold",
+                },
+            },
+            {
+                "headerName": "% Chng.",
+                "field": "PCT_CHANGE",
+                "filter": "agNumberColumnFilter",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.PCT_CHANGE >= 0",
+                    ":text-red font-bold": "(params) => params.data.PCT_CHANGE < 0",
+                },
+            },
+            {
+                "headerName": "1 WK CHNG",
+                "field": "ONE_WK_PCT_CHANGE",
+                "filter": "agNumberColumnFilter",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.ONE_WK_PCT_CHANGE >= 0",
+                    ":text-red font-bold": "(params) => params.data.ONE_WK_PCT_CHANGE < 0",
+                },
+            },
+            {
+                "headerName": "1 MON CHNG",
+                "field": "x30_DAY_PCT_CHANGE",
+                "filter": "agNumberColumnFilter",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.x30_DAY_PCT_CHANGE>= 0",
+                    ":text-red font-bold": "(params) => params.data.x30_DAY_PCT_CHANGE< 0",
+                },
+            },
+            {
+                "headerName": "1 YR % CHNG",
+                "field": "x365_D_PCT_CHANGE",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.x365_D_PCT_CHANGE>= 0",
+                    ":text-red font-bold": "(params) => params.data.x365_D_PCT_CHANGE< 0",
+                },
+            },
+            {
+                "headerName": "52WK H %",
+                "field": "DELTA_52WK_HIGH",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.DELTA_52WK_HIGH>= 0",
+                    ":text-red font-bold": "(params) => params.data.DELTA_52WK_HIGH< 0",
+                },
+            },
+            {
+                "headerName": "52WK L %",
+                "field": "DELTA_52WK_LOW",
+                "cellClassRules": {
+                    ":text-green font-bold": "(params) => params.data.DELTA_52WK_LOW>= 0",
+                    ":text-red font-bold": "(params) => params.data.DELTA_52WK_LOW< 0",
+                },
+            },
+        ],
+        "pagination": True,
+        "paginationPageSize": 20,
+        "suppressHorizontalScroll": True,
+        "domLayout": "autoHeight",
+    }
+    data = index_data()
+    idx_col_name: str = "INDEX"
+    idx_ignores: str = "VIX|BOND|G-SEC|DIVIDEND"
+    data_clean = pd.DataFrame(
+        data[~data[idx_col_name].str.contains(idx_ignores, na=False, case=False)]
+    )
+    columns_to_convert = [
+        "CURRENT",
+        "1_WEEK_AGO",
+        "1_MONTH_AGO",
+        "1_YEAR_AGO",
+        "52_WK_HIGH",
+        "52_WK_LOW",
+    ]
+    data_clean[columns_to_convert] = data_clean[columns_to_convert].map(
+        lambda x: str(x).replace(",", "") if pd.notna(x) else x
+    )
+    data_clean[columns_to_convert] = data_clean[columns_to_convert].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    data_clean["ONE_WK_PCT_CHANGE"] = (
+        ((data_clean["CURRENT"] - data_clean["1_WEEK_AGO"]) / data_clean["1_WEEK_AGO"])
+        * 100
+    ).round(2)
+
+    data_clean["ONE_WK_PCT_CHANGE"] = (
+        ((data_clean["CURRENT"] - data_clean["1_WEEK_AGO"]) / data_clean["1_WEEK_AGO"])
+        * 100
+    ).round(2)
+    data_clean["DELTA_52WK_HIGH"] = (
+        ((data_clean["CURRENT"] - data_clean["52_WK_HIGH"]) / data_clean["52_WK_HIGH"])
+        * 100
+    ).round(2)
+    data_clean["DELTA_52WK_LOW"] = (
+        ((data_clean["CURRENT"] - data_clean["52_WK_LOW"]) / data_clean["52_WK_LOW"])
+        * 100
+    ).round(2)
+    data_clean.rename(
+        columns={
+            "1_WEEK_AGO": "ONE_WEEK_AGO",
+            "1_MONTH_AGO": "ONE_MONTH_AGO",
+            "1_YEAR_AGO": "ONE_YEAR_AGO",
+            "365_D_PCT_CHANGE": "x365_D_PCT_CHANGE",
+            "30_DAY_PCT_CHANGE": "x30_DAY_PCT_CHANGE",
+        },
+        inplace=True,
+    )
+    return ui.aggrid.from_pandas(df=data_clean, theme="balham", options=options)
 
 
 def error_grid(msg: str) -> ui.aggrid:

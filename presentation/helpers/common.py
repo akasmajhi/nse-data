@@ -7,6 +7,7 @@ from presentation.helpers.dc.all import (
     DGFilter,
     WeeklyAnalysisFilter,
     WeeklyFilter,
+    IDXAnalysisFilter,
 )
 from src.helpers.common import get_last_monday, get_last_trading_date
 from loguru import logger
@@ -47,6 +48,28 @@ def dg_filter_from_storage() -> DGFilter:
     except Exception as e:
         logger.error(f"Some Error I did not catch. [{e = }]")
     return default_dg_filter()
+
+
+def idx_analysis_filter_from_storgae() -> IDXAnalysisFilter:
+    try:
+        if app.storage.general["idx_analysis_filter"]:
+            IDX_Analysis_Filter_json = json.loads(
+                app.storage.general["idx_analysis_filter"]
+            )
+            idx_analysis_filter = IDXAnalysisFilter(**IDX_Analysis_Filter_json)
+            return idx_analysis_filter
+    except KeyError:
+        logger.info(f"No IDX_Analysis_Filter locally!")
+    except AttributeError as ae:
+        logger.error(f"AttributeError . . . . {ae = }")
+    except Exception as e:
+        logger.error(f"Some Error I did not catch. [{e = }]")
+
+    return default_idx_analysis_filter()
+
+
+def default_idx_analysis_filter():
+    return IDXAnalysisFilter(trading_date=get_last_trading_date())
 
 
 def default_weekly_filter() -> WeeklyFilter:

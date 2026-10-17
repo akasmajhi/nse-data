@@ -13,6 +13,8 @@ from src.helpers.validators import is_date_valid
 from analytics.validators.params import validate_engulfers
 
 from analytics.scanner import Scanner, inverted_hammer
+from src.helpers.common import get_last_trading_date
+from src.core import get_data
 
 
 def top_gainers(
@@ -137,6 +139,77 @@ def engulfers(start_date: str, instrument: str, duration: str) -> pd.DataFrame:
 def scan(name, *args, **kwargs):
     scanner = Scanner(name, *args, **kwargs)
     return scanner.run()
+
+
+def index_dashboard(for_x: int = 5) -> list[pd.DataFrame]:
+    data: pd.DataFrame = get_data(
+        file_type="INDEX",
+        start_date=get_last_trading_date(),
+        end_date=get_last_trading_date(),
+    )
+    # logger.debug(f"{get_last_trading_date() = }")
+    # logger.debug(f"{data = }")
+    if data.empty:
+        logger.error(f"Index data shpould not be empty. This is an error condition!")
+        return list(pd.DataFrame())
+    # NOTE: Data is present. Now, sort for UI
+    sort_col_name = "PCT_CHANGE"
+    # NOTE: Clean up. Remove [1] VIX, G-SEC, BOND and non-numeric values
+    data[sort_col_name] = pd.to_numeric(data[sort_col_name], errors="coerce")
+    data = data.dropna(subset=[sort_col_name])
+    # Optionally, convert the data(sort_col_name) to preferred numeric type
+    # data[sort_col_name] = data[sort_col_name].astype(int)
+    data.sort_values(by=sort_col_name, ascending=False, inplace=True)
+    idx_ignores: str = "VIX|BOND|G-SEC|DIVIDEND"
+    idx_col_name: str = "INDEX"
+    data_clean = pd.DataFrame(
+        data[~data[idx_col_name].str.contains(idx_ignores, na=False, case=False)]
+    )
+    columns_to_convert = [
+        "CURRENT",
+        "1_WEEK_AGO",
+        "1_MONTH_AGO",
+        "1_YEAR_AGO",
+        "52_WK_HIGH",
+        "52_WK_LOW",
+    ]
+    data_clean[columns_to_convert] = data_clean[columns_to_convert].map(
+        lambda x: str(x).replace(",", "") if pd.notna(x) else x
+    )
+    data_clean[columns_to_convert] = data_clean[columns_to_convert].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    data_clean["ONE_WK_PCT_CHANGE"] = (
+        ((data_clean["CURRENT"] - data_clean["1_WEEK_AGO"]) / data_clean["1_WEEK_AGO"])
+        * 100
+    ).round(2)
+
+    data_clean["ONE_MON_PCT_CHANGE"] = (
+        (
+            (data_clean["CURRENT"] - data_clean["1_MONTH_AGO"])
+            / data_clean["1_MONTH_AGO"]
+        )
+        * 100
+    ).round(2)
+    data_clean["ONE_YR_PCT_CHANGE"] = (
+        ((data_clean["CURRENT"] - data_clean["1_YEAR_AGO"]) / data_clean["1_YEAR_AGO"])
+        * 100
+    ).round(2)
+    top_for_x: pd.DataFrame = pd.DataFrame(data_clean.head(for_x))
+    bottom_for_x: pd.DataFrame = pd.DataFrame(data_clean.tail(for_x))
+    bottom_for_x.sort_values(by="PCT_CHANGE", ascending=True, inplace=True)
+    return [top_for_x, bottom_for_x]
+
+
+def index_data(
+    start_date=get_last_trading_date(), end_date=get_last_trading_date()
+) -> pd.DataFrame:
+    data: pd.DataFrame = get_data(
+        file_type="INDEX",
+        start_date=get_last_trading_date(),
+        end_date=get_last_trading_date(),
+    )
+    return data
 
 
 if __name__ == "__main__":

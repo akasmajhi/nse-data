@@ -11,7 +11,12 @@ import glob
 import pandas as pd
 
 from src.fetchers.common import get_last_fetch_date
-from src.helpers.validators import is_date_valid, is_NSE_holiday, get_latest_file
+from src.helpers.validators import (
+    get_latest_file_df,
+    is_date_valid,
+    is_NSE_holiday,
+    get_latest_file_str,
+)
 from src.constants import (
     DATE_FMT,
     SUPPORTED_FILE_TYPES,
@@ -495,7 +500,7 @@ def get_first_day_of_month() -> str:
     return datetime.now().replace(day=1).strftime(DATE_FMT)
 
 
-def get_all_stock_names(series_list: list = []) -> pd.DataFrame:
+def get_all_stock_names_df(series_list: list = []) -> pd.DataFrame:
     # TODO: Rename this function. Currently, lsp is not allowing rename on 04-June-2026.
     """Gets all the stock name from the latest bhavcopy.
     Parameter
@@ -514,8 +519,8 @@ def get_all_stock_names(series_list: list = []) -> pd.DataFrame:
     it is now returning a DF (in place of a list).
     """
     logger.info(f"[{series_list = }]")
-    latest_bhavcopy = get_latest_file(
-        file_type_or_path=SUPPORTED_FILE_TYPES["BHAVCOPY"]
+    latest_bhavcopy = get_latest_file_df(
+        get_latest_file_str(file_type_or_path=SUPPORTED_FILE_TYPES["BHAVCOPY"])
     )
     series_col_name = "SctySrs"
     # pd.set_option("display.max_rows", None)
@@ -527,7 +532,7 @@ def get_all_stock_names(series_list: list = []) -> pd.DataFrame:
         logger.info(f"Getting stock names for a given {series_list = }")
         filtered_data: pd.DataFrame = latest_bhavcopy[
             latest_bhavcopy[series_col_name].isin(series_list)
-        ]
+        ].copy()
         # logger.debug(f"{filtered_data.columns = }")
         # logger.debug(f"{filtered_data = }")
         # return list(pd.Series(filtered_data[symbol_col_name]).unique())
@@ -536,7 +541,7 @@ def get_all_stock_names(series_list: list = []) -> pd.DataFrame:
             return filtered_data
         else:
             return pd.DataFrame()  # Empty DF
-    return latest_bhavcopy
+    return latest_bhavcopy  # NOTE: For empty series list, return everything!
 
 
 def get_stock_fetch_history(stock_name: str) -> list:
@@ -651,7 +656,10 @@ def register_failed_fetch(stock_name: str, from_date: str, to_date: str, err: st
 @functools.cache
 def get_series(stock_name: str) -> str:
     # get the latest BHAVCOPY
-    bhavcopy: pd.DataFrame = get_latest_file(SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    logger.debug(f"Getting series for {stock_name = }")
+    bhavcopy: pd.DataFrame = get_latest_file_df(
+        get_latest_file_str(SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    )
     # the map and return the series for the given stock!
     symbol_to_series = dict(zip(bhavcopy["TckrSymb"], bhavcopy["SctySrs"]))
     try:
@@ -700,5 +708,5 @@ if __name__ == "__main__":
     # logger.debug(get_last_trading_date(i_date="  "))
     # logger.debug(get_last_trading_date(i_date="19-Oct-2025"))
     # logger.debug(f"{(get_all_stock_names(series='TB'))}")
-    logger.debug(f"{(len(get_all_stock_names(series_list=SERIES_FOR_MCAP)))}")
+    logger.debug(f"{(len(get_all_stock_names_df(series_list=SERIES_FOR_MCAP)))}")
     # logger.debug(get_last_trading_date(datetime.today().strftime(DATE_FMT)))

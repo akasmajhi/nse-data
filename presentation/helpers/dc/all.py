@@ -49,3 +49,8 @@ class AnnouncementsFilter:
     size: str
     mcap: float
     force_refresh: bool
+
+
+@dataclass
+class IDXAnalysisFilter:  # Filter for Index Analysis
+    trading_date: str

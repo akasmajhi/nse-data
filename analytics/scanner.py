@@ -3,7 +3,7 @@ from loguru import logger
 import pandas as pd
 
 from src.constants import SUPPORTED_FILE_TYPES, SUPPORTED_TIME_DURATIONS
-from src.helpers.validators import get_latest_file
+from src.helpers.validators import get_latest_file_str
 from src.fetchers.common import get_last_fetch_date
 from src.derived.readers import combined_m_caps
 
@@ -25,7 +25,7 @@ def inverted_hammer(timeframe: str, shadow_multiplier: int = 9):
     if timeframe != SUPPORTED_TIME_DURATIONS["DAY"]:
         print(f"This {timeframe = } is not supported")
         return pd.DataFrame()  # NOTE: Empty dataframe for ay error
-    data = get_latest_file(SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    data = get_latest_file_str(SUPPORTED_FILE_TYPES["BHAVCOPY"])
     if not data.empty:
         # Step-1 Ensure it's a green candle
         is_green = data["ClsPric"] > data["OpnPric"]

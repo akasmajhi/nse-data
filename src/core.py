@@ -1,4 +1,3 @@
-# type: ignore[reportAssignmentType]
 # TODO: Make this program a cmdline-param based!
 """
 Entry method for the callers to request data from the service.
@@ -8,14 +7,15 @@ import sys
 import pandas as pd
 from pandas import json_normalize
 import os
+from typing import cast
 from loguru import logger
 
 from src.derived import readers
-from src.helpers.validators import get_latest_file
+from src.helpers.validators import get_latest_file_df, get_latest_file_str
 from src.helpers.validators import is_date_valid, is_file_type_valid
 from src.helpers import file_readers
 from src.helpers.common import (
-    get_all_stock_names,
+    get_all_stock_names_df,
     get_first_day_of_month,
 )
 import src.constants as C
@@ -91,17 +91,15 @@ def get_market_cap(
     if file_type == C.SUPPORTED_FILE_TYPES["STOCK"] and stock_name is None:
         # NOTE:Get the combined market cap of all the required stocks
         # Use only stocks _Not Bonds etc._ for m_cap
-        all_stocks_df: pd.DataFrame = get_all_stock_names(series_list=C.SERIES_FOR_MCAP)
+        all_stocks_df: pd.DataFrame = get_all_stock_names_df(
+            series_list=C.SERIES_FOR_MCAP
+        )
         # all_stocks_df.sort(key=None, reverse=False)
         all_market_caps: list[dict] = list()
         total_stocks = len(all_stocks_df)
         processed_stocks = 0
         series_col_name = "SctySrs"
         for stock_df in all_stocks_df.itertuples():
-            # For a stock get it's market cap data
-            # logger.info(
-            #     f'{stock_df.TckrSymb}, {stock_df.SctySrs}, {trading_date}'
-            # )
             all_market_caps.append(
                 file_readers.get_local_market_cap(
                     stock_df.TckrSymb, f"{stock_df.SctySrs}", trading_date
@@ -213,7 +211,7 @@ def stock_data_since_listing(skip_current_year: bool = False):
     logger.info(
         f"Fetching since-listing data for all stocks. Current year skipped? [{skip_current_year = }]"
     )
-    all_stocks = get_all_stock_names()
+    all_stocks = get_all_stock_names_df()
     logger.info(f"Total {len(all_stocks)} stocks data to process.")
     processed = 0
     for stock in all_stocks:
@@ -299,7 +297,7 @@ def industry_stock_map(i_trading_date: str | None) -> dict:
     )
 
     logger.debug(f"[{folder_name = }]")
-    i_file_name = get_latest_file(folder_name)
+    i_file_name = get_latest_file_str(folder_name)
     logger.debug(f"[{i_file_name = }]")
 
     return readers.industry_to_stock(i_trading_date=None, i_file_name=i_file_name)
@@ -351,17 +349,19 @@ def get_stock_info(
     logger.debug(f"[{stock_name = }], [{trading_date = }]")
     series_col_name = "SctySrs"
     symbol_col_name = "TckrSymb"  # TODO: Move these items to src.constants
-    all_stocks: pd.DataFrame = get_latest_file(C.SUPPORTED_FILE_TYPES["BHAVCOPY"])
-    all_stocks.sort_values(by=symbol_col_name, inplace=True)
+    all_stocks_df = get_latest_file_df(
+        get_latest_file_str(C.SUPPORTED_FILE_TYPES["BHAVCOPY"])
+    )
+    all_stocks_df.sort_values(by=symbol_col_name, inplace=True)
 
     if stock_name:  # NOTE: info for a specific/single stock
         # NOTE: Check that the stock is valid
-        if stock_name.upper() not in list(all_stocks[symbol_col_name].values):
+        if stock_name.upper() not in list(all_stocks_df[symbol_col_name].values):
             logger.error(f"{stock_name = } NOT IN valid list of stocks")
             return pd.DataFrame()  # Empty Dataframe for an invalid stock!
         logger.debug(f"{stock_name} symbol name is in the list!")
-        stock_df: pd.DataFrame = all_stocks[
-            all_stocks[symbol_col_name] == stock_name.upper()
+        stock_df = all_stocks_df[
+            all_stocks_df[symbol_col_name] == stock_name.upper()
         ].copy()
         stock_df["stock_info"] = stock_df.apply(
             lambda row: file_readers.get_local_stock_info(
@@ -369,11 +369,11 @@ def get_stock_info(
             ),
             axis=1,
         )
-        return stock_df
+        return cast(pd.DataFrame, stock_df)
 
     # NOTE: Case for all valid and in-scope stocks!
-    filtered_stocks = all_stocks[
-        all_stocks[series_col_name].isin(C.SERIES_FOR_MCAP)
+    filtered_stocks = all_stocks_df[
+        all_stocks_df[series_col_name].isin(C.SERIES_FOR_MCAP)
     ].copy()
     logger.debug(f"Getting stock info for {len(filtered_stocks) = }")
 
@@ -385,7 +385,7 @@ def get_stock_info(
         ),
         axis=1,
     )
-    return filtered_stocks
+    return cast(pd.DataFrame, filtered_stocks)
 
 
 def get_fno_stocks() -> list:

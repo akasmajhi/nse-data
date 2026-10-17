@@ -29,7 +29,9 @@ with ui.row().classes("w-full h-screen"):
                 dark_mode, "value"
             ).classes("rounded").props("icon=check_circle")
 
-        with ui.tab_panels(tabs=tabs, value="stock_scanner").classes("w-full h-screen"):
+        with ui.tab_panels(tabs=tabs, value="index_analysis").classes(
+            "w-full h-screen"
+        ):
             with ui.tab_panel("daily_dashboard"):
                 daily_dashboard_layout()
             with ui.tab_panel("daily_gainers"):
