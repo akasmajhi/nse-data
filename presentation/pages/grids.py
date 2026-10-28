@@ -29,6 +29,7 @@ from presentation.helpers.common import (
     weekly_analysis_filter_from_storage,
     weekly_filter_from_storage,
     announcement_filter_from_storage,
+    index_analysis_grid_filter_from_storage,
 )
 from presentation.pages.stock_grid_summary import grid_summary
 
@@ -36,6 +37,7 @@ import src.constants as C
 
 from analytics.core import index_data, top_gainers
 from src.core import get_result_calendar
+from src.helpers.common import get_last_trading_date
 
 ui.add_head_html(
     """
@@ -51,7 +53,7 @@ from analytics.core import index_dashboard
 
 @ui.refreshable
 def stock_grid() -> ui.aggrid:
-    logger.info(f"Into stock_grid . . . [{dg_filter_from_storage() = }]")
+    logger.error(f"Into stock_grid . . . [{dg_filter_from_storage() = }]")
     dg_filter: DGFilter = dg_filter_from_storage()
     # trading_date = datetime.datetime.today().strftime(C.DATE_FMT)
     trading_date = dg_filter.trading_date
@@ -697,7 +699,7 @@ def company_results_grid() -> ui.aggrid:
     )
 
 
-def index_analysis_summary_grid(
+def index_summary_grid(
     summary_data: pd.DataFrame, is_top_data: bool = True
 ) -> ui.aggrid:
     """Composes AGGRID from the data supplied.
@@ -714,12 +716,16 @@ def index_analysis_summary_grid(
                 "cellStyle": {
                     # "color": "white",
                     # "background-color": "black",
+                    "fontStyle": "italic",
+                    "fontSize": "11px",
                     "fontWeight": "bold",
                     # "bold-text": "params.value > 100000",
                 },
+                # "flex": "30",
+                "width": 500,
             },
             {
-                "headerName": "% Chng.",
+                "headerName": "DAY % Δ",
                 "field": "PCT_CHANGE",
                 "filter": "agNumberColumnFilter",
                 "cellClassRules": {
@@ -728,7 +734,7 @@ def index_analysis_summary_grid(
                 },
             },
             {
-                "headerName": "1 WK CHNG",
+                "headerName": "1-W % Δ",
                 "field": "ONE_WK_PCT_CHANGE",
                 "filter": "agNumberColumnFilter",
                 "cellClassRules": {
@@ -737,7 +743,7 @@ def index_analysis_summary_grid(
                 },
             },
             {
-                "headerName": "1 MON CHNG",
+                "headerName": "1-M % Δ",
                 "field": "ONE_MON_PCT_CHANGE",
                 "filter": "agNumberColumnFilter",
                 "cellClassRules": {
@@ -746,7 +752,7 @@ def index_analysis_summary_grid(
                 },
             },
             {
-                "headerName": "1 YR % CHNG",
+                "headerName": "1-YR % Δ",
                 "field": "ONE_YR_PCT_CHANGE",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.ONE_YR_PCT_CHANGE >= 0",
@@ -757,13 +763,14 @@ def index_analysis_summary_grid(
         "pagination": False,
         "suppressHorizontalScroll": True,
         "domLayout": "autoHeight",
+        "auto_size_columns": False,
     }
     summary_grid = (
         ui.aggrid.from_pandas(
-            df=summary_data, theme="balham", auto_size_columns=True, options=options
+            df=summary_data, theme="balham", auto_size_columns=True, options=options,
         )
         # .classes(add="ag-theme-alpine-dark")
-        .style("width: 100%;")
+        .style("width: 100%;").classes('w-full')
         # .style("height: 100%; width: 100%; margin-top: 0px;")
     )
     # b_5_grid = ui.aggrid.from_pandas(
@@ -771,7 +778,7 @@ def index_analysis_summary_grid(
     # ).classes(add="ag-theme-alpine-dark h-475/1000")
     return summary_grid
 
-
+@ui.refreshable
 def index_grid() -> ui.aggrid:
     options = {
         "columnDefs": [
@@ -782,6 +789,7 @@ def index_grid() -> ui.aggrid:
                 "cellStyle": {
                     "fontWeight": "bold",
                 },
+                # "flex": 30,
             },
             {
                 "headerName": "Current",
@@ -790,65 +798,84 @@ def index_grid() -> ui.aggrid:
                 "cellStyle": {
                     "fontWeight": "bold",
                 },
+                # "flex": 10,
+
             },
             {
-                "headerName": "% Chng.",
+                "headerName": "DAY % Δ",
                 "field": "PCT_CHANGE",
                 "filter": "agNumberColumnFilter",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.PCT_CHANGE >= 0",
                     ":text-red font-bold": "(params) => params.data.PCT_CHANGE < 0",
                 },
+                # "flex": 10,
             },
             {
-                "headerName": "1 WK CHNG",
+                "headerName": "1-W % Δ",
                 "field": "ONE_WK_PCT_CHANGE",
                 "filter": "agNumberColumnFilter",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.ONE_WK_PCT_CHANGE >= 0",
                     ":text-red font-bold": "(params) => params.data.ONE_WK_PCT_CHANGE < 0",
                 },
+                # "flex": 10,
             },
             {
-                "headerName": "1 MON CHNG",
+                "headerName": "1-M % Δ",
                 "field": "x30_DAY_PCT_CHANGE",
                 "filter": "agNumberColumnFilter",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.x30_DAY_PCT_CHANGE>= 0",
                     ":text-red font-bold": "(params) => params.data.x30_DAY_PCT_CHANGE< 0",
                 },
+                # "flex": 10,
             },
             {
-                "headerName": "1 YR % CHNG",
+                "headerName": "1-Y % Δ",
                 "field": "x365_D_PCT_CHANGE",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.x365_D_PCT_CHANGE>= 0",
                     ":text-red font-bold": "(params) => params.data.x365_D_PCT_CHANGE< 0",
                 },
+                # "flex": 10,
             },
             {
-                "headerName": "52WK H %",
+                "headerName": "52W H % Δ",
                 "field": "DELTA_52WK_HIGH",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.DELTA_52WK_HIGH>= 0",
                     ":text-red font-bold": "(params) => params.data.DELTA_52WK_HIGH< 0",
                 },
+                # "flex": 10,
             },
             {
-                "headerName": "52WK L %",
+                "headerName": "52W L % Δ",
                 "field": "DELTA_52WK_LOW",
                 "cellClassRules": {
                     ":text-green font-bold": "(params) => params.data.DELTA_52WK_LOW>= 0",
                     ":text-red font-bold": "(params) => params.data.DELTA_52WK_LOW< 0",
                 },
+                # "flex": 10,
             },
         ],
         "pagination": True,
         "paginationPageSize": 20,
-        "suppressHorizontalScroll": True,
+        "suppressHorizontalScroll": False,
         "domLayout": "autoHeight",
     }
-    data = index_data()
+    try:
+        index_analysis_grid_filter = index_analysis_grid_filter_from_storage()
+        trading_date = index_analysis_grid_filter.trading_date
+        logger.info(f'Trading date set to [{trading_date}]')
+    except Exception as e:
+        logger.error(f'No trading date set in local storage [{e = }]')
+        trading_date = get_last_trading_date() 
+    data = index_data(start_date=trading_date, end_date=trading_date)
+    #NOTE: What if the data is empty?
+    if len(data) == 0:
+        logger.error(f'No data found! Check for exchange holiday.')
+        return error_grid(msg='No data found!')
     idx_col_name: str = "INDEX"
     idx_ignores: str = "VIX|BOND|G-SEC|DIVIDEND"
     data_clean = pd.DataFrame(
@@ -895,7 +922,8 @@ def index_grid() -> ui.aggrid:
         },
         inplace=True,
     )
-    return ui.aggrid.from_pandas(df=data_clean, theme="balham", options=options)
+    logger.error(f'{len(data_clean) = }')
+    return ui.aggrid.from_pandas(df=data_clean, theme="balham", options=options).classes('w-full h-full')
 
 
 def error_grid(msg: str) -> ui.aggrid:

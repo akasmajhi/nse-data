@@ -92,7 +92,7 @@ def daily_summary_container():
         case "STOCK":
             # grid_summary()
             adv_dec()  # NOTE: Advance/Decline for the day
-            adv_dec_filtered()  # NOTE: Advance/Decline for the filter
+            # adv_dec_filtered()  # NOTE: Advance/Decline for the filter
         case "INDEX":
             # advances = (app.storage.general["daily.index.gainers"],)
             # declines = (app.storage.general["daily.index.losers"],)
@@ -113,7 +113,7 @@ def stocks_filter():
         label="What",
         value=dg_filter_from_storage().what_type,
         on_change=(lambda e: UA.handle_filter_change(e, "WHAT")),
-    )  # .bind_value(dg_filter_from_storage(), "what_type", strict=False)
+    )
     ui.select(
         options=["Any", "Gain", "Loss"],
         label="G/L",
@@ -145,9 +145,8 @@ def stocks_filter():
         value=dg_filter_from_storage().series,
         label="Select Series",
         on_change=lambda e: UA.handle_filter_change(e, "SERIES"),
-    ).classes(
-        "w-32"
-    )  # .props("use-chips")
+    ).classes("w-32").props()
+    # .props("use-chips")
     ui.checkbox(
         text="FnO",
         value=dg_filter_from_storage().fno,
@@ -155,11 +154,11 @@ def stocks_filter():
     ).classes("self-center").props(
         "label-position"
     )  # .classes("w-24")
-    with ui.column():
-        ui.label("Tradind Date")
-        ui.label("").bind_text_from(
-            dg_filter_from_storage(), target_name="trading_date", strict=True
-        )
+    # with ui.column():
+    #     ui.label("Tradind Date")
+    #     ui.label("").bind_text_from(
+    #         dg_filter_from_storage(), target_name="trading_date", strict=True
+    #     )
 
     # ui.button(
     #     "Clear",

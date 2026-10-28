@@ -149,7 +149,7 @@ def adv_dec(
 
 
 def adv_dec_filtered():
-    ui.label("Summary of filtered data")
+    # ui.label("Summary of filtered data")
     pass
 
 

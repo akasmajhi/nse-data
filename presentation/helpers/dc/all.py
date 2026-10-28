@@ -54,3 +54,9 @@ class AnnouncementsFilter:
 @dataclass
 class IDXAnalysisFilter:  # Filter for Index Analysis
     trading_date: str
+
+
+@dataclass
+class IndexAnalysisGridFilter:
+    duration: str
+    trading_date: str

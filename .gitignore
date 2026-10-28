@@ -182,3 +182,4 @@ presentation/storage/*
 .nicegui/
 *.pickle
 *.csv
+drills/*

@@ -1,4 +1,5 @@
 from nicegui import ui
+from presentation.helpers.common import index_analysis_grid_filter_from_storage
 from presentation.pages.dashboards import daily_dashboard, index_analysis
 from presentation.pages.filters.all_filters import (
     daily_filter_container,
@@ -46,27 +47,58 @@ def corp_announcement_layout():
     company_results_grid()
 
 
+import presentation.handlers.user_actions as UA
+from src.constants import UI_DATE_FMT
+
+
 def index_layout():
+    daily_js_filter_function = "date => new Date(date).getDay() > 0 && \
+        new Date(date).getDay() < 6 && new Date(date) <= new Date()"
     index_analysis()
-    # idx_analysis_filter()
-    with ui.row().classes("w-full items-stretch gap-0"):
-        with (
-            ui.card()
-            # .tight()
-            .props("flat bordered").classes(
-                "w-3/4  p-0 rounded-1g border-blue-400 border-1 gap-0"
-            )
-            # .classes("w-3/4 h-[70]")
-        ):
-            with ui.row().classes("w-full bg-black-500 p-1 text-white justify-center"):
-                ui.label(f"Index data as on Show Date Picker Here").classes(
-                    "w-full flex justify-center items-center bg-blue-600 p-0 text-md text-bold rounded gap-0"
-                )
-                # with ui.row().classes("w-full flex-grow item-stretch gap-0"):
-                #     with ui.element("div").classes("flex-1 flex flex-col h-full"):
-                #         ui.label(f"Gainers").classes(
-                #             "w-full flex justify-center items-center bg-green-700 font-bold text-md "
-                #         )
+    with ui.row().classes("w-full h-full items-stretch gap-0"):
+        with ui.card().classes("w-full h-full"):
+            with ui.row().classes(
+                "w-full h-full bg-black-500 p-0 text-white justify-center"
+            ):
+                with ui.column():
+                    ui.select(
+                        label="Timeframe",
+                        options=["DAILY", "WEEKLY", "MONTHLY"],
+                        value=index_analysis_grid_filter_from_storage().duration,
+                        on_change=(
+                            lambda e: UA.index_analysis_grid_change(e, "DURATION")
+                        ),
+                    ).props(
+                        # 1. Strips out default margins, paddings, and background/borders
+                        "dense borderless"
+                    ).style(
+                        # 2. Force the overall inner container heights to match text scale
+                        "height: 1.5rem; min-height: 1.5rem;"
+                    ).props(
+                        # 3. Direct styling of the core inner elements to align selection text & arrows
+                        'input-style="height: 1.5rem; min-height: 1.5rem; padding: 0;" '
+                        'popup-content-class="text-sm"'
+                    ).classes(
+                        # 4. Tailor text size and overall wrapper widths via Tailwind
+                        "text-sm w-28 font-bold"
+                    )
+                with ui.input(
+                    "Date",
+                    value=index_analysis_grid_filter_from_storage().trading_date,
+                    on_change=(lambda e: UA.index_analysis_grid_change(e, "DATE")),
+                ).classes("w-32") as date:
+                    with ui.menu().props("no-parent-event") as menu:
+                        with (
+                            ui.date(mask=UI_DATE_FMT)
+                            .props(f':options="{daily_js_filter_function}"')
+                            .bind_value(date)
+                        ):
+                            with ui.row().classes("justify-end"):
+                                ui.button("Close", on_click=menu.close).props("flat")
+                    with date.add_slot("append"):
+                        ui.icon("edit_calendar").on("click", menu.open).classes(
+                            "cursor-pointer"
+                        )
                 index_grid()
     # idx_analysis_insights()
 

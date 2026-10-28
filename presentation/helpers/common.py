@@ -5,6 +5,7 @@ from nicegui import app
 from presentation.helpers.dc.all import (
     AnnouncementsFilter,
     DGFilter,
+    IndexAnalysisGridFilter,
     WeeklyAnalysisFilter,
     WeeklyFilter,
     IDXAnalysisFilter,
@@ -131,6 +132,33 @@ def default_weekly_analysis_filter() -> WeeklyAnalysisFilter:
         f'Default weekly analysis_filter stored. [{app.storage.general["weekly_analysis_filter"]}]'
     )
     return weekly_analysis_filter
+
+
+def index_analysis_grid_filter_from_storage() -> IndexAnalysisGridFilter:
+    try:
+        if app.storage.general["index_analysis_grid_filter"]:
+            index_analysis_grid_filter_json = json.loads(
+                app.storage.general["index_analysis_grid_filter"]
+            )
+            return IndexAnalysisGridFilter(**index_analysis_grid_filter_json)
+    except KeyError:
+        logger.error(f"No Index Analysis Grid Filter in local storage")
+    except AttributeError as ae:
+        logger.error(f"AttributeError . . . . {ae = }")
+    except Exception as e:
+        logger.error(f"Some Error I did not catch. [{e = }]")
+    # DG_Filter ilter
+    return default_index_analysis_grid_filter()
+
+
+def default_index_analysis_grid_filter() -> IndexAnalysisGridFilter:
+    logger.debug(f"Clearing and making index analysis grid filter")
+    index_analysis_grid_filter: IndexAnalysisGridFilter = IndexAnalysisGridFilter(
+        duration="Daily", trading_date=get_last_trading_date()
+    )
+    index_analysis_grid_filter_dict = json.dumps(asdict(index_analysis_grid_filter))
+    app.storage.general["index_analysis_grid_filter"] = index_analysis_grid_filter_dict
+    return index_analysis_grid_filter
 
 
 def weekly_analysis_filter_from_storage() -> WeeklyAnalysisFilter:

@@ -160,7 +160,7 @@ def index_dashboard(for_x: int = 5) -> list[pd.DataFrame]:
     # Optionally, convert the data(sort_col_name) to preferred numeric type
     # data[sort_col_name] = data[sort_col_name].astype(int)
     data.sort_values(by=sort_col_name, ascending=False, inplace=True)
-    idx_ignores: str = "VIX|BOND|G-SEC|DIVIDEND"
+    idx_ignores: str = "VIX|BOND|G-SEC|DIVIDEND|INVERSE"
     idx_col_name: str = "INDEX"
     data_clean = pd.DataFrame(
         data[~data[idx_col_name].str.contains(idx_ignores, na=False, case=False)]
@@ -206,8 +206,8 @@ def index_data(
 ) -> pd.DataFrame:
     data: pd.DataFrame = get_data(
         file_type="INDEX",
-        start_date=get_last_trading_date(),
-        end_date=get_last_trading_date(),
+        start_date=start_date,
+        end_date=end_date,
     )
     return data
 

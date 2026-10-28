@@ -3,13 +3,14 @@ from nicegui import app, ui
 import pandas as pd
 
 import presentation.handlers.user_actions as UA
-from presentation.pages.grids import index_analysis_summary_grid, error_grid
+from presentation.pages.grids import index_summary_grid, error_grid
 from src import core
 from src.constants import UI_DATE_FMT
 from analytics.core import index_dashboard
 from src.helpers.common import get_last_trading_date
 
 
+@ui.refreshable
 def index_analysis():
 
     t_5_data, b_5_data = (
@@ -48,45 +49,32 @@ def index_analysis():
             "sortable": True,
         },
     ]
-    # rows_top_5 = t_5_data.to_dict("records")
-    # rows_bottom_5 = b_5_data.to_dict("records")
     with ui.row().classes("w-full items-stretch gap-0"):
         with (
             ui.card()
-            # .tight()
-            .props("flat bordered").classes(
-                "w-3/4  p-0 rounded-1g border-blue-400 border-1 gap-0"
-            )
-            # .classes("w-3/4 h-[70]")
+            .props("flat bordered")
+            .classes("w-1/2  p-0 rounded-1g border-blue-400 border-1 gap-0")
         ):
             with ui.row().classes("w-full bg-black-500 p-1 text-white justify-center"):
-                ui.label(f"Index Dashboad as on {get_last_trading_date()}").classes(
-                    "w-full flex justify-center items-center bg-black-600 p-0 text-lg text-bold rounded "
+                ui.label(f"Index Dashboard 👉 {get_last_trading_date()}").classes(
+                    "w-full flex justify-center items-center bg-black-600 p-0 text-md text-bold rounded "
                 )
             with ui.row().classes("w-full flex-grow item-stretch gap-0"):
                 with ui.element("div").classes("flex-1 flex flex-col h-full"):
                     ui.label(f"Gainers").classes(
                         "w-full flex justify-center items-center bg-green-700 font-bold text-md "
                     )
-                    index_analysis_summary_grid(t_5_data, is_top_data=True)
-                    # ui.table(columns=columns, rows=rows_top_5, row_key="INDEX").classes(
-                    #     "w-full"
-                    # )
-                    # for index, row in top_3.iterrows():
-                    #     ui.label(f'{row["INDEX"]} gained {row["PCT_CHANGE"]} %')
-                # with ui.element("div").classes("flex-1 "):
+                    index_summary_grid(t_5_data, is_top_data=True)
                 with ui.element("div").classes("flex-1 flex flex-col h-full"):
                     ui.label(f"Losers").classes(
                         "w-full flex justify-center items-center bg-red-700 font-bold text-md "
                     )
-                    index_analysis_summary_grid(b_5_data, is_top_data=False)
+                    index_summary_grid(b_5_data, is_top_data=False)
 
         with (
             ui.card()
-            # .tight()
-            .props("flat bordered").classes(
-                "w-1/4  p-0 rounded-1g border-blue-400 border-1 gap-0"
-            )
+            .props("flat bordered")
+            .classes("w-1/2  p-0 rounded-1g border-blue-400 border-1 gap-0")
             # .classes("w-3/4 h-[70]")
         ):
             ui.label("Reserved for tracking sector/ind. rotations!")

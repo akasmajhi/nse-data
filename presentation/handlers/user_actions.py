@@ -3,11 +3,15 @@ from dataclasses import asdict
 from loguru import logger
 from nicegui import ui, app
 
-from presentation.helpers.common import default_dg_filter
+from presentation.helpers.common import (
+    default_dg_filter,
+    index_analysis_grid_filter_from_storage,
+)
 
 # from presentation.pages.filters.all_filters import announcement_filter
 from presentation.pages.grids import (
     corporate_results_grid,
+    index_grid,
     # stock_grid,
     weekly_grid,
     weekly_analysis_grid,
@@ -60,46 +64,51 @@ def handle_filter_change(e, control_name=""):
             DG_Filter_json = json.loads(app.storage.general["DG_Filter"])
             DG_Filter = DGFilter(**DG_Filter_json)
             instrument_changed: bool = False
-            match control_name:
-                case "INSTRUMENT":
-                    DG_Filter.instrument = e.sender.value
-                    instrument_changed = True
-                case "WHAT":
-                    DG_Filter.what_type = e.sender.value
-                case "GL":
-                    DG_Filter.gl = e.sender.value
-                case "SIZE":
-                    DG_Filter.size = e.sender.value
-                case "INDEX":
-                    DG_Filter.index = e.sender.value
-                case "INDUSTRY":
-                    DG_Filter.industry = e.sender.value
-                case "FNO":
-                    DG_Filter.fno = e.sender.value
-                case "DATE":
-                    DG_Filter.trading_date = e.sender.value
-                case "SERIES":
-                    # logger.error(f"TMP: [{e = }]")
-                    if type(e.value) == list:
-                        DG_Filter.series = e.value
-                    # if type(e) == list:
-                    #     DG_Filter.series = e
-                case "CLEAR":
-                    DG_Filter = default_dg_filter()
-                    ui.notify(
-                        f"Filters cleared . . . Not working now!",
-                        type="negative",
-                        position="center",
-                        close_button=True,
-                    )
-                    return
-                case _:
-                    logger.error(f"Unknown control . . .")
+            logger.debug(f"[{e.sender.value = }], [{control_name = }]")
+            if e.sender.value:
+                match control_name:
+                    case "INSTRUMENT":
+                        DG_Filter.instrument = e.sender.value
+                        instrument_changed = True
+                    case "WHAT":
+                        DG_Filter.what_type = e.sender.value
+                    case "GL":
+                        DG_Filter.gl = e.sender.value
+                    case "SIZE":
+                        DG_Filter.size = e.sender.value
+                    case "INDEX":
+                        DG_Filter.index = e.sender.value
+                    case "INDUSTRY":
+                        DG_Filter.industry = e.sender.value
+                        if e.sender.value != "All":
+                            logger.debug(f"Changing style . . . ")
+                            e.sender.props("color=teal-5")
+                    case "FNO":
+                        DG_Filter.fno = e.sender.value
+                    case "DATE":
+                        DG_Filter.trading_date = e.sender.value
+                    case "SERIES":
+                        # logger.error(f"TMP: [{e = }]")
+                        if type(e.value) == list:
+                            DG_Filter.series = e.value
+                        # if type(e) == list:
+                        #     DG_Filter.series = e
+                    case "CLEAR":
+                        DG_Filter = default_dg_filter()
+                        ui.notify(
+                            f"Filters cleared . . . Not working now!",
+                            type="negative",
+                            position="center",
+                            close_button=True,
+                        )
+                        return
+                    case _:
+                        logger.error(f"Unknown control . . .")
 
-            DG_Filter_Dict = json.dumps(asdict(DG_Filter))
-            app.storage.general["DG_Filter"] = DG_Filter_Dict
-            if instrument_changed:
-                daily_filter_container.refresh()
+                DG_Filter_Dict = json.dumps(asdict(DG_Filter))
+                app.storage.general["DG_Filter"] = DG_Filter_Dict
+                if instrument_changed:
+                    daily_filter_container.refresh()
     except KeyError:  # NOTE: Filter NOT present. Strange!!!
         logger.error(f"DG_Filter not found in local storage!")
     daily_grid_container.refresh()
@@ -256,6 +265,33 @@ def weekly_analysis_filter_change(e, control_name=""):
     except KeyError:  # NOTE: Filter NOT present. Strange!!!
         logger.error(f"Weekly not found in local storage!")
     # weekly_analysis_grid.refresh()
+
+
+def index_analysis_grid_change(e, control_name=""):
+    logger.debug(f"Into analysis grid filter change [{e = }], [{control_name = }]")
+    try:
+        # if app.storage.general["index_analysis_grid"]:  # NOTE: Filter present
+        #     index_analysis_grid_json = json.loads(
+        #         app.storage.general["index_analysis_grid_filter"]
+        #     )
+        #     index_analysis_grid = WeeklyAnalysisFilter(**index_analysis_grid_json)
+        #     # weekly_analysis_filter.new_data_required = False
+        index_analysis_grid_filter = index_analysis_grid_filter_from_storage()
+        match control_name:
+            case "DURATION":
+                index_analysis_grid_filter.duration = e.sender.value
+            case "DATE":
+                index_analysis_grid_filter.trading_date = e.sender.value
+                logger.debug(f"Trading date set to [{e.sender.value}]")
+            case _:
+                logger.error(f"Unknown control . . .")
+        index_analysis_grid_filter_dict = json.dumps(asdict(index_analysis_grid_filter))
+        app.storage.general["index_analysis_grid_filter"] = (
+            index_analysis_grid_filter_dict
+        )
+    except KeyError:  # NOTE: Filter NOT present. Strange!!!
+        logger.error(f"Weekly not found in local storage!")
+    index_grid.refresh()
 
 
 def handle_announcement_filter(e, control_name=""):
